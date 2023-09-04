@@ -1,12 +1,26 @@
 {
+	"name": "apxsp-async-actions",
+	"namespace": "apxsp",
+	"packageAliases": {
+		"apex-starter-pack": "0HoDn000000k9sMKAQ",
+		"apxsp-logger": "0HoDn000000k9xbKAA"
+	},
 	"packageDirectories": [
 		{
-			"path": "force-app",
-			"default": true
+			"default": true,
+			"dependencies": [
+				{
+					"package": "apex-starter-pack",
+					"versionNumber": "0.9.0.LATEST"
+				},
+				{
+					"package": "apxsp-logger",
+					"versionNumber": "0.6.0.LATEST"
+				}
+			],
+			"path": "force-app"
 		}
 	],
-	"name": "apxsp-async-actions",
-	"namespace": "",
 	"sfdcLoginUrl": "https://login.salesforce.com",
 	"sourceApiVersion": "58.0"
 }
