@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Users with this permission set have access to view and manage Async Action records.</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>AsyncAction__c.Data__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>AsyncAction__c.RelatedRecordId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Async Action Administrator</label>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>AsyncAction__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <tabSettings>
+        <tab>AsyncAction__c</tab>
+        <visibility>Available</visibility>
+    </tabSettings>
+</PermissionSet>

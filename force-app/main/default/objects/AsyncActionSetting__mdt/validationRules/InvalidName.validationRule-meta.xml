@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>InvalidName</fullName>
+    <active>true</active>
+    <errorConditionFormula>DeveloperName != &quot;Default&quot;</errorConditionFormula>
+    <errorDisplayField>DeveloperName</errorDisplayField>
+    <errorMessage>There may only be one Async Action Settings record.
+This record must be named &quot;Default&quot;.</errorMessage>
+</ValidationRule>
