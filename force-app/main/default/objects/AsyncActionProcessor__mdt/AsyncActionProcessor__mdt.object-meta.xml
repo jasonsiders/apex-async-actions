@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Governs the configuration of a specific Async Action Processor class.</description>
+    <label>Async Action Processor</label>
+    <pluralLabel>Async Action Processors</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>
