@@ -31,7 +31,7 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Run_Scheduled_Job__c</field>
+                <field>RunScheduledJob__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Required</behavior>
