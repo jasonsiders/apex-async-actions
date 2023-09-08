@@ -1,11 +1,11 @@
 global abstract class AsyncActionProcessorService {
     @TestVisible
-    static Map<String, AsyncActionProcessor__mdt> configs;
+    static Map<String, AsyncActionProcessor__mdt> processors;
 
     global static Map<String, AsyncActionProcessor__mdt> getAll() {
         // Returns a map of AsyncActionProcessor__mdt records by their "Processor Class" value
-        configs = (configs != null) ? configs : AsyncActionProcessorService.retrieve(); 
-        return configs;
+        processors = (processors != null) ? processors : AsyncActionProcessorService.retrieve(); 
+        return processors;
     }
 
     global static AsyncActionProcessor__mdt get(String processorName) { 
