@@ -112,29 +112,6 @@ private class AsyncActionProcessorTest {
 		Assert.areEqual(AsyncActionProcessor.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
 	}
 
-    @IsTest 
-    static void shouldCreateAValidProcessor() {
-        String processorName = new MockProcessor()?.getType()?.getName();
-
-        Test.startTest();
-        AsyncActionProcessor processor = AsyncActionProcessor.init(processorName);
-        Test.stopTest();
-
-        Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
-        Assert.isInstanceOfType(processor, MockProcessor.class, 'Wrong processor type generated');
-    }
-
-    @IsTest 
-    static void shouldReturnNullIfInvalidProcessor() {
-        String processorName = null; 
-
-        Test.startTest();
-        AsyncActionProcessor processor = AsyncActionProcessor.init(processorName);
-        Test.stopTest();
-
-        Assert.isNull(processor, 'Invalid processorName generated a AsyncActionProcessor anyways');
-    }
-
     @IsTest
 	static void shouldReturnProcessorType() {
 		Type expected = MockProcessor.class;
@@ -254,7 +231,7 @@ private class AsyncActionProcessorTest {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(RecursiveProcessor.class);
 		AsyncActionProcessor processor = new RecursiveProcessor();
-		processor.allowRecursion = true; 
+		AsyncActionProcessor.allowRecursion = true; 
 		AsyncAction__c action = processor?.initAction(null);
 		insert action;
 		

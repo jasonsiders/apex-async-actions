@@ -1,19 +1,8 @@
 global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
-    global Set<Id> actionIds;
-    global Boolean allowRecursion = !Test.isRunningTest();
-    global AsyncActionProcessor__mdt config = this.getProcessorConfig();
-    global AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings(); 
-    
-    // **** STATIC **** // 
-    global static AsyncActionProcessor init(String processorName) {
-        try {
-            return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
-        } catch (Exception error) {
-            apxsp.Logger.AdvancedOptions options = new apxsp.Logger.AdvancedOptions().setSource(AsyncActionProcessor.class);
-            apxsp.Logger.error(options, error);
-            return null; 
-        }
-    }
+    global static Boolean allowRecursion = !Test.isRunningTest();
+    protected AsyncActionProcessor__mdt config = this.getProcessorConfig();
+    protected AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings(); 
+    protected Set<Id> actionIds;
     
     // **** ABSTRACT **** // 
     global abstract Type getType(); 
@@ -40,7 +29,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
             update actions; 
 		}
         // * Re-launch if still pending
-		if (this.allowRecursion == true) {
+		if (AsyncActionProcessor.allowRecursion == true) {
             Id currentJobId = context?.getAsyncApexJobId();
             Id newJobId = this.launch(currentJobId);
         }
@@ -88,8 +77,10 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     }
 
     global Id launch(Id currentJobId) {
-        // TODO: Re-work this to utilize the bulk launcher class
-        return System.enqueueJob(this);
+        // Launches a new instance of the current job if enabled, if not already running, and if it has pending actions
+		// This exists to prevent unnecessary/duplicate jobs from running
+        List<AsyncActionProcessor__mdt> configs = new List<AsyncActionProcessor__mdt>{this.config};
+		return AsyncActionLauncher.launchJobs(configs, currentJobId)?.get(this.getType());
     }
 
     global Id launch() {
