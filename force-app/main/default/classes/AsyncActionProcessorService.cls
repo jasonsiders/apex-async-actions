@@ -14,11 +14,18 @@ global abstract class AsyncActionProcessorService {
     }
 
     static Map<String, AsyncActionProcessor__mdt> retrieve() {
-        Map<String, AsyncActionProcessor__mdt> configMap = new Map<String, AsyncActionProcessor__mdt>();
-        for (AsyncActionProcessor__mdt config : AsyncActionProcessor__mdt.getAll().values()) {
-            String processorName = config?.ProcessorClass__c; 
-            configMap?.put(processorName, config);
-        }
+        List<AsyncActionProcessor__mdt> configs = AsyncActionProcessor__mdt.getAll()?.values();
+        Map<String, AsyncActionProcessor__mdt> configMap = AsyncActionProcessorService.mapByProcessorClass(configs);
         return configMap;
+    }
+
+    @TestVisible
+    static Map<String, AsyncActionProcessor__mdt> mapByProcessorClass(List<AsyncActionProcessor__mdt> configs) {
+        Map<String, AsyncActionProcessor__mdt> results = new Map<String, AsyncActionProcessor__mdt>(); 
+        for (AsyncActionProcessor__mdt config : configs) {
+            String processorName = config?.ProcessorClass__c; 
+            results?.put(processorName, config);
+        }
+        return results;
     }
 }
