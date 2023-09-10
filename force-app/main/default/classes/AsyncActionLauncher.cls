@@ -41,21 +41,21 @@ global abstract class AsyncActionLauncher {
             configsByName?.remove(className);
         }
         // 3. Get all pending Actions 
-        for (AggregateResult agg : [
+        List<AggregateResult> aggResults = [
             SELECT ProcessorClass__c className
 			FROM AsyncAction__c
-			WHERE 
-                ProcessorClass__c IN :configsByName.keySet() 
+			WHERE ProcessorClass__c IN :configsByName.keySet() 
                 AND Scheduled__c <= :DateTime.now() 
                 AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
 			GROUP BY ProcessorClass__c
 			HAVING COUNT(Id) > 0
 			ORDER BY MAX(Scheduled__c) ASC // first in, first out! 
-        ]) {
+        ];
+        for (AggregateResult agg : aggResults) {
             String className = (String) agg?.get('className');
             AsyncActionProcessor__mdt config = configsByName?.get(className);
             AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);
-            if (processor?.isEnabled() == true) {
+            if (AsyncActionLauncher.isLaunchable(processor)) {
 				// Launch the job and build the results map w/the resulting job Id
 				Id jobId = System.enqueueJob(processor);
 				results?.put(processor?.getType(), jobId); 
@@ -64,5 +64,16 @@ global abstract class AsyncActionLauncher {
 			}
         }
         return results;
+    }
+
+    global static Map<Type, Id> launchJobs(AsyncActionProcessor__mdt config, Id currentJobId) {
+        return AsyncActionLauncher.launchJobs(new List<AsyncActionProcessor__mdt>{config}, currentJobId);
+    }
+
+    static Boolean isLaunchable(AsyncActionProcessor processor) {
+        return (
+            processor?.config?.Enabled__c == true && 
+            Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()
+        );
     }
 }

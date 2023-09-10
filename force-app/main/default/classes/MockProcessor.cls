@@ -3,7 +3,12 @@ public class MockProcessor extends AsyncActionProcessor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
+	public Boolean throwError = false;
+
 	public virtual override void process(List<AsyncAction__c> actions) {
+		if (throwError == true) {
+			throw new System.DmlException('This is a fake exception'); 
+		}
 		List<Case> cases = new List<Case>();
 		for (AsyncAction__c action : actions) {
 			// Create cases for the action's related account
