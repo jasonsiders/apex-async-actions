@@ -1,14 +1,12 @@
 public class AsyncActionHandler extends apxsp.TriggerHandler {
-    AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
-
     public override void afterInsert() {
         // If Run on Insert, wake the job
-        if (this.settings?.RunOnInsert__c == true) {
+        if (AsyncActionSettingService.getSettings()?.RunOnInsert__c == true) {
             AsyncActionStart__e event = new AsyncActionStart__e();
             EventBus.publish(event);
         }
         // Ensure the scheduled job aligns with current settings
-        new AsyncActionScheduleEnforcer().enforce();
+        new AsyncActionScheduleEnforcer()?.enforce();
         apxsp.Logger.publish();
     }
 
