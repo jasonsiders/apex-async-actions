@@ -1,7 +1,7 @@
 global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
     global static Boolean allowRecursion = !Test.isRunningTest();
-    protected AsyncActionProcessor__mdt config = this.getProcessorConfig();
-    protected AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings(); 
+    global AsyncActionProcessor__mdt config = this.getProcessorConfig();
+    global AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings(); 
     protected Set<Id> actionIds;
     
     // **** ABSTRACT **** // 
@@ -10,11 +10,13 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     
     // **** QUEUEABLE **** // 
     global void execute(System.QueueableContext context) {
-        System.attachFinalizer(this);
-        List<AsyncAction__c> actions = this.getPendingActions();
-        this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-        this.process(actions); 
-        apxsp.Logger.publish();
+        if (this.config?.Enabled__c == true) {
+            System.attachFinalizer(this);
+            List<AsyncAction__c> actions = this.getPendingActions();
+            this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+            this.process(actions); 
+            apxsp.Logger.publish();
+        }
     }
 
     // **** FINALIZER **** // 
@@ -31,7 +33,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         // * Re-launch if still pending
 		if (AsyncActionProcessor.allowRecursion == true) {
             Id currentJobId = context?.getAsyncApexJobId();
-            Id newJobId = this.launch(currentJobId);
+            AsyncActionLauncher.launchJobs(this.config, currentJobId);
         }
         // * Commit any logs accrued during the finalizer context
 		apxsp.Logger.publish();
@@ -72,27 +74,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return this.initAction(relatedRecordId, null); 
     }
 
-    global Boolean isEnabled() {
-        return this.canRunQueueable() && this.config?.Enabled__c == true; 
-    }
-
-    global Id launch(Id currentJobId) {
-        // Launches a new instance of the current job if enabled, if not already running, and if it has pending actions
-		// This exists to prevent unnecessary/duplicate jobs from running
-        List<AsyncActionProcessor__mdt> configs = new List<AsyncActionProcessor__mdt>{this.config};
-		return AsyncActionLauncher.launchJobs(configs, currentJobId)?.get(this.getType());
-    }
-
-    global Id launch() {
-        // Use this overload when outside of a queueable context
-        return this.launch(null);
-    }
-
     // **** PRIVATE **** //
-    private Boolean canRunQueueable() {
-        return Limits.getQueueableJobs() < Limits.getLimitQueueableJobs();
-    }
-
     private Integer getBatchSize() {
         Integer batchSize = this.config?.BatchSize__c?.intValue();
         return (batchSize != null) ? batchSize : 200; 
@@ -108,7 +90,10 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return [
 			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
-			WHERE ProcessorClass__c = :typeName AND Scheduled__c <= :DateTime.now() AND Status__c = 'Pending'
+			WHERE 
+                ProcessorClass__c = :typeName 
+                AND Scheduled__c <= :DateTime.now() 
+                AND Status__c = :Status.PENDING.name()
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
 		];

@@ -9,7 +9,7 @@ private class AsyncActionProcessorTest {
         insert actions; 
 
         Test.startTest(); 
-        Id jobId = processor?.launch();
+        Id jobId = System.enqueueJob(processor);
         Test.stopTest();
 
         Assert.isNotNull(jobId, 'The job was not launched');
@@ -29,21 +29,21 @@ private class AsyncActionProcessorTest {
     @IsTest
 	static void shouldTryAgainIfHasRetries() {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(BadProcessor.class);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
-		AsyncActionProcessor processor = new BadProcessor();
+		MockProcessor processor = new MockProcessor();
+		processor.throwError = true;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
 		Id jobId;
 
 		try {
 			Test.startTest();
-			jobId = processor?.launch(null);
+			jobId = System.enqueueJob(processor);
 			Test.stopTest();
 		} catch (System.DmlException error) {
-			// The BadProcessor will throw an error;
-			// the finalizer will still run and handle the actions accordingly
+			// Try/Catch needed to prevent the test from aborting
 		}
 
 		Assert.isNotNull(jobId, 'The job was not launched');
@@ -64,20 +64,20 @@ private class AsyncActionProcessorTest {
 	static void shouldHandleFatalFailures() {
         AsyncActionProcessorTest.enableLogging(System.LoggingLevel.ERROR);
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(BadProcessor.class);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
 		config.Retries__c = 0;
-		AsyncActionProcessor processor = new BadProcessor();
+		MockProcessor processor = new MockProcessor();
+		processor.throwError = true; 
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
 		Id jobId;
 
 		try {
 			Test.startTest();
-			jobId = processor?.launch(null);
+			jobId = System.enqueueJob(processor);
 			Test.stopTest();
 		} catch (System.DmlException error) {
-			// The BadProcessor will throw an error;
-			// the finalizer will still run and handle the actions accordingly
+			// Try/Catch needed to prevent the test from aborting
 		}
         Test.getEventBus().deliver();
 
@@ -132,12 +132,43 @@ private class AsyncActionProcessorTest {
 		insert actions;
 
 		Test.startTest();
-		Id jobId = processor?.launch(null);
+		Id jobId = System.enqueueJob(processor);
 		Test.stopTest();
 
 		Assert.isNotNull(jobId, 'A job was not launched');
 	}
 
+	@IsTest 
+	static void shouldRecurse() {
+		// Note: In @IsTest context, recursion defaults to false
+		// This prevents tests from running away on failure
+		// In a real scenario, the job WOULD keep re-enqueueing on an error
+		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+		config.Retries__c = 2;
+		config.RetryInterval__c = 0;
+		MockProcessor processor = new MockProcessor();
+		processor.throwError = true; 
+		AsyncAction__c action = processor?.initAction(null);
+		insert action;
+		AsyncActionProcessor.allowRecursion = true; 
+		
+		try {
+			Test.startTest();
+			System.enqueueJob(processor); 
+			Test.stopTest();
+		} catch (Exception error) {
+			// Try/Catch needed to prevent aborting the test, and to trigger the finalizer
+		}
+
+		// Should keep re-enqueueing until the retries are exhausted
+		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockProcessor'];
+		Assert.areEqual(config?.Retries__c, jobs?.size(), 'Wrong # of jobs');
+	}
+
+	// **** TEMP: MOVE TO LAUNCHER TESTS!!! **** // 
 	@IsTest 
 	static void shouldNotLaunchJobIfQueueableLimitsExceeded() {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
@@ -145,17 +176,17 @@ private class AsyncActionProcessorTest {
 		AsyncActionProcessor processor = new MockProcessor();
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
-
-		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			System.enqueueJob(new GoodProcessor());
+			System.enqueueJob(processor);
 		}
-		Id jobId = processor?.launch(null);
+		
+		Test.startTest();
+		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(jobId, 'A job was launched despite hitting queueable limits');
-	}
+		Assert.isNull(results?.get(MockProcessor.class), 'A job was launched despite hitting queueable limits');
+	} 
 
 	@IsTest 
 	static void shouldNotLaunchJobIfDisabled() {
@@ -167,10 +198,10 @@ private class AsyncActionProcessorTest {
 		insert actions;
 		
 		Test.startTest();
-		Id jobId = processor?.launch(null);
+		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(jobId, 'A job was launched despite being disabled');
+		Assert.isNull(results?.get(MockProcessor.class), 'A job was launched despite being disabled');
 	}
 
 	@IsTest 
@@ -178,15 +209,14 @@ private class AsyncActionProcessorTest {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
 		config.Enabled__c = false;
-		AsyncActionProcessor processor = new MockProcessor();
 		// No actions inserted!
 		
 		Test.startTest();
-		Id jobId = processor?.launch(null);
+		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(jobId, 'A job was launched despite having no data');
-	}
+		Assert.isNull(results?.get(MockProcessor.class), 'A job was launched despite having no data');
+	} 
 
 	@IsTest 
 	static void shouldNotLaunchJobIOneAlreadyExists() {
@@ -198,11 +228,11 @@ private class AsyncActionProcessorTest {
 		Id duplicateJobId = System.enqueueJob(processor); 
 
 		Test.startTest();
-		Id jobId = processor?.launch(null);
+		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(jobId, 'A duplicate job was launched');
-	}
+		Assert.isNull(results?.get(MockProcessor.class), 'A duplicate job was launched');
+	} 
 
 	@IsTest 
 	static void shouldIgnoreCurrentJobIdInDuplicateCheck() {
@@ -212,38 +242,13 @@ private class AsyncActionProcessorTest {
 		AsyncActionProcessor processor = new MockProcessor();
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
-
-		Test.startTest();
 		Id originalJobId = System.enqueueJob(processor); 
-		Id jobId = processor?.launch(originalJobId);
-		Test.stopTest();
 
-		Assert.isNotNull(jobId, 'A new job was not launched from the original job');
-	}
-
-	@IsTest 
-	static void shouldRecurse() {
-		// Note: In @IsTest context, recursion defaults to false
-		// This prevents tests from running away on failure
-		// In a real scenario, the job WOULD keep re-enqueueing on an error
-		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
-		Integer baselineNumAccs = (Integer) [SELECT COUNT(Id) FROM Account][0]?.get('expr0');
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(RecursiveProcessor.class);
-		AsyncActionProcessor processor = new RecursiveProcessor();
-		AsyncActionProcessor.allowRecursion = true; 
-		AsyncAction__c action = processor?.initAction(null);
-		insert action;
-		
 		Test.startTest();
-		processor?.launch(null);
+		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, originalJobId);
 		Test.stopTest();
 
-		// Each RecursiveProcessor action creates an account, and then re-enqueues up to 2 additional times
-		// Since one action was inserted, 2 more will be inserted
-		// A total of 3 actions, and 3 new accounts will be inserted
-		Assert.areEqual(3, [SELECT Id FROM AsyncAction__c]?.size(), 'Wrong # of Actions');
-		Assert.areEqual(baselineNumAccs + 3, [SELECT Id FROM Account]?.size(), 'Wrong # of Accounts');
+		Assert.isNotNull(results?.get(MockProcessor.class), 'A new job was not launched from the original job');
 	}
 
     // **** HELPER **** // 
@@ -289,55 +294,4 @@ private class AsyncActionProcessorTest {
             SetupOwnerId = UserInfo.getUserId()
         );
     }
-
-    // **** INNER **** // 
-    private class BadProcessor extends AsyncActionProcessor {
-		public virtual override void process(List<AsyncAction__c> actions) {
-			throw new System.DmlException('This is a test error');
-		}
-
-		public virtual override Type getType() {
-			return BadProcessor.class;
-		}
-	}
-
-	public class GoodProcessor extends AsyncActionProcessor {
-		public override void process(List<AsyncAction__c> actions) {
-			// Blindly complete each action
-			for (AsyncAction__c action : actions) {
-				action.Status__c = AsyncActionProcessor.Status.COMPLETED.name();
-			}
-			update actions;
-		}
-
-		public override Type getType() {
-			return GoodProcessor.class;
-		}
-	}
-
-	public class RecursiveProcessor extends AsyncActionProcessor {
-		Integer numRecursions = 0;
-		final Integer maxRecursions = 2; 
-
-		public override void process(List<AsyncAction__c> actions) {
-			// Create a random Account
-			List<Account> accounts = new List<Account>();
-			for (AsyncAction__c action : actions) {
-				Account account = new Account(Name = 'Test Account #' + Crypto.getRandomInteger()); 
-				accounts?.add(account); 
-				action.Status__c = AsyncActionProcessor.Status.COMPLETED.name();
-			}
-			insert accounts; 
-			update actions; 
-			if (this.numRecursions < this.maxRecursions) {
-				this.numRecursions = this.numRecursions + 1;
-				AsyncAction__c action = this.initAction(null);
-				insert action; 
-			}
-		}
-		
-		public override Type getType() {
-			return RecursiveProcessor.class;
-		}
-	}
 }
