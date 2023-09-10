@@ -71,9 +71,7 @@ global abstract class AsyncActionLauncher {
     }
 
     static Boolean isLaunchable(AsyncActionProcessor processor) {
-        return (
-            processor?.config?.Enabled__c == true && 
-            Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()
-        );
+        Boolean canRunQueueable = (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs());
+        return canRunQueueable == true && processor?.isEnabled() == true;
     }
 }

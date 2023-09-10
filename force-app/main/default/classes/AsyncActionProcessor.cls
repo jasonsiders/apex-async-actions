@@ -1,7 +1,6 @@
 global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
     global static Boolean allowRecursion = !Test.isRunningTest();
-    global AsyncActionProcessor__mdt config = this.getProcessorConfig();
-    global AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings(); 
+    protected AsyncActionProcessor__mdt settings = this.getProcessorSettings();
     protected Set<Id> actionIds;
     
     // **** ABSTRACT **** // 
@@ -10,7 +9,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     
     // **** QUEUEABLE **** // 
     global void execute(System.QueueableContext context) {
-        if (this.config?.Enabled__c == true) {
+        if (this.settings?.Enabled__c == true) {
             System.attachFinalizer(this);
             List<AsyncAction__c> actions = this.getPendingActions();
             this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
@@ -33,7 +32,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         // * Re-launch if still pending
 		if (AsyncActionProcessor.allowRecursion == true) {
             Id currentJobId = context?.getAsyncApexJobId();
-            AsyncActionLauncher.launchJobs(this.config, currentJobId);
+            AsyncActionLauncher.launchJobs(this.settings, currentJobId);
         }
         // * Commit any logs accrued during the finalizer context
 		apxsp.Logger.publish();
@@ -64,7 +63,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
             Data__c = data,
             ProcessorClass__c = this.getType()?.getName(),
             RelatedRecordId__c = relatedRecordId,
-            Retries__c = this.config?.Retries__c, 
+            Retries__c = this.settings?.Retries__c, 
             Scheduled__c = DateTime.now(),
             Status__c = Status.PENDING.name()
         ); 
@@ -74,14 +73,18 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return this.initAction(relatedRecordId, null); 
     }
 
+    global Boolean isEnabled() {
+        return this.settings?.Enabled__c == true;
+    }
+
     // **** PRIVATE **** //
     private Integer getBatchSize() {
-        Integer batchSize = this.config?.BatchSize__c?.intValue();
+        Integer batchSize = this.settings?.BatchSize__c?.intValue();
         return (batchSize != null) ? batchSize : 200; 
     }
 
     private Integer getRetryInterval() {
-        Integer interval = this.config?.RetryInterval__c?.intValue();
+        Integer interval = this.settings?.RetryInterval__c?.intValue();
         return (interval != null) ? interval : 5;
     }
 
@@ -99,7 +102,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
 		];
     }
 
-    private AsyncActionProcessor__mdt getProcessorConfig() {
+    private AsyncActionProcessor__mdt getProcessorSettings() {
         String processorName = this.getType()?.getName(); 
         return AsyncActionProcessorService.get(processorName);
     }
