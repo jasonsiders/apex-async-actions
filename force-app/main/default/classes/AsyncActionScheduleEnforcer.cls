@@ -4,6 +4,7 @@ public class AsyncActionScheduleEnforcer {
     AsyncApexJob nextJob;
     Set<AsyncApexJob> jobsToAbort = new Set<AsyncApexJob>();
     AsyncActionSchedulable scheduler = new AsyncActionSchedulable();
+    static final apxsp.Logger.AdvancedOptions LOG_OPTIONS = new apxsp.Logger.AdvancedOptions().setSource(AsyncActionScheduleEnforcer.class);
 
     public void enforce() {
         List<AsyncApexJob> jobs = this.getPendingJobs();
@@ -17,7 +18,10 @@ public class AsyncActionScheduleEnforcer {
     }
 
     private void abortJobs() {
-        this.jobsToAbort?.remove(null); // Avoid processing null values
+        this.jobsToAbort?.remove(null); // Avoid processing null values        
+        if (this.jobsToAbort?.isEmpty() == false) {
+            apxsp.Logger.finest(LOG_OPTIONS, 'Aborting out of range job(s): ' + JSON.serialize(this.jobsToAbort));
+        }
         this.scheduler?.abortJobs(new List<AsyncApexJob>(jobsToAbort));
     }
 
@@ -38,6 +42,7 @@ public class AsyncActionScheduleEnforcer {
         }
         this.abortJobs();
         if (nextJob == null) { 
+            apxsp.Logger.finest(LOG_OPTIONS, 'Creating new instance of ' + this.scheduler?.getType());
             this.scheduler?.scheduleNewJob();
         }
     }

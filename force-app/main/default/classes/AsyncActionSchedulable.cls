@@ -21,6 +21,8 @@ public class AsyncActionSchedulable extends apxsp.Reschedulable {
     public override Id scheduleNewJob() {
         // If the Scheduled Job is disabled, do not reschedule
         Boolean isEnabled = this.settings?.RunScheduledJob__c == true;
-        return (isEnabled) ? super.scheduleNewJob() : null;
+        Id jobId = (isEnabled) ? super.scheduleNewJob() : null;
+        apxsp.Logger.finest(this.getType() + ' enabled? ' + isEnabled + ' -> ' + jobId);
+        return jobId; 
     }
 }
