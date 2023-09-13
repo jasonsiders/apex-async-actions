@@ -52,8 +52,9 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
 				action.Status__c = 'Failed';
 			}
 			String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
-			apxsp.Logger.AdvancedOptions options = new apxsp.Logger.AdvancedOptions()?.setRecordId(action?.Id)?.setSource(this.getType());
-			apxsp.Logger.error(options, msg); 
+            Type currentType = this.getType();
+			apxsp.Logger.Options options = new apxsp.Logger.Options()?.setApexClass(currentType)?.setRecordId(action?.Id);
+			apxsp.Logger.error(msg, options); 
 		}
     }
 

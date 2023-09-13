@@ -1,11 +1,14 @@
 global abstract class AsyncActionLauncher {
+    static final apxsp.Logger.Options LOG_OPTIONS = new apxsp.Logger.Options()
+        ?.setApexClass(AsyncActionLauncher.class)
+        ?.setSource(AsyncActionConstants.PACKAGE_NAME);
+
     global static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
         try {
             String processorName = config?.ProcessorClass__c; 
             return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
         } catch (Exception error) {
-            apxsp.Logger.AdvancedOptions options = new apxsp.Logger.AdvancedOptions().setSource(AsyncActionProcessor.class);
-            apxsp.Logger.error(options, error);
+            apxsp.Logger.error(error, LOG_OPTIONS);
             return null; 
         }
     }
@@ -59,8 +62,7 @@ global abstract class AsyncActionLauncher {
 				// Launch the job and build the results map w/the resulting job Id
 				Id jobId = System.enqueueJob(processor);
 				results?.put(processor?.getType(), jobId); 
-                apxsp.Logger.AdvancedOptions options = new apxsp.Logger.AdvancedOptions()?.setSource(AsyncActionLauncher.class); 
-				apxsp.Logger.finest(options, processor?.getType() + ': launch() -> ' + jobId);
+				apxsp.Logger.finest(processor?.getType() + ': launch() -> ' + jobId, LOG_OPTIONS);
 			}
         }
         return results;

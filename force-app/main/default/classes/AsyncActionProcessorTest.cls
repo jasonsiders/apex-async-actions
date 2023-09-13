@@ -88,15 +88,13 @@ private class AsyncActionProcessorTest {
 			WHERE apxsp__Level__c = :System.LoggingLevel.ERROR.name()
 		];
 		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
-		// ! TODO: Commenting out temporarily, due to a bug in apxsp-logger. Re-instante once fixed.
-		// https://github.com/jasonsiders/apxsp-async-actions/issues/10
-		/* Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		actions = [SELECT Id, Data__c, RelatedRecordId__c, Status__c FROM AsyncAction__c WHERE Id IN :actions];
 		for (AsyncAction__c action : actions) {
 			Assert.areEqual(AsyncActionProcessor.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
 			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
-		} */
+		}
 	}
 
     @IsTest 
