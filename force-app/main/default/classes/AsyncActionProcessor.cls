@@ -1,7 +1,10 @@
 global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
     global static Boolean allowRecursion = !Test.isRunningTest();
-    protected AsyncActionProcessor__mdt config = this.getProcessorSettings();
-    protected Set<Id> actionIds;
+    global AsyncActionProcessor__mdt config = this.getProcessorSettings();
+    global Set<Id> actionIds;
+    global apxsp.Logger.Options logOptions = new apxsp.Logger.Options()
+        ?.setApexClass(this.getType())
+        ?.setSource(AsyncActionConstants.PACKAGE_NAME);
     
     // **** ABSTRACT **** // 
     global abstract Type getType(); 
@@ -39,31 +42,28 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     }
 
     // **** PUBLIC **** //
+    global void fail(AsyncAction__c action, RetryBehavior behavior, Object errorObj) {
+        // Callers can use this method to handle a failed action
+        if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
+            // Retry the action at some point in the future. Decrement the number of retries. 
+            action.Retries__c--;
+            this.reschedule(action);
+        } else if (behavior == RetryBehavior.KEEP_ALIVE) {
+            // Retry the action at some point in the future. Do not decrement the number of retries. 
+            this.reschedule(action);
+        } else {
+            // If no retries remain, or if SUDDEN_DEATH, mark the record as failed
+            action.Status__c = Status.FAILED.name();
+        }
+        apxsp.Logger.Options options = this.logOptions?.clone()?.setRecordId(action?.Id);
+        String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
+        apxsp.Logger.error(msg, options); 
+    }
+    
     global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {
-        // Callers can use this method to handle failed actions.
+        // Callers can use this method to handle failed actions in bulk
 		for (AsyncAction__c action : actions) {
-            if (behavior == RetryBehavior.KEEP_ALIVE) {
-                // Keep the record as "Pending" and do not decrement retries.
-                // Note: This RetryBehavior should be used with caution - when used improperly, it can lead to runaway jobs.
-                this.reschedule(action);
-            } else if (behavior == RetryBehavior.SUDDEN_DEATH) {
-                // Mark the record as "Failed" and do not retry.
-                action.Status__c = Status.FAILED.name();
-            } else {
-                // Decrement Retries__c if available. Else, mark the action as "Failed".
-                if (action?.Retries__c > 0) {
-                    action.Retries__c--;
-                    this.reschedule(action);
-                } else {
-                    action.Status__c = Status.FAILED.name();
-                }
-            }
-            apxsp.Logger.Options options = new apxsp.Logger.Options()
-                ?.setApexClass(this.getType())
-                ?.setRecordId(action?.Id)
-                ?.setSource(AsyncActionConstants.PACKAGE_NAME);
-            String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
-            apxsp.Logger.error(msg, options); 
+            this.fail(action, behavior, errorObj);
 		}
     }
 
@@ -115,6 +115,11 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     private AsyncActionProcessor__mdt getProcessorSettings() {
         String processorName = this.getType()?.getName(); 
         return AsyncActionProcessorService.get(processorName);
+    }
+
+    private Boolean hasRetries(AsyncAction__c action) {
+        Decimal numRetries = (action?.Retries__c != null) ? action?.Retries__c : 0; 
+        return numRetries > 0;
     }
 
     private void reschedule(AsyncAction__c action) {
