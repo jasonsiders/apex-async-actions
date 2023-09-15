@@ -4,7 +4,7 @@ public class MockProcessor extends AsyncActionProcessor {
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
 	public Path pathType = Path.SUCCESS;
-	public AsyncActionProcessor.RetryBehavior behavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
+	public AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
 
 	public virtual override void process(List<AsyncAction__c> actions) {
 		if (this.pathType == Path.THROW_ERROR) {
@@ -15,7 +15,7 @@ public class MockProcessor extends AsyncActionProcessor {
 			// Create cases for the action's related account
 			if (this.pathType == Path.FAIL) {
 				// Mark the action as completed - this naive implementation doesn't handle failures!
-				this.fail(new List<AsyncAction__c>{action}, this.behavior, 'This is a test error');
+				this.fail(new List<AsyncAction__c>{action}, this.retryBehavior, 'This is a test error');
 			} else if (this.pathType == Path.SUCCESS) {
 				Map<String, Object> params = this.getData(action);
 				Integer numCases = (Integer) params?.get('numCases');
