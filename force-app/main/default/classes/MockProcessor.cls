@@ -7,16 +7,14 @@ public class MockProcessor extends AsyncActionProcessor {
 	public AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
 
 	public virtual override void process(List<AsyncAction__c> actions) {
+		List<Case> cases = new List<Case>();
 		if (this.pathType == Path.THROW_ERROR) {
 			throw new System.DmlException('This is a fake exception'); 
-		}
-		List<Case> cases = new List<Case>();
-		for (AsyncAction__c action : actions) {
-			// Create cases for the action's related account
-			if (this.pathType == Path.FAIL) {
-				// Mark the action as completed - this naive implementation doesn't handle failures!
-				this.fail(new List<AsyncAction__c>{action}, this.retryBehavior, 'This is a test error');
-			} else if (this.pathType == Path.SUCCESS) {
+		} else if (this.pathType == Path.FAIL) {
+			this.fail(actions, this.retryBehavior, 'This is a test error');
+		} else {
+			for (AsyncAction__c action : actions) {
+				// Create cases for the action's related account
 				Map<String, Object> params = this.getData(action);
 				Integer numCases = (Integer) params?.get('numCases');
 				for (Integer i = 0; i < numCases; i++) {
