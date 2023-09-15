@@ -1,10 +1,11 @@
 global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
-    global static Boolean allowRecursion = !Test.isRunningTest();
-    global AsyncActionProcessor__mdt config = this.getProcessorSettings();
     global Set<Id> actionIds;
+    global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
     global apxsp.Logger.Options logOptions = new apxsp.Logger.Options()
         ?.setApexClass(this.getType())
         ?.setSource(AsyncActionConstants.PACKAGE_NAME);
+    @TestVisible
+    static Boolean allowRecursion = !Test.isRunningTest();
     
     // **** ABSTRACT **** // 
     global abstract Type getType(); 
@@ -67,6 +68,20 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
 		}
     }
 
+    global virtual List<AsyncAction__c> getPendingActions() {
+        final String typeName = this.getType()?.getName();
+        return [
+			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
+			FROM AsyncAction__c
+			WHERE 
+                ProcessorClass__c = :typeName 
+                AND Scheduled__c <= :DateTime.now() 
+                AND Status__c = :Status.PENDING.name()
+			ORDER BY Scheduled__c ASC
+			LIMIT :this.getBatchSize()
+		];
+    }
+
     global AsyncAction__c initAction(Id relatedRecordId, String data) {
         // Returns a new action related to the current processor type 
         return new AsyncAction__c(
@@ -87,6 +102,11 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return this.config?.Enabled__c == true;
     }
 
+    global virtual void reschedule(AsyncAction__c action) {
+        Integer interval = this.getRetryInterval();
+        action.Scheduled__c = DateTime.now()?.addMinutes(interval);
+    }
+
     // **** PRIVATE **** //
     private Integer getBatchSize() {
         Integer batchSize = this.config?.BatchSize__c?.intValue();
@@ -98,33 +118,9 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return (interval != null) ? interval : 5;
     }
 
-    private List<AsyncAction__c> getPendingActions() {
-        final String typeName = this.getType()?.getName();
-        return [
-			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
-			FROM AsyncAction__c
-			WHERE 
-                ProcessorClass__c = :typeName 
-                AND Scheduled__c <= :DateTime.now() 
-                AND Status__c = :Status.PENDING.name()
-			ORDER BY Scheduled__c ASC
-			LIMIT :this.getBatchSize()
-		];
-    }
-
-    private AsyncActionProcessor__mdt getProcessorSettings() {
-        String processorName = this.getType()?.getName(); 
-        return AsyncActionProcessorService.get(processorName);
-    }
-
     private Boolean hasRetries(AsyncAction__c action) {
         Decimal numRetries = (action?.Retries__c != null) ? action?.Retries__c : 0; 
         return numRetries > 0;
-    }
-
-    private void reschedule(AsyncAction__c action) {
-        Integer interval = this.getRetryInterval();
-        action.Scheduled__c = DateTime.now()?.addMinutes(interval);
     }
 
     private List<AsyncAction__c> requeryActions() {
