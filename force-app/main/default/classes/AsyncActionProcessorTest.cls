@@ -213,7 +213,7 @@ private class AsyncActionProcessorTest {
 		processor.pathType = MockProcessor.Path.THROW_ERROR; 
 		AsyncAction__c action = processor?.initAction(null);
 		insert action;
-		AsyncActionProcessor.allowRecursion = true; 
+		AsyncActionTestUtils.setAllowRecursion(true);
 		
 		try {
 			Test.startTest();
