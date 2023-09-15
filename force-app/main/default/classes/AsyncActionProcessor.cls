@@ -26,7 +26,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
 		// * Check the current job status, and handle any unexpected failures
         if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			List<AsyncAction__c> actions = this.requeryActions();  
-			this.fail(actions, context?.getException());
+			this.fail(actions, RetryBehavior.ALLOW_RETRY, context?.getException());
             update actions; 
 		}
         // * Re-launch if still pending
@@ -39,7 +39,8 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     }
 
     // **** PUBLIC **** //
-    global void fail(List<AsyncAction__c> actions, Object errorObj) {
+    global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {
+        // TODO! implement the differing retry behaviors
         // Callers can use this method to handle failed actions.
 		// Decrement Retries__c if available. Else, mark the action as "Failed".
 		for (AsyncAction__c action : actions) {
@@ -120,6 +121,12 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     }
 
     // **** INNER **** // 
+    global enum RetryBehavior {
+        ALLOW_RETRY,
+        KEEP_ALIVE,
+        SUDDEN_DEATH
+    }
+
     global enum Status {
         // Represents the AsyncAction__c.Status__c picklist, offers some type-safety
         Pending, 
