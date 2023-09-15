@@ -98,6 +98,7 @@ private class AsyncActionProcessorTest {
 	@IsTest 
 	static void shouldKeepAliveIfErrors() {
 		// If KEEP_ALIVE retry behavior is employed, an action will remain in "Pending", and its retries will not be decremented.
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
 		config.Retries__c = 3; 
