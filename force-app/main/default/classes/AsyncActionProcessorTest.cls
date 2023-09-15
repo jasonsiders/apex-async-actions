@@ -33,7 +33,7 @@ private class AsyncActionProcessorTest {
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
 		MockProcessor processor = new MockProcessor();
-		processor.throwError = true;
+		processor.pathType = MockProcessor.Path.THROW_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
 		Id jobId;
@@ -67,7 +67,7 @@ private class AsyncActionProcessorTest {
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
 		config.Retries__c = 0;
 		MockProcessor processor = new MockProcessor();
-		processor.throwError = true; 
+		processor.pathType = MockProcessor.Path.THROW_ERROR; 
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
 		Id jobId;
@@ -151,7 +151,7 @@ private class AsyncActionProcessorTest {
 		config.Retries__c = 2;
 		config.RetryInterval__c = 0;
 		MockProcessor processor = new MockProcessor();
-		processor.throwError = true; 
+		processor.pathType = MockProcessor.Path.THROW_ERROR; 
 		AsyncAction__c action = processor?.initAction(null);
 		insert action;
 		AsyncActionProcessor.allowRecursion = true; 
