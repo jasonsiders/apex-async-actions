@@ -13,8 +13,8 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     
     // **** QUEUEABLE **** // 
     global void execute(System.QueueableContext context) {
+        System.attachFinalizer(this);
         if (this.config?.Enabled__c == true) {
-            System.attachFinalizer(this);
             List<AsyncAction__c> actions = this.getPendingActions();
             this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
             this.process(actions); 
@@ -33,10 +33,10 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
 			this.fail(actions, RetryBehavior.ALLOW_RETRY, context?.getException());
             update actions; 
 		}
-        // * Re-launch if still pending
-		if (AsyncActionProcessor.allowRecursion == true) {
+        // * Re-launch this, and any other jobs - if still pending
+		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
             Id currentJobId = context?.getAsyncApexJobId();
-            AsyncActionLauncher.launchJobs(this.config, currentJobId);
+            AsyncActionLauncher.launchAll(currentJobId);
         }
         // * Commit any logs accrued during the finalizer context
 		apxsp.Logger.publish();
