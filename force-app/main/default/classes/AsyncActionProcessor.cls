@@ -27,18 +27,11 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         // Note: Finalizers run in their own execution context, after the Queueable job finishes.
 		// Its execution does not count towards the async method limit.
 		// Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_transaction_finalizers.htm
-		// * Check the current job status, and handle any unexpected failures
-        if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
-			List<AsyncAction__c> actions = this.requeryActions();  
-			this.fail(actions, RetryBehavior.ALLOW_RETRY, context?.getException());
-            update actions; 
-		}
-        // * Re-launch this, and any other jobs - if still pending
-		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
-            Id currentJobId = context?.getAsyncApexJobId();
-            AsyncActionLauncher.launchAll(currentJobId);
+        try {
+            this.finalize(context);
+        } catch (Exception error) {
+            this.handleFinalizerError(error);
         }
-        // * Commit any logs accrued during the finalizer context
 		apxsp.Logger.publish();
     }
 
@@ -108,6 +101,19 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     }
 
     // **** PRIVATE **** //
+    @TestVisible
+    private virtual void finalize(System.FinalizerContext context) {
+        // * Check the current job status, and handle any unexpected failures
+        if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
+            this.handleFinalizerError(context?.getException());
+        }
+        // * Re-launch this, and any other jobs - if still pending
+        if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
+            Id currentJobId = context?.getAsyncApexJobId();
+            AsyncActionLauncher.launchAll(currentJobId);
+        }
+    }
+
     private Integer getBatchSize() {
         Integer batchSize = this.config?.BatchSize__c?.intValue();
         return (batchSize != null) ? batchSize : 200; 
@@ -116,6 +122,12 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     private Integer getRetryInterval() {
         Integer interval = this.config?.RetryInterval__c?.intValue();
         return (interval != null) ? interval : 5;
+    }
+
+    private void handleFinalizerError(Exception error) {
+        List<AsyncAction__c> actions = this.requeryActions();  
+        this.fail(actions, RetryBehavior.ALLOW_RETRY, error);
+        update actions; 
     }
 
     private Boolean hasRetries(AsyncAction__c action) {

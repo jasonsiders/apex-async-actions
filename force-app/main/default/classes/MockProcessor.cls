@@ -8,7 +8,7 @@ public class MockProcessor extends AsyncActionProcessor {
 
 	public virtual override void process(List<AsyncAction__c> actions) {
 		List<Case> cases = new List<Case>();
-		if (this.pathType == Path.THROW_ERROR) {
+		if (this.pathType == Path.JOB_ERROR) {
 			throw new System.DmlException('This is a fake exception'); 
 		} else if (this.pathType == Path.FAIL) {
 			this.fail(actions, this.retryBehavior, 'This is a test error');
@@ -29,6 +29,13 @@ public class MockProcessor extends AsyncActionProcessor {
 		update actions;
 	}
 
+	public override void finalize(System.FinalizerContext context) {
+		super.finalize(context); 
+		if (this.pathType == Path.FINALIZER_ERROR) {
+			throw new System.DmlException('This is a fake exception');
+		}
+	}
+
 	public virtual override Type getType() {
 		return MockProcessor.class;
 	}
@@ -41,7 +48,8 @@ public class MockProcessor extends AsyncActionProcessor {
 	// **** INNER **** // 
 	public enum Path {
 		FAIL,
-		SUCCESS,
-		THROW_ERROR
+		FINALIZER_ERROR,
+		JOB_ERROR,
+		SUCCESS
 	}
 }

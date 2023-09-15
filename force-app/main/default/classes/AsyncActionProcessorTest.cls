@@ -34,7 +34,7 @@ private class AsyncActionProcessorTest {
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
 		MockProcessor processor = new MockProcessor();
-		processor.pathType = MockProcessor.Path.THROW_ERROR;
+		processor.pathType = MockProcessor.Path.JOB_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
 		Id jobId;
@@ -70,7 +70,7 @@ private class AsyncActionProcessorTest {
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
 		config.Retries__c = 0;
 		MockProcessor processor = new MockProcessor();
-		processor.pathType = MockProcessor.Path.THROW_ERROR; 
+		processor.pathType = MockProcessor.Path.JOB_ERROR; 
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
 		Id jobId;
@@ -156,6 +156,35 @@ private class AsyncActionProcessorTest {
 		}
 	}
 
+	@IsTest 
+	static void shouldHandleFinalizerErrors() {
+		// If an exception is thrown during the finalizer, it should be caught and handled like an error during the queueable
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+		config.Retries__c = 0;
+		MockProcessor processor = new MockProcessor();
+		processor.retryBehavior = AsyncActionProcessor.RetryBehavior.SUDDEN_DEATH;
+		processor.pathType = MockProcessor.Path.FINALIZER_ERROR; 
+		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
+		insert actions;
+
+		Test.startTest();
+		Id jobId = System.enqueueJob(processor);
+		Test.stopTest();
+		Test.getEventBus().deliver();
+
+		Assert.isNotNull(jobId, 'The job was not launched');
+		List<apxsp__Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
+		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
+		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
+			Assert.areEqual(AsyncActionProcessor.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
+			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
+			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
+		}
+	}
+
     @IsTest 
 	static void shouldInitializeAnAction() {
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
@@ -210,7 +239,7 @@ private class AsyncActionProcessorTest {
 		config.Retries__c = 2;
 		config.RetryInterval__c = 0;
 		MockProcessor processor = new MockProcessor();
-		processor.pathType = MockProcessor.Path.THROW_ERROR; 
+		processor.pathType = MockProcessor.Path.JOB_ERROR; 
 		AsyncAction__c action = processor?.initAction(null);
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
