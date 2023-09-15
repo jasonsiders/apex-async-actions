@@ -56,4 +56,16 @@ private class AsyncActionTestUtilsTest {
             Assert.isTrue(processorNames?.contains(processorName), processorName + ' was not mapped'); 
         }
     }
+
+    @IsTest 
+    static void shouldToggleAllowRecursion() {
+        Boolean currentVal = AsyncActionProcessor.allowRecursion; 
+        Boolean newVal = !currentVal;
+
+        Test.startTest();
+        AsyncActionTestUtils.setAllowRecursion(newVal);
+        Test.stopTest();
+
+        Assert.areEqual(newVal, AsyncActionProcessor.allowRecursion, 'Did not update allowRecursion');
+    }
 }
