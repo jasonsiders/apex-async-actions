@@ -41,4 +41,10 @@ global class AsyncActionTestUtils {
         String processorName = processor?.ProcessorClass__c; 
         AsyncActionProcessorService.processors?.put(processorName, processor); 
     }
+
+    global static void setAllowRecursion(Boolean allowRecursion) {
+        // Enables external callers to manipulate the @TestVisible allowRecursion flag
+        // This is disabled in @IsTest context by default, to simplify testing and prevent runaways
+        AsyncActionProcessor.allowRecursion = allowRecursion;
+    }
 }
