@@ -45,15 +45,16 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
 		for (AsyncAction__c action : actions) {
 			if (action?.Retries__c > 0) {
 				// Retry the action at some point in the future
-				action.Retries__c--;
-                action.Scheduled__c = DateTime.now()?.addMinutes(this.getRetryInterval());
+                Integer interval = this.getRetryInterval();
+                action.Scheduled__c = DateTime.now()?.addMinutes(interval);
+                action.Retries__c--;
 			} else {
 				// No more retries remaining. Mark the action as failed
 				action.Status__c = 'Failed';
 			}
 			String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
             Type currentType = this.getType();
-			apxsp.Logger.Options options = new apxsp.Logger.Options()?.setApexClass(currentType)?.setRecordId(action?.Id);
+			apxsp.Logger.Options options = new apxsp.Logger.Options()?.setApexClass(currentType)?.setRecordId(action?.Id)?.setSource(AsyncActionConstants.PACKAGE_NAME);
 			apxsp.Logger.error(msg, options); 
 		}
     }
