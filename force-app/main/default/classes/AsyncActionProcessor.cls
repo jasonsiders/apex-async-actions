@@ -1,7 +1,11 @@
 global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
-    global static Boolean allowRecursion = !Test.isRunningTest();
-    protected AsyncActionProcessor__mdt config = this.getProcessorSettings();
-    protected Set<Id> actionIds;
+    global Set<Id> actionIds;
+    global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
+    global apxsp.Logger.Options logOptions = new apxsp.Logger.Options()
+        ?.setApexClass(this.getType())
+        ?.setSource(AsyncActionConstants.PACKAGE_NAME);
+    @TestVisible
+    static Boolean allowRecursion = !Test.isRunningTest();
     
     // **** ABSTRACT **** // 
     global abstract Type getType(); 
@@ -9,8 +13,8 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     
     // **** QUEUEABLE **** // 
     global void execute(System.QueueableContext context) {
+        System.attachFinalizer(this);
         if (this.config?.Enabled__c == true) {
-            System.attachFinalizer(this);
             List<AsyncAction__c> actions = this.getPendingActions();
             this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
             this.process(actions); 
@@ -23,39 +27,52 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         // Note: Finalizers run in their own execution context, after the Queueable job finishes.
 		// Its execution does not count towards the async method limit.
 		// Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_transaction_finalizers.htm
-		// * Check the current job status, and handle any unexpected failures
-        if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
-			List<AsyncAction__c> actions = this.requeryActions();  
-			this.fail(actions, context?.getException());
-            update actions; 
-		}
-        // * Re-launch if still pending
-		if (AsyncActionProcessor.allowRecursion == true) {
-            Id currentJobId = context?.getAsyncApexJobId();
-            AsyncActionLauncher.launchJobs(this.config, currentJobId);
+        try {
+            this.finalize(context);
+        } catch (Exception error) {
+            this.handleFinalizerError(error);
         }
-        // * Commit any logs accrued during the finalizer context
 		apxsp.Logger.publish();
     }
 
     // **** PUBLIC **** //
-    global void fail(List<AsyncAction__c> actions, Object errorObj) {
-        // Callers can use this method to handle failed actions.
-		// Decrement Retries__c if available. Else, mark the action as "Failed".
+    global void fail(AsyncAction__c action, RetryBehavior behavior, Object errorObj) {
+        // Callers can use this method to handle a failed action
+        if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
+            // Retry the action at some point in the future. Decrement the number of retries. 
+            action.Retries__c--;
+            this.reschedule(action);
+        } else if (behavior == RetryBehavior.KEEP_ALIVE) {
+            // Retry the action at some point in the future. Do not decrement the number of retries. 
+            this.reschedule(action);
+        } else {
+            // If no retries remain, or if SUDDEN_DEATH, mark the record as failed
+            action.Status__c = Status.FAILED.name();
+        }
+        apxsp.Logger.Options options = this.logOptions?.clone()?.setRecordId(action?.Id);
+        String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
+        apxsp.Logger.error(msg, options); 
+    }
+    
+    global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {
+        // Callers can use this method to handle failed actions in bulk
 		for (AsyncAction__c action : actions) {
-			if (action?.Retries__c > 0) {
-				// Retry the action at some point in the future
-				action.Retries__c--;
-                action.Scheduled__c = DateTime.now()?.addMinutes(this.getRetryInterval());
-			} else {
-				// No more retries remaining. Mark the action as failed
-				action.Status__c = 'Failed';
-			}
-			String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
-            Type currentType = this.getType();
-			apxsp.Logger.Options options = new apxsp.Logger.Options()?.setApexClass(currentType)?.setRecordId(action?.Id);
-			apxsp.Logger.error(msg, options); 
+            this.fail(action, behavior, errorObj);
 		}
+    }
+
+    global virtual List<AsyncAction__c> getPendingActions() {
+        final String typeName = this.getType()?.getName();
+        return [
+			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
+			FROM AsyncAction__c
+			WHERE 
+                ProcessorClass__c = :typeName 
+                AND Scheduled__c <= :DateTime.now() 
+                AND Status__c = :Status.PENDING.name()
+			ORDER BY Scheduled__c ASC
+			LIMIT :this.getBatchSize()
+		];
     }
 
     global AsyncAction__c initAction(Id relatedRecordId, String data) {
@@ -78,7 +95,25 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return this.config?.Enabled__c == true;
     }
 
+    global virtual void reschedule(AsyncAction__c action) {
+        Integer interval = this.getRetryInterval();
+        action.Scheduled__c = DateTime.now()?.addMinutes(interval);
+    }
+
     // **** PRIVATE **** //
+    @TestVisible
+    private virtual void finalize(System.FinalizerContext context) {
+        // * Check the current job status, and handle any unexpected failures
+        if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
+            this.handleFinalizerError(context?.getException());
+        }
+        // * Re-launch this, and any other jobs - if still pending
+        if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
+            Id currentJobId = context?.getAsyncApexJobId();
+            AsyncActionLauncher.launchAll(currentJobId);
+        }
+    }
+
     private Integer getBatchSize() {
         Integer batchSize = this.config?.BatchSize__c?.intValue();
         return (batchSize != null) ? batchSize : 200; 
@@ -89,23 +124,15 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         return (interval != null) ? interval : 5;
     }
 
-    private List<AsyncAction__c> getPendingActions() {
-        final String typeName = this.getType()?.getName();
-        return [
-			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
-			FROM AsyncAction__c
-			WHERE 
-                ProcessorClass__c = :typeName 
-                AND Scheduled__c <= :DateTime.now() 
-                AND Status__c = :Status.PENDING.name()
-			ORDER BY Scheduled__c ASC
-			LIMIT :this.getBatchSize()
-		];
+    private void handleFinalizerError(Exception error) {
+        List<AsyncAction__c> actions = this.requeryActions();  
+        this.fail(actions, RetryBehavior.ALLOW_RETRY, error);
+        update actions; 
     }
 
-    private AsyncActionProcessor__mdt getProcessorSettings() {
-        String processorName = this.getType()?.getName(); 
-        return AsyncActionProcessorService.get(processorName);
+    private Boolean hasRetries(AsyncAction__c action) {
+        Decimal numRetries = (action?.Retries__c != null) ? action?.Retries__c : 0; 
+        return numRetries > 0;
     }
 
     private List<AsyncAction__c> requeryActions() {
@@ -119,6 +146,12 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
     }
 
     // **** INNER **** // 
+    global enum RetryBehavior {
+        ALLOW_RETRY,
+        KEEP_ALIVE,
+        SUDDEN_DEATH
+    }
+
     global enum Status {
         // Represents the AsyncAction__c.Status__c picklist, offers some type-safety
         Pending, 
