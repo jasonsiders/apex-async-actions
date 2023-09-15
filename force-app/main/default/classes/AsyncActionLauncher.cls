@@ -12,11 +12,17 @@ global abstract class AsyncActionLauncher {
             return null; 
         }
     }
+
+    global static Map<Type, Id> launchAll(Id currentJobId) {
+        // Create & launch an AsyncActionProcessor class for each AsyncActionConfig__mdt
+        List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
+        return AsyncActionLauncher.launchJobs(processors, currentJobId);    
+    }
     
     global static Map<Type, Id> launchAll() {
         // Create & launch an AsyncActionProcessor class for each AsyncActionConfig__mdt
-        List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
-        return AsyncActionLauncher.launchJobs(processors, null);    
+        // Use this override when not currently in an AsyncActionProcessor job
+        return AsyncActionLauncher.launchAll(null);
     }
 
     global static Map<Type, Id> launchJobs(List<AsyncActionProcessor__mdt> configs, Id currentJobId) {
