@@ -3,10 +3,6 @@
     <label>Default</label>
     <protected>false</protected>
     <values>
-        <field>RunOnInsert__c</field>
-        <value xsi:type="xsd:boolean">false</value>
-    </values>
-    <values>
         <field>RunScheduledJob__c</field>
         <value xsi:type="xsd:boolean">true</value>
     </values>

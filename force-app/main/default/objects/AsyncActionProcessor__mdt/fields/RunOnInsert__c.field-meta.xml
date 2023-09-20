@@ -2,10 +2,9 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>RunOnInsert__c</fullName>
     <defaultValue>false</defaultValue>
+    <description>When checked, the Actions of this type will be processed immediately after an Async Action record is inserted.</description>
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
-    <inlineHelpText>When checked, the Async Action framework will run when a new Async Action record is inserted.
-At minimum, this field or &quot;Run Scheduled Job&quot; should be checked to prevent Actions from becoming stale.</inlineHelpText>
     <label>Run On Insert</label>
     <type>Checkbox</type>
 </CustomField>
