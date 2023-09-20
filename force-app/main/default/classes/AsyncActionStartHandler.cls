@@ -11,28 +11,29 @@ public class AsyncActionStartHandler extends apxsp.TriggerHandler {
     }
 
     private List<AsyncActionProcessor__mdt> getActionsToLaunch(List<AsyncActionStart__e> events) {
-        Map<String, AsyncActionProcessor__mdt> actionMap = new Map<String, AsyncActionProcessor__mdt>();
+        Set<AsyncActionProcessor__mdt> actions = new Set<AsyncActionProcessor__mdt>();
+        for (String actionName : this.extractActionNames(events)) {
+            AsyncActionProcessor__mdt action = AsyncActionProcessorService.get(actionName);
+            actions?.add(action); 
+        }
+        actions?.remove(null);
+        return new List<AsyncActionProcessor__mdt>(actions);
+    }
+
+    private Set<String> extractActionNames(List<AsyncActionStart__e> events) {
+        Set<String> actionNames = new Set<String>();
         for (AsyncActionStart__e event : events) {
-            System.debug('Actions__c: ' + event?.Actions__c);
             if (String.isNotBlank(event?.Actions__c)) {
                 // If Actions__c are specified, launch only the jobs specified in the field
                 List<String> specifiedActions = event?.Actions__c?.replaceAll('\\s', '')?.split(',');
-                System.debug('Specified Actions: ' + JSON.serialize(specifiedActions));
-                for (String actionName : specifiedActions) {
-                    AsyncActionProcessor__mdt action = AsyncActionProcessorService.get(actionName);
-                    System.debug(actionName + ': ' + action);
-                    if (action != null) {
-                        actionMap?.put(actionName, action);
-                    }
-                }
+                actionNames?.addAll(specifiedActions);
             } else {
                 // If Actions__c are not specified, launch all jobs
-                Map<String, AsyncActionProcessor__mdt> allActions = AsyncActionProcessorService.getAll();
-                actionMap?.putAll(allActions);
+                Set<String> allActionNames = AsyncActionProcessorService.getAll()?.keySet();
+                actionNames?.addAll(allActionNames);
                 break;
             }
         }
-        System.debug('Returning ' + JSON.serialize(actionMap?.values()));
-        return actionMap?.values();
+        return actionNames;
     }
 }
