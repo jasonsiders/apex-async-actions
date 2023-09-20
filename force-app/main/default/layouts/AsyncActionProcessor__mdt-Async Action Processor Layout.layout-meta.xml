@@ -16,7 +16,11 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>BatchSize__c</field>
+                <field>Retries__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Required</behavior>
+                <field>RetryInterval__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -25,16 +29,16 @@
                 <field>DeveloperName</field>
             </layoutItems>
             <layoutItems>
+                <behavior>Required</behavior>
+                <field>BatchSize__c</field>
+            </layoutItems>
+            <layoutItems>
                 <behavior>Edit</behavior>
                 <field>Enabled__c</field>
             </layoutItems>
             <layoutItems>
-                <behavior>Required</behavior>
-                <field>Retries__c</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Required</behavior>
-                <field>RetryInterval__c</field>
+                <behavior>Edit</behavior>
+                <field>RunOnInsert__c</field>
             </layoutItems>
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
@@ -82,7 +86,7 @@
     <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
     <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
     <summaryLayout>
-        <masterLabel>00hDR00000Awpsm</masterLabel>
+        <masterLabel>00hDR00000BA52y</masterLabel>
         <sizeX>4</sizeX>
         <sizeY>0</sizeY>
         <summaryLayoutStyle>Default</summaryLayoutStyle>

@@ -5,7 +5,6 @@ global class AsyncActionTestUtils {
         AsyncActionSetting__mdt settings = new AsyncActionSetting__mdt(
             DeveloperName = 'Test_Settings',
             MasterLabel = 'Test Settings',
-            RunOnInsert__c = false,
             RunScheduledJob__c = false,
             ScheduledJobInterval__c = 60
         ); 
@@ -22,7 +21,8 @@ global class AsyncActionTestUtils {
             MasterLabel = 'Test ' + processorType?.getName(),
             ProcessorClass__c = processorType?.getName(),
             Retries__c = 3,
-            RetryInterval__c = 3
+            RetryInterval__c = 3,
+            RunOnInsert__c = false
         ); 
         AsyncActionTestUtils.mockProcessorSettings(processor); 
         return processor; 
