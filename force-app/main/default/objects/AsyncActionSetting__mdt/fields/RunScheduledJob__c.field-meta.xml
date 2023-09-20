@@ -4,9 +4,7 @@
     <defaultValue>true</defaultValue>
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
-    <inlineHelpText>When checked, a scheduled job will run periodically to process Pending Async Action records.
-At minimum, either this field or &quot;Run on Insert&quot; should be checked to prevent Actions from becoming stale.
-Data Owner</inlineHelpText>
+    <inlineHelpText>When checked, a scheduled job will run periodically to process Pending Async Action records.</inlineHelpText>
     <label>Run Scheduled Job</label>
     <type>Checkbox</type>
 </CustomField>
