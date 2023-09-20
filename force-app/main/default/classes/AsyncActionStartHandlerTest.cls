@@ -22,7 +22,7 @@ private class AsyncActionStartHandlerTest {
         AsyncActionProcessor processor = new MockProcessor();
         insert processor?.initAction(null);
         AsyncActionStart__e event = new AsyncActionStart__e();
-        event.Actions__c = 'MockProcessor,OtherJobs,etc';
+        event.Actions__c = MockProcessor.class?.getName() + ',OtherProcessor,etc';
         
         EventBus.publish(event);
         Test.getEventBus().deliver();
