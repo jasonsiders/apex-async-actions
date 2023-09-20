@@ -3,8 +3,8 @@ private class AsyncActionHandlerTest {
     @IsTest 
     static void shouldLaunchJobsIfTriggerEnabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.RunOnInsert__c = true; 
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+        config.RunOnInsert__c = true;
         AsyncActionProcessor processor = new MockProcessor();
         AsyncAction__c action = processor?.initAction(null);
         
@@ -18,8 +18,8 @@ private class AsyncActionHandlerTest {
     @IsTest 
     static void shouldNotLaunchJobsIfTriggerDisabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.RunOnInsert__c = false; 
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+        config.RunOnInsert__c = false;
         AsyncActionProcessor processor = new MockProcessor();
         AsyncAction__c action = processor?.initAction(null);
         
@@ -33,7 +33,6 @@ private class AsyncActionHandlerTest {
     @IsTest 
     static void shouldScheduleIfEnabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.RunOnInsert__c = false; 
         settings.RunScheduledJob__c = true;
         settings.ScheduledJobInterval__c = 15;
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
@@ -50,7 +49,6 @@ private class AsyncActionHandlerTest {
     @IsTest 
     static void shouldScheduleIfDisabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.RunOnInsert__c = false; 
         settings.RunScheduledJob__c = false;
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
         AsyncActionProcessor processor = new MockProcessor();
