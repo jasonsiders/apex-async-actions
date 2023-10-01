@@ -270,7 +270,7 @@ private class AsyncActionProcessorTest {
 
 	static List<Log__c> getErrorLogs() {
 		return [
-			SELECT Id, Related_Record_Id__c
+			SELECT Id, RelatedRecordId__c
 			FROM Log__c
 			WHERE Level__c = :System.LoggingLevel.ERROR.name()
 		];
@@ -299,7 +299,7 @@ private class AsyncActionProcessorTest {
     static Map<Id, List<Log__c>> mapLogsByRecordId(List<Log__c> logs) {
         Map<Id, List<Log__c>> results = new Map<Id, List<Log__c>>();
         for (Log__c log : logs) {
-            Id recordId = (Id) log?.Related_Record_Id__c; 
+            Id recordId = (Id) log?.RelatedRecordId__c; 
             List<Log__c> matching = results?.containsKey(recordId)
                 ? results?.get(recordId)
                 : new List<Log__c>();
@@ -310,9 +310,9 @@ private class AsyncActionProcessorTest {
     }
 
     static void enableLogging(System.LoggingLevel level) {
-        insert new Log_Setting__c(
+        insert new LogSetting__c(
             Enabled__c = true, 
-            Level__c = level?.name(),
+            Threshold__c = level?.name(),
             SetupOwnerId = UserInfo.getUserId()
         );
     }
