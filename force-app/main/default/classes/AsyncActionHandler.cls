@@ -1,4 +1,4 @@
-public class AsyncActionHandler extends apxsp.TriggerHandler {
+public class AsyncActionHandler extends ApexAsyncActionTriggerFramework {
     public override void afterInsert() {
         // Run any jobs configured to run on insert
         List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;

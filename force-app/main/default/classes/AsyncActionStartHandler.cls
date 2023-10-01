@@ -1,4 +1,4 @@
-public class AsyncActionStartHandler extends apxsp.TriggerHandler {
+public class AsyncActionStartHandler extends ApexAsyncActionTriggerFramework {
     public override void afterInsert() {
         List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
         List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
