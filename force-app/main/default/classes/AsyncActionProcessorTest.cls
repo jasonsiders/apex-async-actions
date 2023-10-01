@@ -49,16 +49,16 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<apxsp__Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
+		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
 		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
-		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActionProcessor.Status.PENDING.name(), action?.Status__c, 'Action is no longer pending');
 			Assert.areEqual(config?.Retries__c - 1, action?.Retries__c, 'Wrong Num Retries');
 			DateTime now = DateTime.now();
 			DateTime scheduled = action?.Scheduled__c;
 			Assert.isTrue(scheduled > now, 'Scheduled Date is not in the future: ' + scheduled + '. Expected: ' + now);
-			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
+			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
@@ -85,12 +85,12 @@ private class AsyncActionProcessorTest {
         Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<apxsp__Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
+		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
 		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
-		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActionProcessor.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
-			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
+			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
@@ -115,14 +115,14 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<apxsp__Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
+		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
 		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
-		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActionProcessor.Status.PENDING.name(), action?.Status__c, 'Action is not longer pending');
 			Assert.areEqual(config?.Retries__c, action?.Retries__c, 'Retries was altered');
 			Assert.isTrue(action?.Scheduled__c > DateTime.now(), 'Action was not rescheduled');
-			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
+			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
@@ -146,12 +146,12 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<apxsp__Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
+		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
 		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
-		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActionProcessor.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
-			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
+			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
@@ -175,12 +175,12 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<apxsp__Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
+		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
 		Assert.isFalse(logs?.isEmpty(), 'No errors were logged'); 
-		Map<Id, List<apxsp__Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActionProcessor.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
-			List<apxsp__Log__c> errorLogs = logsByRecordId?.get(action?.Id);
+			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
@@ -268,11 +268,11 @@ private class AsyncActionProcessorTest {
 		insert accounts;
     }
 
-	static List<apxsp__Log__c> getErrorLogs() {
+	static List<Log__c> getErrorLogs() {
 		return [
-			SELECT Id, apxsp__Related_Record_Id__c
-			FROM apxsp__Log__c
-			WHERE apxsp__Level__c = :System.LoggingLevel.ERROR.name()
+			SELECT Id, Related_Record_Id__c
+			FROM Log__c
+			WHERE Level__c = :System.LoggingLevel.ERROR.name()
 		];
 	}
 
@@ -296,13 +296,13 @@ private class AsyncActionProcessorTest {
         return actions; 
     }
 
-    static Map<Id, List<apxsp__Log__c>> mapLogsByRecordId(List<apxsp__Log__c> logs) {
-        Map<Id, List<apxsp__Log__c>> results = new Map<Id, List<apxsp__Log__c>>();
-        for (apxsp__Log__c log : logs) {
-            Id recordId = (Id) log?.apxsp__Related_Record_Id__c; 
-            List<apxsp__Log__c> matching = results?.containsKey(recordId)
+    static Map<Id, List<Log__c>> mapLogsByRecordId(List<Log__c> logs) {
+        Map<Id, List<Log__c>> results = new Map<Id, List<Log__c>>();
+        for (Log__c log : logs) {
+            Id recordId = (Id) log?.Related_Record_Id__c; 
+            List<Log__c> matching = results?.containsKey(recordId)
                 ? results?.get(recordId)
-                : new List<apxsp__Log__c>();
+                : new List<Log__c>();
             matching?.add(log);
             results?.put(recordId, matching);
         }
@@ -310,9 +310,9 @@ private class AsyncActionProcessorTest {
     }
 
     static void enableLogging(System.LoggingLevel level) {
-        insert new apxsp__Log_Setting__c(
-            apxsp__Enabled__c = true, 
-            apxsp__Level__c = level?.name(),
+        insert new Log_Setting__c(
+            Enabled__c = true, 
+            Level__c = level?.name(),
             SetupOwnerId = UserInfo.getUserId()
         );
     }
