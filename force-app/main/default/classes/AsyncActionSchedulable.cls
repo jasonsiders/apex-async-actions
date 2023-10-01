@@ -27,7 +27,8 @@ public class AsyncActionSchedulable implements System.Schedulable {
         Boolean isEnabled =  this.settings?.RunScheduledJob__c == true;
         if (isEnabled) {
             String jobName = AsyncActionSchedulable.class?.getName();
-            String cronExp = Cron.hourly().minutesFromNow(this.getInterval())?.expression();
+            Integer interval = this.getInterval();
+            String cronExp = new HourlyCron()?.minutesFromNow(interval)?.expression();
             jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
             LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
         }
@@ -63,5 +64,34 @@ public class AsyncActionSchedulable implements System.Schedulable {
         List<AsyncApexJob> pendingJobs = this.getPendingJobs();
         this.abortJobs(pendingJobs);
         return this.scheduleNewJob();
+    }
+
+    // **** INNER **** //
+    private class HourlyCron {
+        private String seconds = '0';
+        private String minutes = '0';
+        private String hours = '*';
+        private String dayOfMonth = '*';
+        private String month = '*';
+        private String dayOfWeek = '?';
+
+        private String expression() {
+            List<String> parts = new List<String>{
+                this.seconds,
+                this.minutes,
+                this.hours,
+                this.dayOfMonth,
+                this.month,
+                this.dayOfWeek
+            };
+            return String.join(parts, ' ');
+        }
+    
+        private HourlyCron minutesFromNow(Integer minsInFuture) {
+            // Alter the minutes value to be X minutes from now
+            Integer newMins = DateTime.now().addMinutes(minsInFuture).minute();
+            this.minutes = String.valueOf(newMins);
+            return this;
+        }
     }
 }
