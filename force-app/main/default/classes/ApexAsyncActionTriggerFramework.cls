@@ -23,8 +23,8 @@ global abstract class ApexAsyncActionTriggerFramework {
 	protected ApexAsyncActionTriggerFramework() {
         this.initialize();
 	}
-
-	public abstract Type getType();
+	
+	global abstract Type getType();
 
 	public void run() {
         if (this.enabled() == false) {

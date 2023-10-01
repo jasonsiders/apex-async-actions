@@ -56,7 +56,7 @@ public class AsyncActionSchedulable implements System.Schedulable {
         Id jobId;
         Boolean isEnabled =  this.settings?.RunScheduledJob__c == true;
         if (isEnabled) {
-            String jobName = AsyncActionSchedulable.class?.name();
+            String jobName = AsyncActionSchedulable.class?.getName();
             String cronExp = Cron.hourly().minutesFromNow(this.getInterval())?.expression();
             jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
             LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
