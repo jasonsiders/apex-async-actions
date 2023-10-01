@@ -1,28 +1,125 @@
-# apxsp-async-actions
+# `apex-async-actions`
+
+Async Actions uses the power of the Salesforce platform to make it easier to launch, process, and track business-critical asynchronous tasks. Developers can define your own custom _Actions_ through Apex code, and then control and monitor its execution with declarative tools.
+
+## **Usage**
+
+Developers can create a new _Action_ in two easy steps:
+
+1. Create an Apex Class that extends the `AsyncActionProcessor` class. This defines what the Action will do when it runs.
+
+    ```java
+    global class FooCreator extends AsyncActionProcessor {
+        global override void process(List<AsyncAction__c> actions) {
+            List<Foo__c> myFoos = new List<Foo__c>();
+            for (AsyncAction__c action : actions) {
+                Id barId = (Id) action?.RelatedRecordId__c;
+                Foo__c foo = new Foo__c(Bar__c = barId);
+                myFoos?.add(foo);
+                action.Status__c = 'Completed';
+            }
+            insert myFoos;
+            update actions;
+        }
+
+        global override Type getType() {
+            return FooCreator.class;
+        }
+    }
+    ```
+
+    Read more about this class [here](TODO!).
+
+2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](TODO!).
+   ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
+
+Once an action is defined, developers can trigger its execution by creating an `AsyncAction__c` record related to the Action's class. The action can be configured to run on a trigger, or as part of a recurring scheduled job.
+
+Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, if it needs to be retried, and logs (including errors) related to the Action.
+
+Read more about the `AsyncAction__c` object [here](TODO!).
+![An AsyncAction__c record](/media/sample_async_action.png)
+
+Developers can track the status of their Actions through reports, list views, or through a custom "related list" component on records related to the Actions.
+![Async Action List View](/media/list_view.png)
+
+![The Async Action Related List Component](/media/related_list.png)
+
+---
+
+## **Features**
+
+### :eyes: View Actions Directly in Salesforce
+
+Without _Async Actions_, tracking the execution of asynchronous processes is a painful process, involving wading through mountains of Apex Debug Logs - that is, if you were lucky enough to have Debug Logs enabled for the running user when the job ran! _Async Actions_ surfaces this information in the Salesforce UI. Get information about an Action's status, and any errors or other information logged during its execution at-a-glance.
+
+### :pencil: Log Integration Makes it Easy
+
+TODO!
+
+### :muscle: Flexible Enough for Any Use Case
+
+TODO!
+
+### :v: Easy on Limits
+
+TODO!
+
+### :gear: Configurable
 
 TODO!
 
 ---
 
-## Getting Started
+## **Getting Started**
 
-Run the following command to create a scratch org:
+`apex-async-actions` is available as an, Unlocked package. Follow these instructions to get started.
 
-```
-sf org create scratch -f config/project-scratch-def.json -w 5 -y 30 -a YOUR_ORG_NAME
-```
+### Install Dependencies
 
-Once created, install the necessary dependencies referenced in [`sfdx-project.json`](sfdx-project.json) by running these commands:
+`apex-async-actions` is uses `lwc-related-list` to display Action records in the UI, and `apex-logger` for logging,. You must install the latest version of each of these packages before installing `apex-async-actions`.
 
-```
-# Get package versions
-sf package version list -p PACKAGE_ALIAS
-# Find the specified version id and install that package
-sf package install -p PACKAGE_VERSION_ID -w 5
-```
+You can view the latest versions of these packages below:
 
-Once all dependencies are installed, push the source to your target environment:
+- [lwc-related-list](https://github.com/jasonsiders/lwc-related-list/releases/latest)
+-   [apex-logger](https://github.com/jasonsiders/apex-logger/releases/latest)
+
+Run this sfdx command to install each dependent package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
 
 ```
-sf project source deploy
+sfdx package install -p PACKAGE_VERSION_ID
 ```
+
+### Install/Deploy the Package
+
+To use Async Actions in your own project, install the latest version of the package. You can find this version [here](https://github.com/jasonsiders/apex-async-actions/releases/latest).
+
+Run this command to install the package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
+
+```
+sfdx package install -p PACKAGE_VERSION_ID
+```
+
+Alternatively, if you wish to contribute to this project, you can deploy its contents directly to your org. To do this, clone the repo and then run `sfdx force source push`.
+
+### Assign Permissions
+
+You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
+
+### Configure Global Settings
+
+The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. `apex-async-actions` ships with a `Default` settings record, with some default settings. Review this custom metadata type, and make adjustments as needed to suit your use case. Read more about this custom metadata type [here](TODO!).
+
+### Enable Logging
+
+This framework uses the `apex-logger` package to post logs related to the execution of Async Actions. When properly configured, these logs will be visible from the Async Action record page.
+
+Enable logging by creating an org-wide default `LogSetting__c` custom settings record:
+
+-   Navigate to _Setup > Custom Settings > Log Setting > Manage_.
+-   Above _Default Organization Level Value_, click **_New_**.
+-   Set _Enabled_ to `true`, and _Threshold_ to `INFO`.
+
+> Note: Async Actions always run as the `Automated Process` user, which doesn't appear in Custom Settings' `User` lookup. For this reason, use the org-wide default Log Settings record to govern log visibility for Async Actions.
+
+Read more about `apex-logger` [here](https://github.com/jasonsiders/apex-logger).

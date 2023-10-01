@@ -1,8 +1,8 @@
-global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Queueable, System.Finalizer {
+global abstract class AsyncActionProcessor implements System.Queueable, System.Finalizer {
     global Set<Id> actionIds;
     global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
-    global apxsp.Logger.Options logOptions = new apxsp.Logger.Options()
-        ?.setApexClass(this.getType())
+    global Logger logger = new Logger()
+        ?.setLoggedFrom(this.getType())
         ?.setSource(AsyncActionConstants.PACKAGE_NAME);
     @TestVisible
     static Boolean allowRecursion = !Test.isRunningTest();
@@ -18,7 +18,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
             List<AsyncAction__c> actions = this.getPendingActions();
             this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
             this.process(actions); 
-            apxsp.Logger.publish();
+            this.logger?.publish();
         }
     }
 
@@ -32,7 +32,7 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
         } catch (Exception error) {
             this.handleFinalizerError(error);
         }
-		apxsp.Logger.publish();
+		this.logger?.publish();
     }
 
     // **** PUBLIC **** //
@@ -49,9 +49,8 @@ global abstract class AsyncActionProcessor implements apxsp.TypeAware, System.Qu
             // If no retries remain, or if SUDDEN_DEATH, mark the record as failed
             action.Status__c = Status.FAILED.name();
         }
-        apxsp.Logger.Options options = this.logOptions?.clone()?.setRecordId(action?.Id);
         String msg = 'Async Action failed: ' + errorObj + '\nNew Status: ' + action?.Status__c + '. Num Retries: ' + action?.Retries__c;
-        apxsp.Logger.error(msg, options); 
+        this.logger?.clone()?.setRelatedRecordId(action?.Id)?.error(msg);
     }
     
     global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {

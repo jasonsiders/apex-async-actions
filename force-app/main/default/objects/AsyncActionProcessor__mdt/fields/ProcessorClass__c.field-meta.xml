@@ -4,7 +4,7 @@
     <caseSensitive>false</caseSensitive>
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
-    <inlineHelpText>The fully qualified API name of the class which extends apxsp.AsyncActionProcessor abstract type. This should include its namespace prefix if applicable. 
+    <inlineHelpText>The fully qualified API name of the class which extends the AsyncActionProcessor abstract type. This should include its namespace prefix if applicable. 
 Ex., &quot;FooProcessor&quot;, &quot;some_namespace.BarProcessor&quot;</inlineHelpText>
     <label>Processor Class</label>
     <length>255</length>

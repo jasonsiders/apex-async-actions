@@ -1,8 +1,8 @@
 public class AsyncActionSchedulable extends apxsp.Reschedulable {
     static final Integer DEFAULT_INTERVAL = 60; 
     AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
-    static final apxsp.Logger.Options LOG_OPTIONS = new apxsp.Logger.Options()
-        ?.setApexClass(AsyncActionSchedulable.class)
+    static final Logger LOGGER = new Logger()
+        ?.setLoggedFrom(AsyncActionSchedulable.class)
         ?.setSource(AsyncActionConstants.PACKAGE_NAME);
 
     public override void doScheduledActions(System.SchedulableContext context) {
@@ -25,7 +25,7 @@ public class AsyncActionSchedulable extends apxsp.Reschedulable {
         // If the Scheduled Job is disabled, do not reschedule
         Boolean isEnabled = this.settings?.RunScheduledJob__c == true;
         Id jobId = (isEnabled) ? super.scheduleNewJob() : null;
-        apxsp.Logger.finest(this.getType() + ' enabled? ' + isEnabled + ' -> ' + jobId, LOG_OPTIONS);
+        LOGGER?.finest(this.getType() + ' enabled? ' + isEnabled + ' -> ' + jobId);
         return jobId; 
     }
 }

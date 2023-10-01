@@ -3,7 +3,7 @@ public class AsyncActionStartHandler extends apxsp.TriggerHandler {
         List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
         List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
         AsyncActionLauncher.launchJobs(actions, null);
-        apxsp.Logger.publish();
+        new Logger()?.publish();
     }
     
     public override Type getType() {

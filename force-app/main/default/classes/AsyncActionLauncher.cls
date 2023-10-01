@@ -1,6 +1,6 @@
 global abstract class AsyncActionLauncher {
-    static final apxsp.Logger.Options LOG_OPTIONS = new apxsp.Logger.Options()
-        ?.setApexClass(AsyncActionLauncher.class)
+    static final Logger LOGGER = new Logger()
+        ?.setLoggedFrom(AsyncActionLauncher.class)
         ?.setSource(AsyncActionConstants.PACKAGE_NAME);
 
     global static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
@@ -8,7 +8,7 @@ global abstract class AsyncActionLauncher {
             String processorName = config?.ProcessorClass__c; 
             return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
         } catch (Exception error) {
-            apxsp.Logger.error(error, LOG_OPTIONS);
+            LOGGER?.error(error);
             return null; 
         }
     }
@@ -68,7 +68,7 @@ global abstract class AsyncActionLauncher {
 				// Launch the job and build the results map w/the resulting job Id
 				Id jobId = System.enqueueJob(processor);
 				results?.put(processor?.getType(), jobId); 
-				apxsp.Logger.finest(processor?.getType() + ': launch() -> ' + jobId, LOG_OPTIONS);
+                LOGGER?.finest(processor?.getType() + ': launch() -> ' + jobId);
 			}
         }
         return results;

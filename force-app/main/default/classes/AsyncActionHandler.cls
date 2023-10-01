@@ -10,7 +10,7 @@ public class AsyncActionHandler extends apxsp.TriggerHandler {
         }
         // Ensure the scheduled job aligns with current configuration
         new AsyncActionScheduleEnforcer()?.enforce();
-        apxsp.Logger.publish();
+        new Logger().publish();
     }
 
     public override Type getType() {
