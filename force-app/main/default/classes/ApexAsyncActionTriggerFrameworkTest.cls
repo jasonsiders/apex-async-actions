@@ -67,6 +67,20 @@ private class ApexAsyncActionTriggerFrameworkTest {
         Assert.isFalse(ApexAsyncActionTriggerFrameworkTest.results?.isEmpty(), 'Handler was re-enabled, but did not run'); 
     }
 
+    @IsTest 
+    static void testTriggerBaseClass() {
+        // Purely for code coverage. The base class is virtual, so the defualt implementation of the operation methods do nothing
+        try {
+            for (System.TriggerOperation operation : System.TriggerOperation.values()) {
+                ApexAsyncActionTriggerFramework handler = new DummyHandler();
+                handler.operation = operation; 
+                handler?.run();
+            }
+        } catch (Exception error) {
+            Assert.fail('Error during execution of base class: ' + error);
+        }
+    }
+
     // **** HELPER **** //
     static Map<System.TriggerOperation, List<SObject>> results = new Map<System.TriggerOperation, List<SObject>>();
 
@@ -129,6 +143,12 @@ private class ApexAsyncActionTriggerFrameworkTest {
 
         public void mapOperation() {
             ApexAsyncActionTriggerFrameworkTest.results?.put(this.operation, this.triggerNew);
+        }
+    }
+
+    public class DummyHandler extends ApexAsyncActionTriggerFramework {
+        public override Type getType() {
+            return DummyHandler.class;
         }
     }
 }
