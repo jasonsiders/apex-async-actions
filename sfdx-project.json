@@ -4,11 +4,13 @@
 	"packageAliases": {
 		"apex-logger": "04tDn0000006weZIAQ",
 		"lwc-related-list": "04tDn0000011NQzIAM",
-		"apex-async-actions": "0HoDn000000kALJKA2"
+		"apex-async-actions": "0HoDn000000kALJKA2",
+		"apex-async-actions@0.1.0-1": "04tDn0000006wfhIAA"
 	},
 	"packageDirectories": [
 		{
 			"default": true,
+			"definitionFile": "config/project-scratch-def.json",
 			"dependencies": [
 				{
 					"package": "lwc-related-list"
@@ -19,7 +21,7 @@
 			],
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 0.1",
+			"versionName": "ver 0.1.0",
 			"versionNumber": "0.1.0.NEXT",
 			"versionDescription": ""
 		}
