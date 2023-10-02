@@ -1,21 +1,19 @@
 {
-	"name": "apxsp-async-actions",
-	"namespace": "apxsp",
+	"name": "apex-async-actions",
+	"namespace": "",
 	"packageAliases": {
-		"apex-starter-pack": "0HoDn000000k9sMKAQ",
-		"apxsp-logger": "0HoDn000000k9xbKAA"
+		"apex-logger": "04tDn0000006weZIAQ",
+		"lwc-related-list": "04tDn0000011NQzIAM"
 	},
 	"packageDirectories": [
 		{
 			"default": true,
 			"dependencies": [
 				{
-					"package": "apex-starter-pack",
-					"versionNumber": "0.9.0.LATEST"
+					"package": "lwc-related-list"
 				},
 				{
-					"package": "apxsp-logger",
-					"versionNumber": "0.7.0.LATEST"
+					"package": "apex-logger"
 				}
 			],
 			"path": "force-app"
