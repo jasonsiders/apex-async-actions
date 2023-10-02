@@ -47,30 +47,6 @@ Developers can track the status of their Actions through reports, list views, or
 
 ---
 
-## **Features**
-
-### :eyes: View Actions Directly in Salesforce
-
-Without _Async Actions_, tracking the execution of asynchronous processes is a painful process, involving wading through mountains of Apex Debug Logs - that is, if you were lucky enough to have Debug Logs enabled for the running user when the job ran! _Async Actions_ surfaces this information in the Salesforce UI. Get information about an Action's status, and any errors or other information logged during its execution at-a-glance.
-
-### :pencil: Log Integration Makes it Easy
-
-TODO!
-
-### :muscle: Flexible Enough for Any Use Case
-
-TODO!
-
-### :v: Easy on Limits
-
-TODO!
-
-### :gear: Configurable
-
-TODO!
-
----
-
 ## **Getting Started**
 
 `apex-async-actions` is available as an, Unlocked package. Follow these instructions to get started.
