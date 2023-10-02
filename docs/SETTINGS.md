@@ -2,6 +2,13 @@
 
 This Custom Metadata Type is used to govern common behavior across the entire framework. There can only be 1 record of this type at any given time, and it must have a `DeveloperName` of _Default_.
 
+## Creating a Settings Record
+After installing `apex-async-actions` in a new environment, you must create a Settings record. Without this, the package will not function as intended. Follow these steps:
+1. Manage Async Action Setting records, by navigating to _Setup > Custom Metadata > Async Action Settings > Manage_
+2. If no records exist, click _New_ to create a new record.
+3. Set the `Label` and `Async Action Settings Name` to _Default_, and adjust all other fields according to your preferences.
+4. Click _Save_. 
+
 ## Fields
 
 ![An Async Action Settings Record](/media/sample_settings.png)
