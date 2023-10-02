@@ -5,9 +5,17 @@ public without sharing class AsyncActionRelatedListController {
 			throw new AuraHandledException('Missing Record Id');
 		}
 		return [
-			SELECT 
-				Id, Data__c, CreatedById, CreatedBy.Name, CreatedDate, Name, 
-				ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT
+				Id,
+				Data__c,
+				CreatedById,
+				CreatedBy.Name,
+				CreatedDate,
+				Name,
+				ProcessorClass__c,
+				RelatedRecordId__c,
+				Scheduled__c,
+				Status__c
 			FROM AsyncAction__c
 			WHERE RelatedRecordId__c = :recordId
 			ORDER BY Id DESC

@@ -52,7 +52,7 @@
         <itemInstances>
             <componentInstance>
                 <componentName>logRelatedList</componentName>
-                <identifier>apxsp_logRelatedList</identifier>
+                <identifier>logRelatedList</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-b2c83b75-7acb-4cfc-b206-808ed4d5e5bc</name>

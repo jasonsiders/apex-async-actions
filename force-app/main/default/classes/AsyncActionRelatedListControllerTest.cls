@@ -35,7 +35,7 @@ private class AsyncActionRelatedListControllerTest {
 	static void shouldReturnTrueIfHasAccess() {
 		User user = AsyncActionRelatedListControllerTest.getTestUser();
 		// By default, this user does not have access. Assign them a permission set
-		AsyncActionPermissionUtils.assignPermissionSet(user); 
+		AsyncActionPermissionUtils.assignPermissionSet(user);
 
 		Test.startTest();
 		Boolean results;
@@ -64,18 +64,18 @@ private class AsyncActionRelatedListControllerTest {
 
 	// **** HELPER **** //
 	static final Integer NUM_TEST_ACTIONS = 200;
-    static final String TEST_USER_ALIAS = 'tUser123';
+	static final String TEST_USER_ALIAS = 'tUser123';
 
 	@TestSetup
 	static void setup() {
 		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
 		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
-		User user = AsyncActionRelatedListControllerTest.createTestUser(); 
+		User user = AsyncActionRelatedListControllerTest.createTestUser();
 		// Create an Account
 		Account account = new Account(Name = 'Test Account');
 		insert account;
 		// Create actions related to the Account
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(FakeProcessor.class);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(FakeProcessor.class);
 		AsyncActionProcessor processor = new FakeProcessor();
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {
@@ -85,28 +85,28 @@ private class AsyncActionRelatedListControllerTest {
 		insert actions;
 	}
 
-    static User createTestUser() {
-        Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
-        String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
-        User user = new User(
-            Alias = TEST_USER_ALIAS,
-            EmailEncodingKey = 'UTF-8',
-            Email = username,
-            FirstName = 'Test',
-            LanguageLocaleKey = 'en_US',
-            LastName = 'User',
-            LocaleSidKey = 'en_US',
-            TimeZoneSidKey = 'GMT',
-            ProfileId = standardProfile?.Id,
-            Username = username
-        );
-        // Can't mix DML ops - this is a workaround
-        User me = new User(Id = UserInfo.getUserId());
-        System.runAs(me) {
-            insert user;
-        }
-        return user;
-    }
+	static User createTestUser() {
+		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
+		User user = new User(
+			Alias = TEST_USER_ALIAS,
+			EmailEncodingKey = 'UTF-8',
+			Email = username,
+			FirstName = 'Test',
+			LanguageLocaleKey = 'en_US',
+			LastName = 'User',
+			LocaleSidKey = 'en_US',
+			TimeZoneSidKey = 'GMT',
+			ProfileId = standardProfile?.Id,
+			Username = username
+		);
+		// Can't mix DML ops - this is a workaround
+		User me = new User(Id = UserInfo.getUserId());
+		System.runAs(me) {
+			insert user;
+		}
+		return user;
+	}
 
 	static User getTestUser() {
 		return [SELECT Id FROM User WHERE Alias = :TEST_USER_ALIAS ORDER BY CreatedDate DESC LIMIT 1];
