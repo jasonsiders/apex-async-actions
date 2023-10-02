@@ -28,16 +28,16 @@ Developers can create a new _Action_ in two easy steps:
     }
     ```
 
-    Read more about this class [here](TODO!).
+    Read more about this class [here](/docs/ASYNCACTIONPROCESSOR.md).
 
-2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](TODO!).
+2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](/docs/PROCESSORMETADATA.md).
    ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
 
 Once an action is defined, developers can trigger its execution by creating an `AsyncAction__c` record related to the Action's class. The action can be configured to run on a trigger, or as part of a recurring scheduled job.
 
 Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, if it needs to be retried, and logs (including errors) related to the Action.
 
-Read more about the `AsyncAction__c` object [here](TODO!).
+Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTION.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
 
 Developers can track the status of their Actions through reports, list views, or through a custom "related list" component on records related to the Actions.
@@ -84,7 +84,7 @@ You should assign the `AsyncActionAdministrator` permission set to yourself, alo
 
 ### Configure Global Settings
 
-The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. `apex-async-actions` ships with a `Default` settings record, with some default settings. Review this custom metadata type, and make adjustments as needed to suit your use case. Read more about this custom metadata type [here](TODO!).
+The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. `apex-async-actions` ships with a `Default` settings record, with some default settings. Review this custom metadata type, and make adjustments as needed to suit your use case. Read more about this custom metadata type [here](/docs/SETTINGS.md).
 
 ### Enable Logging
 
