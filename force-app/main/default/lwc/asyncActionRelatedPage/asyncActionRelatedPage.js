@@ -18,7 +18,7 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 				return { ...row, ActionUrl, CreatedByName, CreatedByUrl };
 			});
 		} else if (error) {
-			console.error(`apxsp:asyncActionRelatedPage: ${JSON.stringify(error)}`);
+			console.error(`c:asyncActionRelatedPage: ${JSON.stringify(error)}`);
 		}
 	}
 }

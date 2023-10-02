@@ -4,31 +4,28 @@ import { refreshApex } from "@salesforce/apex";
 import { registerRefreshContainer } from "lightning/refresh";
 import ASYNC_ACTION_OBJECT from "@salesforce/schema/AsyncAction__c";
 import getActions from "@salesforce/apex/AsyncActionRelatedListController.getActions";
-import hasAccess from "@salesforce/apex/AsyncActionRelatedListController.hasAccess";
-const VIEW_ALL_COMPONENT_NAME = "asyncActionRelatedPage";
+const VIEW_ALL_COMPONENT_NAME = "c:asyncActionRelatedPage";
 
 export default class AsyncActionRelatedList extends LightningElement {
 	@api recordId;
-	allColumns = getColumns();
-	cachedAccessResponse;
-	cachedQueryResponse;
-	hasViewAccess = false;
-	isLoading = true;
 	actions = [];
 	actionObject = ASYNC_ACTION_OBJECT;
+	allColumns = getColumns();
+	cachedQueryResponse;
+	isLoading = true;
 
 	get relatedListColumns() {
 		// Display a subset of all columns for the related list page
 		// The related list page will contain the full list of columns
 		const subset = this.allColumns?.filter((column) => {
-			return column.includeInRelatedList === true;
+			return column?.includeInRelatedList === true;
 		});
 		return subset;
 	}
 
 	get viewAllComponent() {
 		return {
-			componentDef: this.viewAllComponentName,
+			componentDef: VIEW_ALL_COMPONENT_NAME,
 			attributes: {
 				columns: this.allColumns,
 				objectApiName: this.actionObject,
@@ -41,21 +38,8 @@ export default class AsyncActionRelatedList extends LightningElement {
 		};
 	}
 
-	get viewAllComponentName() {
-		const namespace = this.getNamespace() || "c";
-		return `${namespace}:${VIEW_ALL_COMPONENT_NAME}`;
-	}
-
 	connectedCallback() {
 		this.refreshContainerId = registerRefreshContainer(this, this.handleRefresh);
-	}
-
-	@wire(hasAccess)
-	checkAccess(response) {
-		this.cachedAccessResponse = response;
-		if (response?.data) {
-			this.hasViewAccess = response?.data;
-		}
 	}
 
 	@wire(getActions, { recordId: "$recordId" })
@@ -77,14 +61,8 @@ export default class AsyncActionRelatedList extends LightningElement {
 		return actions;
 	}
 
-    getNamespace() {
-		const BASE_API_NAME = "AsyncAction__c"; 
-		return ASYNC_ACTION_OBJECT?.objectApiName?.replace(BASE_API_NAME, "")?.replace("__", "");
-	}
-
 	handleRefresh() {
 		this.isLoading = true;
-		refreshApex(this.cachedAccessResponse);
 		refreshApex(this.cachedQueryResponse).then(() => {
 			this.isLoading = false;
 		});
