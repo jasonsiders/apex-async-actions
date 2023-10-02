@@ -49,11 +49,12 @@ Developers can track the status of their Actions through reports, list views, or
 
 ## **Getting Started**
 
-`apex-async-actions` is available as an, Unlocked package. Follow these instructions to get started.
+`apex-async-actions` is available as an Unlocked package. Follow these instructions to get started.
 
 ### Install Dependencies
 
-`apex-async-actions` is uses `lwc-related-list` to display Action records in the UI, and `apex-logger` for logging,. You must install the latest version of each of these packages before installing `apex-async-actions`.
+`apex-async-actions` uses the `lwc-related-list` package to display Action records in the UI, and the `apex-logger` package for logging.
+You must install the latest version of each of these packages before installing `apex-async-actions`:
 
 You can view the latest versions of these packages below:
 
