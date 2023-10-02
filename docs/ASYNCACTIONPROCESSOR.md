@@ -19,7 +19,6 @@ The abstract class handles the minutia of the framework, and leaves the actual a
 Creating your own `AsyncActionProcessor` is easy, but you must follow these requirements:
 
 -   Must extend `AsyncActionProcessor` and implement the [abstract methods](#abstract-methods). Else, the class will not compile.
--   Must be marked as `global`. Non-global classes are not visible across package boundaries. The framework will throw a runtime error if it attepmts to instantiate a non-global processor class.
 -   Must be an outer class. The framework uses the `AsyncApexJob` object to check for existing/pending queueable jobs. Its `ApexClass` field always displays the name of the _outer_ type, even if the Queueable job is an inner type. The framework will behave unpredictably if you use an inner class to extend `AsyncActionProcessor`.
 -   Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORMETADATA.md) configuration record with a corresponding `ProcessorClass__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
 

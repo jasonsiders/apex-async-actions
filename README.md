@@ -85,7 +85,7 @@ You should assign the `AsyncActionAdministrator` permission set to yourself, alo
 
 ### Configure Global Settings
 
-The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. `apex-async-actions` ships with a `Default` settings record, with some default settings. Review this custom metadata type, and make adjustments as needed to suit your use case. Read more about this custom metadata type [here](/docs/SETTINGS.md).
+The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. You will need to configure a `Default` record for the application to function. This process is documented [here](/docs/SETTINGS.md).
 
 ### Enable Logging
 
