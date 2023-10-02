@@ -5,45 +5,47 @@ global abstract class AsyncActionTriggerFramework {
 	static Set<Type> bypassed = new Set<Type>();
 
 	global static void disable(Type handlerType) {
-        AsyncActionTriggerFramework.bypassed?.add(handlerType); 
-    }
+		AsyncActionTriggerFramework.bypassed?.add(handlerType);
+	}
 
-    global static void enable(Type handlerType) {
-        AsyncActionTriggerFramework.bypassed?.remove(handlerType);
-    }
+	global static void enable(Type handlerType) {
+		AsyncActionTriggerFramework.bypassed?.remove(handlerType);
+	}
 
 	// **** MEMBER **** //
 	@TestVisible
-    protected List<SObject> triggerNew, triggerOld;
+	protected List<SObject> triggerNew,
+		triggerOld;
 	@TestVisible
-	protected Map<Id, SObject> triggerNewMap, triggerOldMap;
+	protected Map<Id, SObject> triggerNewMap,
+		triggerOldMap;
 	@TestVisible
 	protected System.TriggerOperation operation;
 
 	protected AsyncActionTriggerFramework() {
-        this.initialize();
+		this.initialize();
 	}
-	
+
 	global abstract Type getType();
 
 	public void run() {
-        if (this.enabled() == false) {
-            return;
-        } else if (this.operation == System.TriggerOperation.BEFORE_INSERT) {
-            this.beforeInsert();
-        } else if (this.operation == System.TriggerOperation.BEFORE_UPDATE) {
-            this.beforeUpdate();
-        } else if (this.operation == System.TriggerOperation.BEFORE_DELETE) {
-            this.beforeDelete();
-        } else if (this.operation == System.TriggerOperation.AFTER_INSERT) {
-            this.afterInsert();
-        } else if (this.operation == System.TriggerOperation.AFTER_UPDATE) {
-            this.afterUpdate();
-        } else if (this.operation == System.TriggerOperation.AFTER_DELETE) {
-            this.afterDelete();
-        } else if (this.operation == System.TriggerOperation.AFTER_UNDELETE) {
-            this.afterUndelete();
-        }
+		if (this.enabled() == false) {
+			return;
+		} else if (this.operation == System.TriggerOperation.BEFORE_INSERT) {
+			this.beforeInsert();
+		} else if (this.operation == System.TriggerOperation.BEFORE_UPDATE) {
+			this.beforeUpdate();
+		} else if (this.operation == System.TriggerOperation.BEFORE_DELETE) {
+			this.beforeDelete();
+		} else if (this.operation == System.TriggerOperation.AFTER_INSERT) {
+			this.afterInsert();
+		} else if (this.operation == System.TriggerOperation.AFTER_UPDATE) {
+			this.afterUpdate();
+		} else if (this.operation == System.TriggerOperation.AFTER_DELETE) {
+			this.afterDelete();
+		} else if (this.operation == System.TriggerOperation.AFTER_UNDELETE) {
+			this.afterUndelete();
+		}
 	}
 
 	// **** VIRTUAL **** //
@@ -62,14 +64,14 @@ global abstract class AsyncActionTriggerFramework {
 	protected virtual void afterUndelete() {
 	}
 
-	// **** PRIVATE **** // 
-    private Boolean enabled() {
-        Type currentType = this.getType();
+	// **** PRIVATE **** //
+	private Boolean enabled() {
+		Type currentType = this.getType();
 		return AsyncActionTriggerFramework.bypassed?.contains(currentType) == false;
 	}
 
 	private void initialize() {
-		Boolean isTrigger = Trigger.isExecuting; 
+		Boolean isTrigger = Trigger.isExecuting;
 		this.triggerNew = (isTrigger) ? Trigger.new : new List<SObject>();
 		this.triggerOld = (isTrigger) ? Trigger.old : new List<SObject>();
 		this.triggerNewMap = (isTrigger) ? Trigger.newMap : new Map<Id, SObject>();

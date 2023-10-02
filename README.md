@@ -81,7 +81,7 @@ TODO!
 
 You can view the latest versions of these packages below:
 
-- [lwc-related-list](https://github.com/jasonsiders/lwc-related-list/releases/latest)
+-   [lwc-related-list](https://github.com/jasonsiders/lwc-related-list/releases/latest)
 -   [apex-logger](https://github.com/jasonsiders/apex-logger/releases/latest)
 
 Run this sfdx command to install each dependent package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
