@@ -44,7 +44,6 @@ public class AsyncActionScheduleEnforcer {
 		}
 		this.abortJobs();
 		if (nextJob == null) {
-			LOGGER?.finest('Creating new instance of ' + AsyncActionSchedulable.class);
 			this.scheduler?.scheduleNewJob();
 		}
 	}

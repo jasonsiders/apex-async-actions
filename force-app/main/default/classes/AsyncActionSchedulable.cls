@@ -9,6 +9,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	global void execute(System.SchedulableContext context) {
 		this.doScheduledActions(context);
 		this.reschedule(context?.getTriggerId());
+		LOGGER.publish();
 	}
 
 	public void abortJobs(List<AsyncApexJob> jobs) {
@@ -16,7 +17,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
 			Id jobId = job?.CronTriggerId;
 			if (jobId != null) {
-				LOGGER?.finest('Aborting ' + jobName + ' [' + jobId + ']');
+				LOGGER?.finest('Aborting job: ' + jobName + ' [' + jobId + ']');
 				System.abortJob(jobId);
 			}
 		}
@@ -24,17 +25,17 @@ global class AsyncActionSchedulable implements System.Schedulable {
 
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
-		Id jobId;
-		Boolean isEnabled = this.settings?.RunScheduledJob__c == true;
-		if (isEnabled) {
+		if (this.settings?.RunScheduledJob__c == true) {
 			String jobName = AsyncActionSchedulable.class?.getName();
 			Integer interval = this.getInterval();
 			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
-			jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
+			Id jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
 			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
+			return jobId;
+		} else {
+			LOGGER?.finest(AsyncActionSchedulable.class + ' is not enabled');
+			return null;
 		}
-		LOGGER?.finest(AsyncActionSchedulable.class + ' enabled? ' + isEnabled + ' -> ' + jobId);
-		return jobId;
 	}
 
 	private void doScheduledActions(System.SchedulableContext context) {
