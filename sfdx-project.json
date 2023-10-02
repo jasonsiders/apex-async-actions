@@ -6,7 +6,7 @@
 		"lwc-related-list": "04tDn0000011NQzIAM",
 		"apex-async-actions": "0HoDn000000kALJKA2",
 		"apex-async-actions@0.1.0-1": "04tDn0000006wfhIAA",
-		"apex-async-actions@0.1.0-2": "04tDn0000006wfmIAA"
+		"apex-async-actions@0.2.0-1": "04tDn0000006wfrIAA"
 	},
 	"packageDirectories": [
 		{
@@ -22,8 +22,8 @@
 			],
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 0.1.0",
-			"versionNumber": "0.1.0.NEXT",
+			"versionName": "ver 0.2.0",
+			"versionNumber": "0.2.0.NEXT",
 			"versionDescription": ""
 		}
 	],
