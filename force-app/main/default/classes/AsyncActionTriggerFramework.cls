@@ -1,15 +1,15 @@
-global abstract class ApexAsyncActionTriggerFramework {
+global abstract class AsyncActionTriggerFramework {
 	// Simple TriggerHandler framework utilized by triggers in this package.
 	// Includes methods to disable triggers, if desired by callers
 	// **** STATIC **** //
 	static Set<Type> bypassed = new Set<Type>();
 
 	global static void disable(Type handlerType) {
-        ApexAsyncActionTriggerFramework.bypassed?.add(handlerType); 
+        AsyncActionTriggerFramework.bypassed?.add(handlerType); 
     }
 
     global static void enable(Type handlerType) {
-        ApexAsyncActionTriggerFramework.bypassed?.remove(handlerType);
+        AsyncActionTriggerFramework.bypassed?.remove(handlerType);
     }
 
 	// **** MEMBER **** //
@@ -20,7 +20,7 @@ global abstract class ApexAsyncActionTriggerFramework {
 	@TestVisible
 	protected System.TriggerOperation operation;
 
-	protected ApexAsyncActionTriggerFramework() {
+	protected AsyncActionTriggerFramework() {
         this.initialize();
 	}
 	
@@ -65,7 +65,7 @@ global abstract class ApexAsyncActionTriggerFramework {
 	// **** PRIVATE **** // 
     private Boolean enabled() {
         Type currentType = this.getType();
-		return ApexAsyncActionTriggerFramework.bypassed?.contains(currentType) == false;
+		return AsyncActionTriggerFramework.bypassed?.contains(currentType) == false;
 	}
 
 	private void initialize() {

@@ -5,8 +5,8 @@ private class AsyncActionSchedulableTest {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         settings.RunScheduledJob__c = true; 
         settings.ScheduledJobInterval__c = 15;
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-        AsyncActionProcessor processor = new MockProcessor();
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+        AsyncActionProcessor processor = new MockAsyncActionProcessor();
         insert processor?.initAction(null);
 
         new AsyncActionSchedulable().execute(null);
@@ -18,7 +18,7 @@ private class AsyncActionSchedulableTest {
             String className = job?.ApexClass?.Name;
             jobsByClassName?.put(className, job);
         }
-        AsyncApexJob processorJob = jobsByClassName?.get('MockProcessor');
+        AsyncApexJob processorJob = jobsByClassName?.get('MockAsyncActionProcessor');
         Assert.isNotNull(processorJob, 'Processor job was not launched');
         AsyncApexJob scheduledJob = jobsByClassName?.get('AsyncActionSchedulable');
         Assert.isNotNull(scheduledJob, 'Job was not rescheduled'); 
@@ -32,8 +32,8 @@ private class AsyncActionSchedulableTest {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         settings.RunScheduledJob__c = false; // The scheduled job should do nothing
         settings.ScheduledJobInterval__c = 15;
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-        AsyncActionProcessor processor = new MockProcessor();
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+        AsyncActionProcessor processor = new MockAsyncActionProcessor();
         insert processor?.initAction(null);
 
         new AsyncActionSchedulable().execute(null);

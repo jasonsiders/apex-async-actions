@@ -1,11 +1,12 @@
-public class AsyncActionSchedulable implements System.Schedulable {
+global class AsyncActionSchedulable implements System.Schedulable {
+    static final String HOURLY = '0 0 * * * ?';
     static final Integer DEFAULT_INTERVAL = 60; 
-    AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
     static final Logger LOGGER = new Logger()
         ?.setLoggedFrom(AsyncActionSchedulable.class)
         ?.setSource(AsyncActionConstants.PACKAGE_NAME);
+    AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
 
-    public void execute(System.SchedulableContext context) {
+    global void execute(System.SchedulableContext context) {
         this.doScheduledActions(context);
         this.reschedule(context?.getTriggerId());
     }
@@ -28,7 +29,7 @@ public class AsyncActionSchedulable implements System.Schedulable {
         if (isEnabled) {
             String jobName = AsyncActionSchedulable.class?.getName();
             Integer interval = this.getInterval();
-            String cronExp = new HourlyCron()?.minutesFromNow(interval)?.expression();
+            String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
             jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
             LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
         }
@@ -67,13 +68,24 @@ public class AsyncActionSchedulable implements System.Schedulable {
     }
 
     // **** INNER **** //
-    private class HourlyCron {
-        private String seconds = '0';
-        private String minutes = '0';
-        private String hours = '*';
-        private String dayOfMonth = '*';
-        private String month = '*';
-        private String dayOfWeek = '?';
+    private class Cron {
+        private String seconds;
+        private String minutes;
+        private String hours;
+        private String dayOfMonth;
+        private String month;
+        private String dayOfWeek;
+
+        private Cron(String exp) {
+            // Expsting exp to be a valid Cron string
+            List<String> parts = exp?.split(' ');
+            this.seconds = parts[0];
+            this.minutes = parts[1];
+            this.hours = parts[2];
+            this.dayOfMonth = parts[3];
+            this.month = parts[4];
+            this.dayOfWeek = parts[5];
+        }
 
         private String expression() {
             List<String> parts = new List<String>{
@@ -87,7 +99,7 @@ public class AsyncActionSchedulable implements System.Schedulable {
             return String.join(parts, ' ');
         }
     
-        private HourlyCron minutesFromNow(Integer minsInFuture) {
+        private Cron minutesFromNow(Integer minsInFuture) {
             // Alter the minutes value to be X minutes from now
             Integer newMins = DateTime.now().addMinutes(minsInFuture).minute();
             this.minutes = String.valueOf(newMins);

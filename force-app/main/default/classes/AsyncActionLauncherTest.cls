@@ -2,14 +2,14 @@
 private class AsyncActionLauncherTest {
     @IsTest 
     static void shouldCreateAValidProcessor() {
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 
         Test.startTest();
         AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);
         Test.stopTest();
 
         Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
-        Assert.isInstanceOfType(processor, MockProcessor.class, 'Wrong processor type generated');
+        Assert.isInstanceOfType(processor, MockAsyncActionProcessor.class, 'Wrong processor type generated');
     }
 
     @IsTest 
@@ -25,10 +25,10 @@ private class AsyncActionLauncherTest {
     
     @IsTest 
     static void shouldLaunchAllJobs() {
-        Type processorType = MockProcessor.class;
+        Type processorType = MockAsyncActionProcessor.class;
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
-        MockProcessor processor = new MockProcessor();
+        MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null); 
         insert action; 
 
@@ -42,10 +42,10 @@ private class AsyncActionLauncherTest {
 
     @IsTest 
     static void shouldLaunchSpecifiedJobs() {
-        Type processorType = MockProcessor.class;
+        Type processorType = MockAsyncActionProcessor.class;
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
-        MockProcessor processor = new MockProcessor();
+        MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null); 
         insert action;  
 
@@ -77,11 +77,11 @@ private class AsyncActionLauncherTest {
 
     @IsTest 
     static void shouldNotLaunchIfDisabled() {
-        Type processorType = MockProcessor.class;
+        Type processorType = MockAsyncActionProcessor.class;
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
         config.Enabled__c = false;
-        MockProcessor processor = new MockProcessor();
+        MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null); 
         insert action;  
 
@@ -95,8 +95,8 @@ private class AsyncActionLauncherTest {
     @IsTest 
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-		AsyncActionProcessor processor = new MockProcessor();
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
@@ -107,13 +107,13 @@ private class AsyncActionLauncherTest {
 		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(results?.get(MockProcessor.class), 'A job was launched despite hitting queueable limits');
+		Assert.isNull(results?.get(MockAsyncActionProcessor.class), 'A job was launched despite hitting queueable limits');
 	}
 
 	@IsTest 
 	static void shouldNotLaunchWithoutPendingActions() {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Enabled__c = false;
 		// No actions inserted!
 		
@@ -121,14 +121,14 @@ private class AsyncActionLauncherTest {
 		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(results?.get(MockProcessor.class), 'A job was launched despite having no data');
+		Assert.isNull(results?.get(MockAsyncActionProcessor.class), 'A job was launched despite having no data');
 	} 
 
 	@IsTest 
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-		AsyncActionProcessor processor = new MockProcessor();
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
 		Id duplicateJobId = System.enqueueJob(processor); 
 
@@ -136,15 +136,15 @@ private class AsyncActionLauncherTest {
 		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
 		Test.stopTest();
 
-		Assert.isNull(results?.get(MockProcessor.class), 'A duplicate job was launched');
+		Assert.isNull(results?.get(MockAsyncActionProcessor.class), 'A duplicate job was launched');
 	} 
 
 	@IsTest 
 	static void shouldIgnoreCurrentJobId() {
 		// In practice, this should only ever be used from within an existing job
 		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-		AsyncActionProcessor processor = new MockProcessor();
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
 		Id originalJobId = System.enqueueJob(processor); 
 
@@ -152,6 +152,6 @@ private class AsyncActionLauncherTest {
 		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, originalJobId);
 		Test.stopTest();
 
-		Assert.isNotNull(results?.get(MockProcessor.class), 'A new job was not launched from the original job');
+		Assert.isNotNull(results?.get(MockAsyncActionProcessor.class), 'A new job was not launched from the original job');
 	}
 }

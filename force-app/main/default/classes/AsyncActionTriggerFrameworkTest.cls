@@ -1,70 +1,70 @@
 @IsTest 
-private class ApexAsyncActionTriggerFrameworkTest {
+private class AsyncActionTriggerFrameworkTest {
     @IsTest 
     static void shouldRunBeforeInsert() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_INSERT);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_INSERT);
     }
 
     @IsTest 
     static void shouldRunBeforeUpdate() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_UPDATE);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_UPDATE);
     }
 
     @IsTest 
     static void shouldRunBeforeDelete() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_DELETE);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_DELETE);
     }
 
     @IsTest 
     static void shouldRunAfterInsert() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_INSERT);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_INSERT);
     }
 
     @IsTest 
     static void shouldRunAfterUpdate() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_UPDATE);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_UPDATE);
     }
 
     @IsTest 
     static void shouldRunAfterDelete() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_DELETE);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_DELETE);
     }
 
     @IsTest 
     static void shouldRunAfterUndelete() {
-        ApexAsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_UNDELETE);
+        AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.AFTER_UNDELETE);
     }
 
     @IsTest 
     static void shouldNotRunIfBypassed() {
-        List<Account> accounts = ApexAsyncActionTriggerFrameworkTest.generateRecords();
-        ApexAsyncActionTriggerFramework handler = new ExampleHandler();
+        List<Account> accounts = AsyncActionTriggerFrameworkTest.generateRecords();
+        AsyncActionTriggerFramework handler = new ExampleHandler();
         handler.operation = System.TriggerOperation.BEFORE_INSERT;
         handler.triggerNew = accounts;
-        ApexAsyncActionTriggerFramework.disable(ExampleHandler.class);
+        AsyncActionTriggerFramework.disable(ExampleHandler.class);
 
         Test.startTest();
         handler?.run();
         Test.stopTest();
 
-        Assert.isTrue(ApexAsyncActionTriggerFrameworkTest.results?.isEmpty(), 'Disabled handler ran anyways'); 
+        Assert.isTrue(AsyncActionTriggerFrameworkTest.results?.isEmpty(), 'Disabled handler ran anyways'); 
     }
 
     @IsTest 
     static void shouldRunIfReEnabled() {
-        ApexAsyncActionTriggerFramework.disable(ExampleHandler.class);
-        List<Account> accounts = ApexAsyncActionTriggerFrameworkTest.generateRecords();
-        ApexAsyncActionTriggerFramework handler = new ExampleHandler();
+        AsyncActionTriggerFramework.disable(ExampleHandler.class);
+        List<Account> accounts = AsyncActionTriggerFrameworkTest.generateRecords();
+        AsyncActionTriggerFramework handler = new ExampleHandler();
         handler.operation = System.TriggerOperation.BEFORE_INSERT;
         handler.triggerNew = accounts;
         // Re-enabling the handler will make it eligible to be run
-        ApexAsyncActionTriggerFramework.enable(ExampleHandler.class);
+        AsyncActionTriggerFramework.enable(ExampleHandler.class);
 
         Test.startTest();
         handler?.run();
         Test.stopTest();
 
-        Assert.isFalse(ApexAsyncActionTriggerFrameworkTest.results?.isEmpty(), 'Handler was re-enabled, but did not run'); 
+        Assert.isFalse(AsyncActionTriggerFrameworkTest.results?.isEmpty(), 'Handler was re-enabled, but did not run'); 
     }
 
     @IsTest 
@@ -72,7 +72,7 @@ private class ApexAsyncActionTriggerFrameworkTest {
         // Purely for code coverage. The base class is virtual, so the defualt implementation of the operation methods do nothing
         try {
             for (System.TriggerOperation operation : System.TriggerOperation.values()) {
-                ApexAsyncActionTriggerFramework handler = new DummyHandler();
+                AsyncActionTriggerFramework handler = new DummyHandler();
                 handler.operation = operation; 
                 handler?.run();
             }
@@ -93,8 +93,8 @@ private class ApexAsyncActionTriggerFrameworkTest {
     }
 
     static void testOperation(System.TriggerOperation operation) {
-        List<Account> accounts = ApexAsyncActionTriggerFrameworkTest.generateRecords();
-        ApexAsyncActionTriggerFramework handler = new ExampleHandler();
+        List<Account> accounts = AsyncActionTriggerFrameworkTest.generateRecords();
+        AsyncActionTriggerFramework handler = new ExampleHandler();
         handler.operation = operation;
         handler.triggerNew = accounts;
 
@@ -102,13 +102,13 @@ private class ApexAsyncActionTriggerFrameworkTest {
         handler?.run();
         Test.stopTest();
 
-        Assert.isTrue(ApexAsyncActionTriggerFrameworkTest.results?.containsKey(operation), 'Did not run ' + operation); 
-        Assert.areEqual(1, ApexAsyncActionTriggerFrameworkTest.results?.size(), 'Wrong # of operations processed'); 
-        Assert.areEqual(accounts?.size(), ApexAsyncActionTriggerFrameworkTest.results?.get(operation)?.size(), 'Wrong # of triggerNew records');
+        Assert.isTrue(AsyncActionTriggerFrameworkTest.results?.containsKey(operation), 'Did not run ' + operation); 
+        Assert.areEqual(1, AsyncActionTriggerFrameworkTest.results?.size(), 'Wrong # of operations processed'); 
+        Assert.areEqual(accounts?.size(), AsyncActionTriggerFrameworkTest.results?.get(operation)?.size(), 'Wrong # of triggerNew records');
     }
 
     // **** INNER **** //
-    public class ExampleHandler extends ApexAsyncActionTriggerFramework {
+    public class ExampleHandler extends AsyncActionTriggerFramework {
         public override Type getType() {
             return ExampleHandler.class;
         }
@@ -142,11 +142,11 @@ private class ApexAsyncActionTriggerFrameworkTest {
         }
 
         public void mapOperation() {
-            ApexAsyncActionTriggerFrameworkTest.results?.put(this.operation, this.triggerNew);
+            AsyncActionTriggerFrameworkTest.results?.put(this.operation, this.triggerNew);
         }
     }
 
-    public class DummyHandler extends ApexAsyncActionTriggerFramework {
+    public class DummyHandler extends AsyncActionTriggerFramework {
         public override Type getType() {
             return DummyHandler.class;
         }

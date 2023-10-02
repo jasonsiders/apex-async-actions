@@ -1,5 +1,5 @@
 @IsTest
-public class MockProcessor extends AsyncActionProcessor {
+public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
@@ -37,7 +37,7 @@ public class MockProcessor extends AsyncActionProcessor {
 	}
 
 	public virtual override Type getType() {
-		return MockProcessor.class;
+		return MockAsyncActionProcessor.class;
 	}
 
 	private Map<String, Object> getData(AsyncAction__c action) {

@@ -3,30 +3,30 @@ private class AsyncActionHandlerTest {
     @IsTest 
     static void shouldLaunchJobsIfTriggerEnabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
         config.RunOnInsert__c = true;
-        AsyncActionProcessor processor = new MockProcessor();
+        AsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null);
         
         insert action;
         Test.getEventBus().deliver();
 
-        List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockProcessor' LIMIT 1];
+        List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor' LIMIT 1];
         Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert'); 
     }
 
     @IsTest 
     static void shouldNotLaunchJobsIfTriggerDisabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
         config.RunOnInsert__c = false;
-        AsyncActionProcessor processor = new MockProcessor();
+        AsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null);
         
         insert action;
         Test.getEventBus().deliver();
 
-        List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockProcessor' LIMIT 1];
+        List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor' LIMIT 1];
         Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched on insert'); 
     }
 
@@ -35,8 +35,8 @@ private class AsyncActionHandlerTest {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         settings.RunScheduledJob__c = true;
         settings.ScheduledJobInterval__c = 15;
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-        AsyncActionProcessor processor = new MockProcessor();
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+        AsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null);
         
         insert action;
@@ -50,8 +50,8 @@ private class AsyncActionHandlerTest {
     static void shouldScheduleIfDisabled() {
         AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
         settings.RunScheduledJob__c = false;
-        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockProcessor.class);
-        AsyncActionProcessor processor = new MockProcessor();
+        AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+        AsyncActionProcessor processor = new MockAsyncActionProcessor();
         AsyncAction__c action = processor?.initAction(null);
         
         insert action;
