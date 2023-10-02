@@ -28,16 +28,16 @@ Developers can create a new _Action_ in two easy steps:
     }
     ```
 
-    Read more about this class [here](TODO!).
+    Read more about this class [here](/docs/ASYNCACTIONPROCESSOR.md).
 
-2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](TODO!).
+2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](/docs/PROCESSORMETADATA.md).
    ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
 
 Once an action is defined, developers can trigger its execution by creating an `AsyncAction__c` record related to the Action's class. The action can be configured to run on a trigger, or as part of a recurring scheduled job.
 
 Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, if it needs to be retried, and logs (including errors) related to the Action.
 
-Read more about the `AsyncAction__c` object [here](TODO!).
+Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTION.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
 
 Developers can track the status of their Actions through reports, list views, or through a custom "related list" component on records related to the Actions.
@@ -47,37 +47,14 @@ Developers can track the status of their Actions through reports, list views, or
 
 ---
 
-## **Features**
-
-### :eyes: View Actions Directly in Salesforce
-
-Without _Async Actions_, tracking the execution of asynchronous processes is a painful process, involving wading through mountains of Apex Debug Logs - that is, if you were lucky enough to have Debug Logs enabled for the running user when the job ran! _Async Actions_ surfaces this information in the Salesforce UI. Get information about an Action's status, and any errors or other information logged during its execution at-a-glance.
-
-### :pencil: Log Integration Makes it Easy
-
-TODO!
-
-### :muscle: Flexible Enough for Any Use Case
-
-TODO!
-
-### :v: Easy on Limits
-
-TODO!
-
-### :gear: Configurable
-
-TODO!
-
----
-
 ## **Getting Started**
 
-`apex-async-actions` is available as an, Unlocked package. Follow these instructions to get started.
+`apex-async-actions` is available as an Unlocked package. Follow these instructions to get started.
 
 ### Install Dependencies
 
-`apex-async-actions` is uses `lwc-related-list` to display Action records in the UI, and `apex-logger` for logging,. You must install the latest version of each of these packages before installing `apex-async-actions`.
+`apex-async-actions` uses the `lwc-related-list` package to display Action records in the UI, and the `apex-logger` package for logging.
+You must install the latest version of each of these packages before installing `apex-async-actions`:
 
 You can view the latest versions of these packages below:
 
@@ -108,7 +85,7 @@ You should assign the `AsyncActionAdministrator` permission set to yourself, alo
 
 ### Configure Global Settings
 
-The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. `apex-async-actions` ships with a `Default` settings record, with some default settings. Review this custom metadata type, and make adjustments as needed to suit your use case. Read more about this custom metadata type [here](TODO!).
+The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. `apex-async-actions` ships with a `Default` settings record, with some default settings. Review this custom metadata type, and make adjustments as needed to suit your use case. Read more about this custom metadata type [here](/docs/SETTINGS.md).
 
 ### Enable Logging
 
