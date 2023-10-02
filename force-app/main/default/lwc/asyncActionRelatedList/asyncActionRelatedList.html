@@ -1,12 +1,10 @@
 <template>
-	<div lwc:if={hasViewAccess}>
-		<c-related-list
-			columns={relatedListColumns}
-			is-loading={isLoading}
-			object-api-name={actionObject}
-			records={actions}
-			view-all-component={viewAllComponent}
-		>
-		</c-related-list>
-	</div>
+	<c-related-list
+		columns={relatedListColumns}
+		is-loading={isLoading}
+		object-api-name={actionObject}
+		records={actions}
+		view-all-component={viewAllComponent}
+	>
+	</c-related-list>
 </template>

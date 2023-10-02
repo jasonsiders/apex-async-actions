@@ -146,7 +146,7 @@
     <allowInChatterGroups>true</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <description>Represents a single Asynchronous Action, to be processed by an instance of apxsp.AsyncActionProcessor.
+    <description>Represents a single Asynchronous Action, to be processed by an instance of the AsyncActionProcessor class.
 Usually linked to a single parent record, can also be flexibly linked to other data.
 Stores information about the request, including its status and available retries.</description>
     <enableActivities>false</enableActivities>

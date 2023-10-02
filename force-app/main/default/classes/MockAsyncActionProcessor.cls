@@ -1,5 +1,5 @@
 @IsTest
-public class MockProcessor extends AsyncActionProcessor {
+public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
@@ -9,7 +9,7 @@ public class MockProcessor extends AsyncActionProcessor {
 	public virtual override void process(List<AsyncAction__c> actions) {
 		List<Case> cases = new List<Case>();
 		if (this.pathType == Path.JOB_ERROR) {
-			throw new System.DmlException('This is a fake exception'); 
+			throw new System.DmlException('This is a fake exception');
 		} else if (this.pathType == Path.FAIL) {
 			this.fail(actions, this.retryBehavior, 'This is a test error');
 		} else {
@@ -30,14 +30,14 @@ public class MockProcessor extends AsyncActionProcessor {
 	}
 
 	public override void finalize(System.FinalizerContext context) {
-		super.finalize(context); 
+		super.finalize(context);
 		if (this.pathType == Path.FINALIZER_ERROR) {
 			throw new System.DmlException('This is a fake exception');
 		}
 	}
 
 	public virtual override Type getType() {
-		return MockProcessor.class;
+		return MockAsyncActionProcessor.class;
 	}
 
 	private Map<String, Object> getData(AsyncAction__c action) {
@@ -45,7 +45,7 @@ public class MockProcessor extends AsyncActionProcessor {
 		return data != null ? (Map<String, Object>) JSON.deserializeUntyped(action?.Data__c) : null;
 	}
 
-	// **** INNER **** // 
+	// **** INNER **** //
 	public enum Path {
 		FAIL,
 		FINALIZER_ERROR,
