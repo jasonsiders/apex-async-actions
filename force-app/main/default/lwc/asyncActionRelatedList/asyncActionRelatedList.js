@@ -9,10 +9,11 @@ const VIEW_ALL_COMPONENT_NAME = "c:asyncActionRelatedPage";
 export default class AsyncActionRelatedList extends LightningElement {
 	@api recordId;
 	actions = [];
-	actionObject = ASYNC_ACTION_OBJECT;
+	actionObject = ASYNC_ACTION_OBJECT?.objectApiName;
 	allColumns = getColumns();
 	cachedQueryResponse;
 	isLoading = true;
+	refreshContainerId;
 
 	get relatedListColumns() {
 		// Display a subset of all columns for the related list page
@@ -32,14 +33,20 @@ export default class AsyncActionRelatedList extends LightningElement {
 				recordId: this.recordId
 			},
 			tabInfo: {
-				iconName: "custom:custom25",
+				iconName: "custom:custom25", 
 				title: "Async Actions"
 			}
 		};
 	}
 
 	connectedCallback() {
-		this.refreshContainerId = registerRefreshContainer(this, this.handleRefresh);
+		try {
+			// Note: If LWS is not enabled, this will thrown an error. This can/should be enabled in Session Settings
+			// if using Lightning Locker, will not be able to handle incoming refreshes.
+			this.refreshContainerId = registerRefreshContainer(this, this.handleRefresh);	
+		} catch (error) {
+			console.error(`c:asyncActionRelatedList: ${error}`);
+		} 
 	}
 
 	@wire(getActions, { recordId: "$recordId" })
@@ -62,9 +69,10 @@ export default class AsyncActionRelatedList extends LightningElement {
 	}
 
 	handleRefresh() {
+		console.log(`@jason: handleRefresh()`);
 		this.isLoading = true;
 		refreshApex(this.cachedQueryResponse).then(() => {
 			this.isLoading = false;
 		});
-	}
+	} 
 }
