@@ -8,6 +8,7 @@ private class RunAsyncActionNowControllerTest {
 
         Test.startTest();
         RunAsyncActionNowController.runAction(action?.Id);
+        Test.getEventBus().deliver();
         Test.stopTest();
 
         action = RunAsyncActionNowControllerTest.getAction(); 
@@ -25,6 +26,7 @@ private class RunAsyncActionNowControllerTest {
 
         Test.startTest();
         RunAsyncActionNowController.runAction(action?.Id);
+        Test.getEventBus().deliver();
         Test.stopTest();
 
         action = RunAsyncActionNowControllerTest.getAction(); 
