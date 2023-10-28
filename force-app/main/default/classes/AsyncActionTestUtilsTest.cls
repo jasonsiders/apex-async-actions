@@ -34,6 +34,20 @@ private class AsyncActionTestUtilsTest {
 		);
 	}
 
+	@IsTest 
+	static void shouldInitScheduledJobSettings() {
+		String jobName = 'My_Job_123';
+
+		Test.startTest();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings(jobName);
+		Test.stopTest();
+
+		Assert.isNotNull(jobSettings, 'AsyncActionScheduledJob__mdt');
+		Assert.areEqual(jobName, jobSettings?.DeveloperName, 'Wrong DeveloperName');
+		List<AsyncActionScheduledJob__mdt> allJobSettings = AsyncActionScheduledJob__mdt.getAll().values();
+		Assert.areEqual(1, allJobSettings?.size(), 'Wrong # of Job Settings mocked');
+	}
+
 	@IsTest
 	static void shouldMockGlobalSettings() {
 		AsyncActionSetting__mdt mock = new AsyncActionSetting__mdt(DeveloperName = 'Testing 123');
@@ -62,6 +76,24 @@ private class AsyncActionTestUtilsTest {
 		for (AsyncActionProcessor__mdt processor : allProcessors) {
 			String processorName = processor?.ProcessorClass__c;
 			Assert.isTrue(processorNames?.contains(processorName), processorName + ' was not mapped');
+		}
+	}
+
+	@IsTest 
+	static void shouldMockScheduledJobSettings() {
+		Set<String> jobNames = new Set<String>{ 'job_1', 'job_2', 'job_3' };
+
+		Test.startTest();
+		for (String jobName : jobNames) {
+			AsyncActionScheduledJob__mdt job = new AsyncActionScheduledJob__mdt(DeveloperName = jobName);
+			AsyncActionTestUtils.mockScheduledJobSettings(job);
+		}
+		Test.stopTest();
+
+		for (String jobName : jobNames) {
+			AsyncActionScheduledJob__mdt job = AsyncActionScheduledJobService.get(jobName);
+			Assert.isNotNull(job, 'AsyncActionScheduledJob__mdt');
+			Assert.areEqual(jobName, job?.DeveloperName);
 		}
 	}
 

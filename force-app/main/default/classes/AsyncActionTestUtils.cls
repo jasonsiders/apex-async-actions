@@ -28,6 +28,18 @@ global class AsyncActionTestUtils {
 		return processor;
 	}
 
+	global static AsyncActionScheduledJob__mdt initScheduledJobSettings(String jobName) {
+		// Instantiates and returns a processor settings object w/default values for testing
+		AsyncActionScheduledJob__mdt settings = new AsyncActionScheduledJob__mdt(
+			DeveloperName = jobName,
+			Enabled__c = true, 
+			Interval__c = 60,
+			MasterLabel = jobName
+		); 
+		AsyncActionTestUtils.mockScheduledJobSettings(settings);
+		return settings;
+	}
+
 	global static void mockGlobalSettings(AsyncActionSetting__mdt settings) {
 		// Gives @IsTest access to inject settings records to external callers
 		AsyncActionSettingService.settings = settings;
@@ -40,6 +52,15 @@ global class AsyncActionTestUtils {
 			: new Map<String, AsyncActionProcessor__mdt>();
 		String processorName = processor?.ProcessorClass__c;
 		AsyncActionProcessorService.processors?.put(processorName, processor);
+	}
+
+	global static void mockScheduledJobSettings(AsyncActionScheduledJob__mdt jobSettings) {
+		// Gives @IsTest access to inject job settings records to external callers
+		AsyncActionScheduledJobService.settings = (AsyncActionScheduledJobService.settings != null)
+			? AsyncActionScheduledJobService.settings
+			: new Map<String, AsyncActionScheduledJob__mdt>();
+		String jobName = jobSettings?.DeveloperName;
+		AsyncActionScheduledJobService.settings?.put(jobName, jobSettings);
 	}
 
 	global static void setAllowRecursion(Boolean allowRecursion) {
