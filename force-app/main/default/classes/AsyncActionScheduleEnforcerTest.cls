@@ -47,104 +47,68 @@ private class AsyncActionScheduleEnforcerTest {
 		}
 	}
 
-	/* @IsTest
-	static void shouldRescheduleJobsIfNoneInRange() {
-		Integer interval = 15;
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
-		settings.Enabled__c = true;
-		settings.Interval__c = Decimal.valueOf(interval);
-		// Schedule a job for > 15 mins in the future
-		Integer nextMin = DateTime.now().addMinutes(20).minute();
-		String originalJobName = 'OriginalJob';
-		String cronExp = '0 ' + nextMin + ' * * * ?';
-		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable(settings));
-
-		new AsyncActionScheduleEnforcer().enforce();
-
-		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(1, jobs?.size(), 'Wrong # of scheduled jobs');
-		AsyncApexJob job = jobs[0];
-		Assert.areNotEqual(originalJobName, job?.CronTrigger?.CronJobDetail?.Name, 'New job did not replace original');
-		Assert.areEqual(
-			DateTime.now().addMinutes(interval).minute(),
-			job?.CronTrigger?.NextFireTime?.minute(),
-			'Wrong NextFireTime'
-		);
-	}
-
-	@IsTest
+	@IsTest 
 	static void shouldAbortJobsIfDisabled() {
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
-		settings.Enabled__c = false;
-		// Schedule a pre-existing job
-		Integer nextMin = DateTime.now().addMinutes(20).minute();
-		String originalJobName = 'OriginalJob';
-		String cronExp = '0 ' + nextMin + ' * * * ?';
-		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable(settings));
+		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
+		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
+			String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName; 
+			Integer nextMin = DateTime.now().addMinutes(jobSetting?.Interval__c?.intValue())?.minute() - 1; 
+			String cronExp = '0 ' + nextMin + ' * * * ?';
+			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
+			Id jobId = System.schedule(jobName, cronExp, job);
+		}
+		// Disable one of the jobs
+		AsyncActionScheduledJob__mdt disabledJob = jobSettings?.values()[0];
+		disabledJob.Enabled__c = false;
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(0, jobs?.size(), 'Wrong # of scheduled jobs');
+		Assert.areEqual(jobSettings?.size() - 1, jobs?.size(), 'Wrong # of Scheduled Jobs'); 
+		for (AsyncApexJob job : jobs) {
+			String key = job?.CronTrigger?.CronJobDetail?.Name?.replace(AsyncActionSchedulable.JOB_PREFIX, ''); 
+			Assert.areNotEqual(disabledJob?.DeveloperName, key, 'Disabled job was scheduled'); 
+		}
 	}
 
-	@IsTest
+	@IsTest 
 	static void shouldDoNothingIfNoJobsAndDisabled() {
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
-		settings.Enabled__c = false;
+		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
+		AsyncActionScheduledJob__mdt disabledJob = jobSettings?.values()[0];
+		disabledJob.Enabled__c = false;
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(0, jobs?.size(), 'Wrong # of scheduled jobs');
+		Assert.areEqual(jobSettings?.size() - 1, jobs?.size(), 'Wrong # of Scheduled Jobs'); 
+		for (AsyncApexJob job : jobs) {
+			String key = job?.CronTrigger?.CronJobDetail?.Name?.replace(AsyncActionSchedulable.JOB_PREFIX, ''); 
+			Assert.areNotEqual(disabledJob?.DeveloperName, key, 'Disabled job was scheduled'); 
+		}
 	}
 
-	@IsTest
+	@IsTest 
 	static void shouldDoNothingIfScheduledJobExistsInRange() {
-		Integer interval = 15;
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
-		settings.Enabled__c = true;
-		settings.Interval__c = Decimal.valueOf(interval);
-		// Schedule a job for < 15 mins in the future
-		String originalJobName = 'OriginalJob';
-		Integer nextMin = DateTime.now().addMinutes(10).minute();
-		String cronExp = '0 ' + nextMin + ' * * * ?';
-		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable(settings));
+		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
+		Set<Id> existingJobIds = new Set<Id>();
+		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
+			String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName; 
+			Integer nextMin = DateTime.now().addMinutes(jobSetting?.Interval__c?.intValue())?.minute();
+			nextMin = nextMin - 2; // In range!
+			String cronExp = '0 ' + nextMin + ' * * * ?';
+			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
+			Id jobId = System.schedule(jobName, cronExp, job);
+			existingJobIds?.add(jobId);
+		}
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(1, jobs?.size(), 'Wrong # of scheduled jobs');
-		AsyncApexJob job = jobs[0];
-		Assert.areEqual(nextMin, job?.CronTrigger?.NextFireTime?.minute(), 'Wrong NextFireTime');
-		Assert.areEqual(originalJobName, job?.CronTrigger?.CronJobDetail?.Name, 'Job was rescheduled');
+		Assert.areEqual(jobSettings?.size(), jobs?.size(), 'Wrong # of Scheduled Jobs'); 
+		for (AsyncApexJob job : jobs) {
+			Assert.isTrue(existingJobIds?.contains(job?.CronTriggerId), 'Did not keep existing job');
+		}
 	}
-
-	@IsTest
-	static void shouldRemoveMultipleDuplicateJobs() {
-		Integer interval = 15;
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
-		settings.Enabled__c = true;
-		settings.Interval__c = Decimal.valueOf(interval);
-		// Schedule multiple jobs for < 15 mins in the future
-		String jobName1 = 'Job1';
-		Integer nextMin1 = DateTime.now().addMinutes(10).minute();
-		String cronExp1 = '0 ' + nextMin1 + ' * * * ?';
-		System.schedule(jobName1, cronExp1, new AsyncActionSchedulable(settings));
-		String jobName2 = 'Job2';
-		Integer nextMin2 = DateTime.now().addMinutes(5).minute();
-		String cronExp2 = '0 ' + nextMin2 + ' * * * ?';
-		System.schedule(jobName2, cronExp2, new AsyncActionSchedulable(settings));
-
-		new AsyncActionScheduleEnforcer().enforce();
-
-		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(1, jobs?.size(), 'Wrong # of scheduled jobs');
-		// Since multiple exist, abort all but the one for the earliest time
-		AsyncApexJob job = jobs[0];
-		Assert.areEqual(nextMin2, job?.CronTrigger?.NextFireTime?.minute(), 'Wrong NextFireTime');
-		Assert.areEqual(jobName2, job?.CronTrigger?.CronJobDetail?.Name, 'Wrong Job was kept');
-	} */
 
 	// **** HELPER **** //
 	static List<AsyncApexJob> getScheduledJobs() {
