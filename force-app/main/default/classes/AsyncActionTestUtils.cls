@@ -32,7 +32,7 @@ global class AsyncActionTestUtils {
 		// Instantiates and returns a processor settings object w/default values for testing
 		AsyncActionScheduledJob__mdt settings = new AsyncActionScheduledJob__mdt(
 			DeveloperName = jobName,
-			Enabled__c = true, 
+			Enabled__c = false, 
 			Interval__c = 60,
 			MasterLabel = jobName
 		); 
