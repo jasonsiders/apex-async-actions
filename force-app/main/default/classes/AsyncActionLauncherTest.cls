@@ -26,7 +26,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldLaunchAllJobs() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction(null);
@@ -43,7 +43,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldLaunchSpecifiedJobs() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction(null);
@@ -60,7 +60,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchInvalidJob() {
 		Type fakeProcessorType = Account.class; // Obv not a real processor!
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(fakeProcessorType);
 		insert new AsyncAction__c(
 			ProcessorClass__c = String.valueOf(fakeProcessorType),
@@ -78,7 +78,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		config.Enabled__c = false;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -94,7 +94,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
@@ -115,7 +115,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchWithoutPendingActions() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Enabled__c = false;
 		// No actions inserted!
@@ -129,7 +129,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
@@ -145,7 +145,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldIgnoreCurrentJobId() {
 		// In practice, this should only ever be used from within an existing job
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);

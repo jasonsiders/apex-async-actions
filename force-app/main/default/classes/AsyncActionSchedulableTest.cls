@@ -2,7 +2,7 @@
 private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldLaunchIfEnabled() {
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
 		settings.Enabled__c = true;
 		settings.Interval__c = 15;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
@@ -29,7 +29,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
 		settings.Enabled__c = false; // The scheduled job should do nothing
 		settings.Interval__c = 15;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);

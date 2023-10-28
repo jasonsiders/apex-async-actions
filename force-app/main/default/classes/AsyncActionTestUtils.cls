@@ -28,13 +28,13 @@ global class AsyncActionTestUtils {
 		return processor;
 	}
 
-	global static AsyncActionScheduledJob__mdt initScheduledJobSettings(String jobName) {
+	global static AsyncActionScheduledJob__mdt initScheduledJobSettings() {
 		// Instantiates and returns a processor settings object w/default values for testing
 		AsyncActionScheduledJob__mdt settings = new AsyncActionScheduledJob__mdt(
-			DeveloperName = jobName,
+			DeveloperName = 'TestJob',
 			Enabled__c = false, 
 			Interval__c = 60,
-			MasterLabel = jobName
+			MasterLabel = 'TestJob'
 		); 
 		AsyncActionTestUtils.mockScheduledJobSettings(settings);
 		return settings;
