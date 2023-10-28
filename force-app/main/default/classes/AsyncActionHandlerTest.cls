@@ -2,7 +2,6 @@
 private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsIfTriggerEnabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.RunOnInsert__c = true;
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -22,7 +21,6 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldNotLaunchJobsIfTriggerDisabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.RunOnInsert__c = false;
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -42,9 +40,9 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldScheduleIfEnabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = true;
-		settings.ScheduledJobInterval__c = 15;
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		jobSettings.Enabled__c = true;
+		jobSettings.Interval__c = 15;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction(null);
@@ -58,8 +56,8 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldScheduleIfDisabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = false;
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		jobSettings.Enabled__c = false;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction(null);
