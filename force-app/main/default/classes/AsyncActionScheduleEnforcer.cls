@@ -6,6 +6,7 @@ public class AsyncActionScheduleEnforcer {
 		?.setSource(AsyncActionConstants.PACKAGE_NAME);
 
 	public void enforce() {
+		// Ensures that AsyncApexJobs created by the framework matches the current AsyncActionScheduledJob__mdt configuration
 		Map<String, AsyncApexJob> pendingJobs = this.getPendingJobs();
 		for (AsyncActionScheduledJob__mdt jobSettings : AsyncActionScheduledJobService.getAll()?.values()) {
 			AsyncActionSchedulable scheduler = new AsyncActionSchedulable(jobSettings);
