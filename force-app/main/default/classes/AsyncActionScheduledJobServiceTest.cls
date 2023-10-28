@@ -5,11 +5,14 @@ private class AsyncActionScheduledJobServiceTest {
         Set<String> settingNames = AsyncActionScheduledJob__mdt.getAll()?.keySet();
 
         Test.startTest();
+        List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll();
         for (String settingName : settingNames) {
             AsyncActionScheduledJob__mdt settings = AsyncActionScheduledJobService.get(settingName);
             Assert.areEqual(settingName, settings?.DeveloperName, 'Retrieved wrong CMDT record');
         }
         Test.stopTest();
+
+        Assert.areEqual(settingNames?.size(), allSettings?.size(), 'Wrong # of Settings');
     }
 
     @IsTest 
@@ -24,9 +27,11 @@ private class AsyncActionScheduledJobServiceTest {
         AsyncActionScheduledJobService.settings?.put(mockName, mockSettings);
 
         Test.startTest();
+        List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll();
         AsyncActionScheduledJob__mdt results = AsyncActionScheduledJobService.get(mockName);
         Test.stopTest();
 
+        Assert.areEqual(1, allSettings?.size(), 'Wrong # of Settings');
         Assert.areEqual(mockSettings?.DeveloperName, results?.DeveloperName, 'Wrong DeveloperName');
         Assert.areEqual(mockSettings?.Enabled__c, results?.Enabled__c, 'Wrong Enabled__c');
         Assert.areEqual(mockSettings?.Interval__c, results?.Interval__c, 'Wrong Interval__c');
