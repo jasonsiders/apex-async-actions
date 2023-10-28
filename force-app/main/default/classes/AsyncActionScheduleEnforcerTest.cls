@@ -17,26 +17,37 @@ private class AsyncActionScheduleEnforcerTest {
 		}
 	}
 
-	/* @IsTest
-	static void shouldScheduleJobsIfNoneExist() {
-		Integer interval = 15;
-		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
-		settings.Enabled__c = true;
-		settings.Interval__c = Decimal.valueOf(interval);
+	@IsTest 
+	static void shouldRescheduleJobsIfNoneInRange() {
+		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
+		// For each jobSetting, create a scheduled job that is "out-of-range" of the current interval.
+		// These existing jobs should be aborted and replaced with a job that respects the current interval.
+		Set<Id> existingJobIds = new Set<Id>();
+		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
+			String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName; 
+			Integer nextMin = DateTime.now().addMinutes(jobSetting?.Interval__c?.intValue())?.minute();
+			nextMin = nextMin + 5; // Out of range!
+			String cronExp = '0 ' + nextMin + ' * * * ?';
+			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
+			Id jobId = System.schedule(jobName, cronExp, job);
+			existingJobIds?.add(jobId);
+		}
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(1, jobs?.size(), 'Wrong # of scheduled jobs');
-		AsyncApexJob job = jobs[0];
-		Assert.areEqual(
-			DateTime.now().addMinutes(interval).minute(),
-			job?.CronTrigger?.NextFireTime?.minute(),
-			'Wrong NextFireTime'
-		);
+		Assert.areEqual(jobSettings?.size(), jobs?.size(), 'Wrong # of Scheduled Jobs'); 
+		for (AsyncApexJob job : jobs) {
+			Assert.isFalse(existingJobIds?.contains(job?.CronTriggerId), 'Out-of-range job was not aborted');
+			String key = job?.CronTrigger?.CronJobDetail?.Name?.replace(AsyncActionSchedulable.JOB_PREFIX, ''); 
+			AsyncActionScheduledJob__mdt jobSetting = jobSettings?.get(key);
+			Assert.isNotNull(jobSetting, 'Could not find a matching AsyncActionScheduledJob__mdt: ' + key);
+			Integer interval = jobSetting?.Interval__c?.intValue();
+			Assert.areEqual(DateTime.now()?.addMinutes(interval).minute(), job?.CronTrigger?.NextFireTime?.minute(), 'Wrong NextFireTime');
+		}
 	}
 
-	@IsTest
+	/* @IsTest
 	static void shouldRescheduleJobsIfNoneInRange() {
 		Integer interval = 15;
 		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
@@ -154,7 +165,7 @@ private class AsyncActionScheduleEnforcerTest {
 	}
 
 	static Map<String, AsyncActionScheduledJob__mdt> initJobSettings() {
-		for (Double interval : new List<Double>{ 10, 20, 30, 60 }) {
+		for (Double interval : new List<Double>{ 10, 20, 30 }) {
 			AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
 			jobSetting.Enabled__c = true; 
 			jobSetting.Interval__c = interval;

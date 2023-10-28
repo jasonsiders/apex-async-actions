@@ -31,7 +31,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
 		if (this.settings?.Enabled__c == true) {
-			String jobName = AsyncActionSchedulable.class?.getName();
+			String jobName = JOB_PREFIX + settings?.DeveloperName;
 			Integer interval = this.getInterval();
 			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
 			System.Schedulable newJob = new AsyncActionSchedulable(this.settings);
