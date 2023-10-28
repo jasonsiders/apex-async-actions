@@ -1,21 +1,6 @@
 @IsTest
 private class AsyncActionTestUtilsTest {
 	@IsTest
-	static void shouldInitGlobalSettings() {
-		Test.startTest();
-		AsyncActionSetting__mdt testSettings = AsyncActionTestUtils.initGlobalSettings();
-		Test.stopTest();
-
-		Assert.isNotNull(testSettings, 'Did not initialize a settings record');
-		AsyncActionSetting__mdt mockSettings = AsyncActionSettingService.getSettings();
-		Assert.areEqual(
-			testSettings?.DeveloperName,
-			mockSettings?.DeveloperName,
-			'Test Settings not returned by service class'
-		);
-	}
-
-	@IsTest
 	static void shouldInitProcessorSettings() {
 		Type processorType = AsyncActionTestUtilsTest.class;
 
@@ -36,27 +21,12 @@ private class AsyncActionTestUtilsTest {
 
 	@IsTest 
 	static void shouldInitScheduledJobSettings() {
-		String jobName = 'My_Job_123';
-
 		Test.startTest();
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings(jobName);
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		Test.stopTest();
 
 		Assert.isNotNull(jobSettings, 'AsyncActionScheduledJob__mdt');
-		Assert.areEqual(jobName, jobSettings?.DeveloperName, 'Wrong DeveloperName');
-		Assert.isNotNull(AsyncActionScheduledJobService.get(jobName), 'Mocked CMDT');
-	}
-
-	@IsTest
-	static void shouldMockGlobalSettings() {
-		AsyncActionSetting__mdt mock = new AsyncActionSetting__mdt(DeveloperName = 'Testing 123');
-
-		Test.startTest();
-		AsyncActionTestUtils.mockGlobalSettings(mock);
-		Test.stopTest();
-
-		AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
-		Assert.areEqual(mock?.DeveloperName, settings?.DeveloperName, 'Wrong Settings object returned');
+		Assert.areEqual(1, AsyncActionScheduledJobService.getAll()?.size(), 'Wrong # of Settings mocked');
 	}
 
 	@IsTest
