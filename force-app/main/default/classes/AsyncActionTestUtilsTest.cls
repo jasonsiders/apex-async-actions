@@ -44,8 +44,7 @@ private class AsyncActionTestUtilsTest {
 
 		Assert.isNotNull(jobSettings, 'AsyncActionScheduledJob__mdt');
 		Assert.areEqual(jobName, jobSettings?.DeveloperName, 'Wrong DeveloperName');
-		List<AsyncActionScheduledJob__mdt> allJobSettings = AsyncActionScheduledJob__mdt.getAll().values();
-		Assert.areEqual(1, allJobSettings?.size(), 'Wrong # of Job Settings mocked');
+		Assert.isNotNull(AsyncActionScheduledJobService.get(jobName), 'Mocked CMDT');
 	}
 
 	@IsTest
