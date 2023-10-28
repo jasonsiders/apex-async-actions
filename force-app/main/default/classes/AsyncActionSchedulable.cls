@@ -4,7 +4,11 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	static final Logger LOGGER = new Logger()
 		?.setLoggedFrom(AsyncActionSchedulable.class)
 		?.setSource(AsyncActionConstants.PACKAGE_NAME);
-	AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
+	AsyncActionScheduledJob__mdt settings;
+
+	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt settings) {
+		this.settings = settings; 
+	}
 
 	global void execute(System.SchedulableContext context) {
 		this.doScheduledActions(context);
@@ -25,11 +29,12 @@ global class AsyncActionSchedulable implements System.Schedulable {
 
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
-		if (this.settings?.RunScheduledJob__c == true) {
+		if (this.settings?.Enabled__c == true) {
 			String jobName = AsyncActionSchedulable.class?.getName();
 			Integer interval = this.getInterval();
 			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
-			Id jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
+			System.Schedulable newJob = new AsyncActionSchedulable(this.settings);
+			Id jobId = System.schedule(jobName, cronExp, newJob);
 			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
 			return jobId;
 		} else {
@@ -39,14 +44,14 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	private void doScheduledActions(System.SchedulableContext context) {
-		if (this.settings?.RunScheduledJob__c == true) {
+		if (this.settings?.Enabled__c == true) {
 			AsyncActionStart__e event = new AsyncActionStart__e();
 			EventBus.publish(event);
 		}
 	}
 
 	private Integer getInterval() {
-		Integer interval = AsyncActionSettingService.getSettings()?.ScheduledJobInterval__c?.intValue();
+		Integer interval = this.settings?.Interval__c?.intValue();
 		return (interval != null) ? interval : DEFAULT_INTERVAL;
 	}
 

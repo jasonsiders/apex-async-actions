@@ -2,14 +2,14 @@
 private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldLaunchIfEnabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = true;
-		settings.ScheduledJobInterval__c = 15;
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		settings.Enabled__c = true;
+		settings.Interval__c = 15;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
 
-		new AsyncActionSchedulable().execute(null);
+		new AsyncActionSchedulable(settings).execute(null);
 		Test.getEventBus().deliver();
 
 		// Should create 1 Queueable, and a future instance of the schedulable job
@@ -29,14 +29,14 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = false; // The scheduled job should do nothing
-		settings.ScheduledJobInterval__c = 15;
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
+		settings.Enabled__c = false; // The scheduled job should do nothing
+		settings.Interval__c = 15;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
 
-		new AsyncActionSchedulable().execute(null);
+		new AsyncActionSchedulable(settings).execute(null);
 		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = AsyncActionSchedulableTest.getAsyncJobs();
