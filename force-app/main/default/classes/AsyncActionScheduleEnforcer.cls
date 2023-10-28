@@ -9,14 +9,14 @@ public class AsyncActionScheduleEnforcer {
 		?.setSource(AsyncActionConstants.PACKAGE_NAME);
 
 	public void enforce() {
-		List<AsyncApexJob> jobs = this.getPendingJobs();
+		/* List<AsyncApexJob> jobs = this.getPendingJobs();
 		if (AsyncActionSettingService.getSettings()?.RunScheduledJob__c == true) {
 			// A scheduled job should exist in range of the configured interval
 			this.ensureActiveJobs(jobs);
 		} else {
 			// No jobs should exist for this class
 			this.scheduler?.abortJobs(jobs);
-		}
+		} */
 	}
 
 	private void abortJobs() {

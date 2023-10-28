@@ -1,4 +1,5 @@
 global class AsyncActionSchedulable implements System.Schedulable {
+	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 	static final Integer DEFAULT_INTERVAL = 60;
 	static final String HOURLY = '0 0 * * * ?';
 	static final Logger LOGGER = new Logger()

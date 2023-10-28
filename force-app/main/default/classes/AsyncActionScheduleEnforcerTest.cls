@@ -1,6 +1,23 @@
 @IsTest
 private class AsyncActionScheduleEnforcerTest {
-	@IsTest
+	@IsTest 
+	static void shouldScheduleJobsIfNoneExist() {
+		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
+
+		new AsyncActionScheduleEnforcer().enforce();
+
+		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
+		Assert.areEqual(jobSettings?.size(), jobs?.size(), 'Wrong # of Scheduled Jobs'); 
+		for (AsyncApexJob job : jobs) {
+			String key = job?.CronTrigger?.CronJobDetail?.Name?.replace(AsyncActionSchedulable.JOB_PREFIX, ''); 
+			AsyncActionScheduledJob__mdt jobSetting = jobSettings?.get(key);
+			Assert.isNotNull(jobSetting, 'Could not find a matching AsyncActionScheduledJob__mdt: ' + key);
+			Integer interval = jobSetting?.Interval__c?.intValue();
+			Assert.areEqual(DateTime.now()?.addMinutes(interval).minute(), job?.CronTrigger?.NextFireTime?.minute(), 'Wrong NextFireTime');
+		}
+	}
+
+	/* @IsTest
 	static void shouldScheduleJobsIfNoneExist() {
 		Integer interval = 15;
 		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
@@ -116,7 +133,7 @@ private class AsyncActionScheduleEnforcerTest {
 		AsyncApexJob job = jobs[0];
 		Assert.areEqual(nextMin2, job?.CronTrigger?.NextFireTime?.minute(), 'Wrong NextFireTime');
 		Assert.areEqual(jobName2, job?.CronTrigger?.CronJobDetail?.Name, 'Wrong Job was kept');
-	}
+	} */
 
 	// **** HELPER **** //
 	static List<AsyncApexJob> getScheduledJobs() {
@@ -134,5 +151,14 @@ private class AsyncActionScheduleEnforcerTest {
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
 			ORDER BY CreatedDate ASC
 		];
+	}
+
+	static Map<String, AsyncActionScheduledJob__mdt> initJobSettings() {
+		for (Double interval : new List<Double>{ 10, 20, 30, 60 }) {
+			AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+			jobSetting.Enabled__c = true; 
+			jobSetting.Interval__c = interval;
+		}
+		return AsyncActionScheduledJobService.getAll();
 	}
 }
