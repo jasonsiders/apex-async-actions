@@ -2,9 +2,9 @@ global abstract class AsyncActionScheduledJobService {
     @TestVisible
     static Map<String, AsyncActionScheduledJob__mdt> settings;
 
-    global static List<AsyncActionScheduledJob__mdt> getAll() {
+    global static Map<String, AsyncActionScheduledJob__mdt> getAll() {
         AsyncActionScheduledJobService.retrieveSettings();
-        return AsyncActionScheduledJobService.settings?.values();
+        return AsyncActionScheduledJobService.settings;
     }
     
     global static AsyncActionScheduledJob__mdt get(String developerName) {

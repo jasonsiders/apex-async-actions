@@ -5,7 +5,7 @@ private class AsyncActionScheduledJobServiceTest {
         Set<String> settingNames = AsyncActionScheduledJob__mdt.getAll()?.keySet();
 
         Test.startTest();
-        List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll();
+        List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll()?.values();
         for (String settingName : settingNames) {
             AsyncActionScheduledJob__mdt settings = AsyncActionScheduledJobService.get(settingName);
             Assert.areEqual(settingName, settings?.DeveloperName, 'Retrieved wrong CMDT record');
@@ -27,7 +27,7 @@ private class AsyncActionScheduledJobServiceTest {
         AsyncActionScheduledJobService.settings?.put(mockName, mockSettings);
 
         Test.startTest();
-        List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll();
+        List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll()?.values();
         AsyncActionScheduledJob__mdt results = AsyncActionScheduledJobService.get(mockName);
         Test.stopTest();
 
