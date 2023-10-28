@@ -2,7 +2,7 @@
 private class AsyncActionStartHandlerTest {
 	@IsTest
 	static void shouldLaunchAllJobsIfNoneListed() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
@@ -17,7 +17,7 @@ private class AsyncActionStartHandlerTest {
 
 	@IsTest
 	static void shouldLaunchJobsListedInActions() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
@@ -33,7 +33,7 @@ private class AsyncActionStartHandlerTest {
 
 	@IsTest
 	static void shouldNotLaunchJobsIfNotListed() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings('Test_Job');
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction(null);
