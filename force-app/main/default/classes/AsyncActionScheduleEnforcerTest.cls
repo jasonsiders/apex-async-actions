@@ -3,9 +3,9 @@ private class AsyncActionScheduleEnforcerTest {
 	@IsTest
 	static void shouldScheduleJobsIfNoneExist() {
 		Integer interval = 15;
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = true;
-		settings.ScheduledJobInterval__c = Decimal.valueOf(interval);
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
+		settings.Enabled__c = true;
+		settings.Interval__c = Decimal.valueOf(interval);
 
 		new AsyncActionScheduleEnforcer().enforce();
 
@@ -22,14 +22,14 @@ private class AsyncActionScheduleEnforcerTest {
 	@IsTest
 	static void shouldRescheduleJobsIfNoneInRange() {
 		Integer interval = 15;
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = true;
-		settings.ScheduledJobInterval__c = Decimal.valueOf(interval);
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
+		settings.Enabled__c = true;
+		settings.Interval__c = Decimal.valueOf(interval);
 		// Schedule a job for > 15 mins in the future
 		Integer nextMin = DateTime.now().addMinutes(20).minute();
 		String originalJobName = 'OriginalJob';
 		String cronExp = '0 ' + nextMin + ' * * * ?';
-		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable());
+		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable(settings));
 
 		new AsyncActionScheduleEnforcer().enforce();
 
@@ -46,13 +46,13 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldAbortJobsIfDisabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = false;
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
+		settings.Enabled__c = false;
 		// Schedule a pre-existing job
 		Integer nextMin = DateTime.now().addMinutes(20).minute();
 		String originalJobName = 'OriginalJob';
 		String cronExp = '0 ' + nextMin + ' * * * ?';
-		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable());
+		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable(settings));
 
 		new AsyncActionScheduleEnforcer().enforce();
 
@@ -62,8 +62,8 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldDoNothingIfNoJobsAndDisabled() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = false;
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
+		settings.Enabled__c = false;
 
 		new AsyncActionScheduleEnforcer().enforce();
 
@@ -74,14 +74,14 @@ private class AsyncActionScheduleEnforcerTest {
 	@IsTest
 	static void shouldDoNothingIfScheduledJobExistsInRange() {
 		Integer interval = 15;
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = true;
-		settings.ScheduledJobInterval__c = Decimal.valueOf(interval);
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
+		settings.Enabled__c = true;
+		settings.Interval__c = Decimal.valueOf(interval);
 		// Schedule a job for < 15 mins in the future
 		String originalJobName = 'OriginalJob';
 		Integer nextMin = DateTime.now().addMinutes(10).minute();
 		String cronExp = '0 ' + nextMin + ' * * * ?';
-		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable());
+		System.schedule(originalJobName, cronExp, new AsyncActionSchedulable(settings));
 
 		new AsyncActionScheduleEnforcer().enforce();
 
@@ -95,18 +95,18 @@ private class AsyncActionScheduleEnforcerTest {
 	@IsTest
 	static void shouldRemoveMultipleDuplicateJobs() {
 		Integer interval = 15;
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.RunScheduledJob__c = true;
-		settings.ScheduledJobInterval__c = Decimal.valueOf(interval);
+		AsyncActionScheduledJob__mdt settings = AsyncActionTestUtils.initScheduledJobSettings();
+		settings.Enabled__c = true;
+		settings.Interval__c = Decimal.valueOf(interval);
 		// Schedule multiple jobs for < 15 mins in the future
 		String jobName1 = 'Job1';
 		Integer nextMin1 = DateTime.now().addMinutes(10).minute();
 		String cronExp1 = '0 ' + nextMin1 + ' * * * ?';
-		System.schedule(jobName1, cronExp1, new AsyncActionSchedulable());
+		System.schedule(jobName1, cronExp1, new AsyncActionSchedulable(settings));
 		String jobName2 = 'Job2';
 		Integer nextMin2 = DateTime.now().addMinutes(5).minute();
 		String cronExp2 = '0 ' + nextMin2 + ' * * * ?';
-		System.schedule(jobName2, cronExp2, new AsyncActionSchedulable());
+		System.schedule(jobName2, cronExp2, new AsyncActionSchedulable(settings));
 
 		new AsyncActionScheduleEnforcer().enforce();
 

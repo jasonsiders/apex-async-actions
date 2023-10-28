@@ -1,9 +1,9 @@
 public class AsyncActionScheduleEnforcer {
 	// This class can be called at any time to ensure that the Scheduled Jobs queue
-	// is in alignment with the current AsyncActionSetting__mdt configuration
+	// is in alignment with the current AsyncActionScheduledJob__mdt records
 	AsyncApexJob nextJob;
 	Set<AsyncApexJob> jobsToAbort = new Set<AsyncApexJob>();
-	AsyncActionSchedulable scheduler = new AsyncActionSchedulable();
+	AsyncActionSchedulable scheduler; // = new AsyncActionSchedulable();
 	static final Logger LOGGER = new Logger()
 		?.setLoggedFrom(AsyncActionScheduleEnforcer.class)
 		?.setSource(AsyncActionConstants.PACKAGE_NAME);
