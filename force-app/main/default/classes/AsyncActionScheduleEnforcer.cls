@@ -11,25 +11,22 @@ public class AsyncActionScheduleEnforcer {
 			AsyncActionSchedulable scheduler = new AsyncActionSchedulable(jobSettings);
 			String jobName = scheduler?.getJobName();
 			AsyncApexJob pendingJob = pendingJobs?.get(jobName); 
-			if (jobSettings?.Enabled__c == true) {
-				// A scheduled job should exist in range of the configured interval
+			if (jobSettings?.Enabled__c == false) {
+				// No jobs should exist for this class. Abort
+				scheduler?.abortJobs(new List<AsyncApexJob>{pendingJob});
+			} else if (pendingJob == null) {
+				// Job is enabled, but one doesn't exist yet. Schedule one. 
+				scheduler?.scheduleNewJob();
+			} else if (pendingJob != null) {
+				// Job is enabled, and job exists. Ensure that job respects the current interval. 
 				Integer interval = jobSettings?.Interval__c?.intValue();
-				if (this.getNextFireTime(pendingJob) > DateTime.now()?.addMinutes(interval)) {
+				if (pendingJob?.CronTrigger?.NextFireTime > DateTime.now()?.addMinutes(interval)) {
 					// Out of range of the current interval. Abort it and schedule a new one
-					LOGGER?.finest('Aborting out of range job(s): ' + JSON.serialize(pendingJob));
 					scheduler?.abortJobs(new List<AsyncApexJob>{pendingJob});
 					scheduler?.scheduleNewJob();
-				}
-			} else {
-				// No jobs should exist for this class
-				scheduler?.abortJobs(new List<AsyncApexJob>{pendingJob});
+				} 
 			}
 		}
-	}
-
-	private DateTime getNextFireTime(AsyncApexJob job) {
-		Integer interval = AsyncActionSettingService.getScheduledInterval();
-		return (job != null) ? job?.CronTrigger?.NextFireTime : DateTime.now().addMinutes(interval);
 	}
 
 	private Map<String, AsyncApexJob> getPendingJobs() {
