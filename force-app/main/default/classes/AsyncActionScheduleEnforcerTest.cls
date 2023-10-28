@@ -25,8 +25,8 @@ private class AsyncActionScheduleEnforcerTest {
 		Set<Id> existingJobIds = new Set<Id>();
 		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
 			String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName; 
-			Integer nextMin = DateTime.now().addMinutes(jobSetting?.Interval__c?.intValue())?.minute();
-			nextMin = nextMin + 5; // Out of range!
+			Integer minsToAdd = jobSetting?.Interval__c?.intValue() + 5; // Out of range!
+			Integer nextMin = DateTime.now().addMinutes(minsToAdd)?.minute();
 			String cronExp = '0 ' + nextMin + ' * * * ?';
 			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
 			Id jobId = System.schedule(jobName, cronExp, job);
@@ -52,7 +52,8 @@ private class AsyncActionScheduleEnforcerTest {
 		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
 		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
 			String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName; 
-			Integer nextMin = DateTime.now().addMinutes(jobSetting?.Interval__c?.intValue())?.minute() - 1; 
+			Integer minsToAdd = jobSetting?.Interval__c?.intValue() - 2; // In range!
+			Integer nextMin = DateTime.now().addMinutes(minsToAdd)?.minute();
 			String cronExp = '0 ' + nextMin + ' * * * ?';
 			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
 			Id jobId = System.schedule(jobName, cronExp, job);
@@ -93,8 +94,8 @@ private class AsyncActionScheduleEnforcerTest {
 		Set<Id> existingJobIds = new Set<Id>();
 		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
 			String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName; 
-			Integer nextMin = DateTime.now().addMinutes(jobSetting?.Interval__c?.intValue())?.minute();
-			nextMin = nextMin - 2; // In range!
+			Integer minsToAdd = jobSetting?.Interval__c?.intValue() - 2; // In range!
+			Integer nextMin = DateTime.now().addMinutes(minsToAdd)?.minute();
 			String cronExp = '0 ' + nextMin + ' * * * ?';
 			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
 			Id jobId = System.schedule(jobName, cronExp, job);
