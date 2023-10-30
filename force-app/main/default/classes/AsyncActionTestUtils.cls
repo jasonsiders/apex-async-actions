@@ -31,6 +31,14 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	global static AsyncActionScheduledJobItem__mdt initScheduledJobItem(
+		AsyncActionProcessor__mdt actionSettings, 
+		AsyncActionScheduledJob__mdt jobSettings
+	) {
+		// TODO!
+		return new AsyncActionScheduledJobItem__mdt(); 
+	}
+
 	global static void mockProcessorSettings(AsyncActionProcessor__mdt processor) {
 		// Gives @IsTest access to inject settings records to external callers
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
@@ -38,6 +46,10 @@ global class AsyncActionTestUtils {
 			: new Map<String, AsyncActionProcessor__mdt>();
 		String processorName = processor?.ProcessorClass__c;
 		AsyncActionProcessorService.processors?.put(processorName, processor);
+	}
+
+	global static void mockScheduledJobItem(AsyncActionScheduledJobItem__mdt jobSettings) {
+		// TODO!
 	}
 
 	global static void mockScheduledJobSettings(AsyncActionScheduledJob__mdt jobSettings) {
