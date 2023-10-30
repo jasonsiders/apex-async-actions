@@ -5,14 +5,14 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	static final Logger LOGGER = new Logger()
 		?.setLoggedFrom(AsyncActionSchedulable.class)
 		?.setSource(AsyncActionConstants.PACKAGE_NAME);
-	AsyncActionScheduledJob__mdt settings;
+	AsyncActionScheduledJob__mdt jobSettings;
 
-	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt settings) {
-		this.settings = settings; 
+	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
+		this.jobSettings = jobSettings; 
 	}
 
 	global void execute(System.SchedulableContext context) {
-		this.doScheduledActions(context);
+		this.doScheduledActions();
 		this.reschedule(context?.getTriggerId());
 		LOGGER.publish();
 	}
@@ -29,16 +29,16 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	public String getJobName() {
-		return JOB_PREFIX + settings?.DeveloperName; 
+		return JOB_PREFIX + jobSettings?.DeveloperName; 
 	}
 
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
-		if (this.settings?.Enabled__c == true) {
+		if (this.jobSettings?.Enabled__c == true) {
 			String jobName = this.getJobName();
 			Integer interval = this.getInterval();
 			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
-			System.Schedulable newJob = new AsyncActionSchedulable(this.settings);
+			System.Schedulable newJob = new AsyncActionSchedulable(this.jobSettings);
 			Id jobId = System.schedule(jobName, cronExp, newJob);
 			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
 			return jobId;
@@ -48,15 +48,36 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		}
 	}
 
-	private void doScheduledActions(System.SchedulableContext context) {
-		if (this.settings?.Enabled__c == true) {
-			AsyncActionStart__e event = new AsyncActionStart__e();
+	private void doScheduledActions() {
+		List<AsyncActionScheduledJobItem__mdt> items = this.getActiveItems();
+		if (this.jobSettings?.Enabled__c == true && items?.isEmpty() == false) {
+			String actions = this.getCommaSeparatedActions(items);
+			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions); 
 			EventBus.publish(event);
 		}
 	}
 
+	private List<AsyncActionScheduledJobItem__mdt> getActiveItems() {
+		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>();
+		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
+			if (item?.Enabled__c == true) {
+				activeItems?.add(item);
+			}
+		}
+		return activeItems; 
+	}
+
+	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
+		Set<String> actionSet = new Set<String>();
+		for (AsyncActionScheduledJobItem__mdt item : items) {
+			String processorClass = item?.AsyncActionProcessor__r?.ProcessorClass__c;
+			actionSet?.add(processorClass);
+		}
+		return String.join(actionSet, ','); 
+	}
+
 	private Integer getInterval() {
-		Integer interval = this.settings?.Interval__c?.intValue();
+		Integer interval = this.jobSettings?.Interval__c?.intValue();
 		return (interval != null) ? interval : DEFAULT_INTERVAL;
 	}
 
