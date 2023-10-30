@@ -8,7 +8,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	AsyncActionScheduledJob__mdt jobSettings;
 
 	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
-		this.jobSettings = jobSettings; 
+		this.jobSettings = jobSettings;
 	}
 
 	global void execute(System.SchedulableContext context) {
@@ -29,7 +29,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	public String getJobName() {
-		return JOB_PREFIX + jobSettings?.DeveloperName; 
+		return JOB_PREFIX + jobSettings?.DeveloperName;
 	}
 
 	public Id scheduleNewJob() {
@@ -52,7 +52,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		List<AsyncActionScheduledJobItem__mdt> items = this.getActiveItems();
 		if (this.jobSettings?.Enabled__c == true && items?.isEmpty() == false) {
 			String actions = this.getCommaSeparatedActions(items);
-			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions); 
+			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
 			EventBus.publish(event);
 		}
 	}
@@ -64,7 +64,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 				activeItems?.add(item);
 			}
 		}
-		return activeItems; 
+		return activeItems;
 	}
 
 	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
@@ -73,7 +73,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			String processorClass = item?.AsyncActionProcessor__r?.ProcessorClass__c;
 			actionSet?.add(processorClass);
 		}
-		return String.join(actionSet, ','); 
+		return String.join(actionSet, ',');
 	}
 
 	private Integer getInterval() {

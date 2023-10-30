@@ -23,22 +23,22 @@ global class AsyncActionTestUtils {
 		String jobName = 'TestJob_' + (numSettings + 1);
 		AsyncActionScheduledJob__mdt settings = new AsyncActionScheduledJob__mdt(
 			DeveloperName = jobName,
-			Enabled__c = false, 
+			Enabled__c = false,
 			Interval__c = 60,
 			MasterLabel = jobName
-		); 
+		);
 		AsyncActionTestUtils.mockScheduledJobSettings(settings);
 		return settings;
 	}
 
 	global static AsyncActionScheduledJobItem__mdt initScheduledJobItem(
-		AsyncActionProcessor__mdt actionSettings, 
+		AsyncActionProcessor__mdt actionSettings,
 		AsyncActionScheduledJob__mdt jobSettings
 	) {
 		AsyncActionScheduledJobItem__mdt item = new AsyncActionScheduledJobItem__mdt(
 			AsyncActionProcessor__r = actionSettings,
 			DeveloperName = actionSettings?.DeveloperName + '_' + jobSettings?.DeveloperName,
-			Enabled__c = true, 
+			Enabled__c = true,
 			ScheduledJob__r = jobSettings
 		);
 		AsyncActionTestUtils.mockScheduledJobItem(item);
@@ -57,8 +57,9 @@ global class AsyncActionTestUtils {
 	global static void mockScheduledJobItem(AsyncActionScheduledJobItem__mdt item) {
 		// Gives @IsTest access to inject settings records to external callers
 		// **IMPORTANT**: The input object must have a fully populated ScheduledJob__r relationship
-		String jobName = item?.ScheduledJob__r?.DeveloperName; 
-		List<AsyncActionScheduledJobItem__mdt> matching = AsyncActionScheduledJobItemService.jobItems?.containsKey(jobName)
+		String jobName = item?.ScheduledJob__r?.DeveloperName;
+		List<AsyncActionScheduledJobItem__mdt> matching = AsyncActionScheduledJobItemService.jobItems
+				?.containsKey(jobName)
 			? AsyncActionScheduledJobItemService.jobItems?.get(jobName)
 			: new List<AsyncActionScheduledJobItem__mdt>();
 		matching?.add(item);
