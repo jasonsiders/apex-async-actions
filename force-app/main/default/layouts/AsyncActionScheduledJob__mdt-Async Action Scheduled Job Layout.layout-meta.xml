@@ -12,33 +12,17 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>ProcessorClass__c</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Required</behavior>
-                <field>Retries__c</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Required</behavior>
-                <field>RetryInterval__c</field>
+                <field>DeveloperName</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
-            <layoutItems>
-                <behavior>Required</behavior>
-                <field>DeveloperName</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Required</behavior>
-                <field>BatchSize__c</field>
-            </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
                 <field>Enabled__c</field>
             </layoutItems>
             <layoutItems>
-                <behavior>Edit</behavior>
-                <field>RunOnInsert__c</field>
+                <behavior>Required</behavior>
+                <field>Interval__c</field>
             </layoutItems>
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
@@ -54,7 +38,7 @@
                 <field>CreatedById</field>
             </layoutItems>
             <layoutItems>
-                <behavior>Readonly</behavior>
+                <behavior>Required</behavior>
                 <field>NamespacePrefix</field>
             </layoutItems>
         </layoutColumns>
@@ -64,7 +48,7 @@
                 <field>LastModifiedById</field>
             </layoutItems>
             <layoutItems>
-                <behavior>Readonly</behavior>
+                <behavior>Edit</behavior>
                 <field>IsProtected</field>
             </layoutItems>
         </layoutColumns>
@@ -84,7 +68,7 @@
         <fields>MasterLabel</fields>
         <fields>DeveloperName</fields>
         <fields>NamespacePrefix</fields>
-        <relatedList>AsyncActionScheduledJobItem__mdt.AsyncActionProcessor__c</relatedList>
+        <relatedList>AsyncActionScheduledJobItem__mdt.ScheduledJob__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
@@ -92,7 +76,7 @@
     <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
     <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
     <summaryLayout>
-        <masterLabel>00hDR00000BA52y</masterLabel>
+        <masterLabel>00h8I000002GGka</masterLabel>
         <sizeX>4</sizeX>
         <sizeY>0</sizeY>
         <summaryLayoutStyle>Default</summaryLayoutStyle>
