@@ -11,27 +11,27 @@ public class AsyncActionScheduleEnforcer {
 		for (AsyncActionScheduledJob__mdt jobSettings : AsyncActionScheduledJobService.getAll()?.values()) {
 			AsyncActionSchedulable scheduler = new AsyncActionSchedulable(jobSettings);
 			String jobName = scheduler?.getJobName();
-			AsyncApexJob pendingJob = pendingJobs?.get(jobName); 
+			AsyncApexJob pendingJob = pendingJobs?.get(jobName);
 			if (jobSettings?.Enabled__c == false) {
 				// No jobs should exist for this class. Abort
-				scheduler?.abortJobs(new List<AsyncApexJob>{pendingJob});
+				scheduler?.abortJobs(new List<AsyncApexJob>{ pendingJob });
 			} else if (pendingJob == null) {
-				// Job is enabled, but one doesn't exist yet. Schedule one. 
+				// Job is enabled, but one doesn't exist yet. Schedule one.
 				scheduler?.scheduleNewJob();
 			} else if (pendingJob != null) {
-				// Job is enabled, and job exists. Ensure that job respects the current interval. 
+				// Job is enabled, and job exists. Ensure that job respects the current interval.
 				Integer interval = jobSettings?.Interval__c?.intValue();
 				if (pendingJob?.CronTrigger?.NextFireTime > DateTime.now()?.addMinutes(interval)) {
 					// Out of range of the current interval. Abort it and schedule a new one
-					scheduler?.abortJobs(new List<AsyncApexJob>{pendingJob});
+					scheduler?.abortJobs(new List<AsyncApexJob>{ pendingJob });
 					scheduler?.scheduleNewJob();
-				} 
+				}
 			}
 		}
 	}
 
 	private Map<String, AsyncApexJob> getPendingJobs() {
-		Map<String, AsyncApexJob> pendingJobs = new Map<String, AsyncApexJob>(); 
+		Map<String, AsyncApexJob> pendingJobs = new Map<String, AsyncApexJob>();
 		for (AsyncApexJob job : [
 			SELECT
 				Id,
@@ -47,8 +47,8 @@ public class AsyncActionScheduleEnforcer {
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
 			ORDER BY CronTrigger.NextFireTime ASC
 		]) {
-			String jobName = job?.CronTrigger?.CronJobDetail?.Name; 
-			pendingJobs?.put(jobName, job); 
+			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
+			pendingJobs?.put(jobName, job);
 		}
 		return pendingJobs;
 	}
