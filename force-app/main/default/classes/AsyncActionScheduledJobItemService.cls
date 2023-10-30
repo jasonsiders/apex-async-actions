@@ -8,7 +8,7 @@ global abstract without sharing class AsyncActionScheduledJobItemService {
 		if (jobItems?.containsKey(jobName) == false) {
 			// Note: CMDT SOQL queries do not count against limits!
 			List<AsyncActionScheduledJobItem__mdt> matching = [
-				SELECT AsyncActionProcessor__r.DeveloperName, AsyncActionProcessor__r.ProcessorClass__c, ScheduledJob__r.DeveloperName
+				SELECT AsyncActionProcessor__r.DeveloperName, AsyncActionProcessor__r.ProcessorClass__c, Enabled__c, ScheduledJob__r.DeveloperName
 				FROM AsyncActionScheduledJobItem__mdt
 				WHERE Enabled__c = TRUE AND ScheduledJob__r.DeveloperName = :jobName
 			];
