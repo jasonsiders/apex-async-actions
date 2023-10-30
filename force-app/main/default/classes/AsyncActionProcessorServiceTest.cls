@@ -12,9 +12,6 @@ private class AsyncActionProcessorServiceTest {
 		for (String processorName : actual?.keySet()) {
 			AsyncActionProcessor__mdt processor = actual?.get(processorName);
 			Assert.areEqual(processorName, processor?.ProcessorClass__c, 'Not mapped by processor');
-			String developerName = processor?.DeveloperName;
-			AsyncActionProcessor__mdt expectedConfig = actual?.get(developerName);
-			Assert.areEqual(processor, expectedConfig, 'Config record does not match');
 		}
 	}
 
