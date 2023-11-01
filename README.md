@@ -83,10 +83,6 @@ Alternatively, if you wish to contribute to this project, you can deploy its con
 
 You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
 
-### Configure Global Settings
-
-The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. You will need to configure a `Default` record for the application to function. This process is documented [here](/docs/SETTINGS.md).
-
 ### Enable Logging
 
 This framework uses the `apex-logger` package to post logs related to the execution of Async Actions. When properly configured, these logs will be visible from the Async Action record page.
