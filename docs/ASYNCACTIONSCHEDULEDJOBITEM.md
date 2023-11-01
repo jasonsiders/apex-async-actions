@@ -11,7 +11,7 @@ Follow these steps to create a a `AsyncActionScheduledJobItem__mdt` record:
 4. Click _Save_. 
 
 ## Fields
-> TODO! Add photo
+![A "Async Action Scheduled Job Item" Custom Metadata record](/media/sample_scheduled_job_item.png)
 
 - **Async Action Scheduled Job Name/Label**: (Text) Standard fields which serve as the API Name and friendly Label of the record. These do not impact anything. 
 - **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted. 

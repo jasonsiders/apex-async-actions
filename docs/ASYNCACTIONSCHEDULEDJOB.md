@@ -15,7 +15,7 @@ Once you've created a settings record for your scheduled job, you'll need to ass
 Each time an Async Action is inserted, or the scheduled job runs, code will run to ensure that each active scheduled job is running at the correct interval. 
 
 ## Fields
-> TODO! Add photo
+![A "Async Action Scheduled Job" Custom Metadata record](/media/sample_scheduled_job_config.png)
 
 - **Async Action Scheduled Job Name/Label**: (Text) Standard fields which serve as the API Name and friendly Label of the record. These do not impact anything. 
 - **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted. 
