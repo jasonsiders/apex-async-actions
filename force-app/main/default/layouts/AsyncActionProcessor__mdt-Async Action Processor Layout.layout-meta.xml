@@ -83,6 +83,7 @@
     <relatedLists>
         <fields>MasterLabel</fields>
         <fields>ScheduledJob__c</fields>
+        <fields>Enabled__c</fields>
         <fields>DeveloperName</fields>
         <relatedList>AsyncActionScheduledJobItem__mdt.AsyncActionProcessor__c</relatedList>
     </relatedLists>
