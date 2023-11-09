@@ -66,8 +66,9 @@
     </layoutSections>
     <relatedLists>
         <fields>MasterLabel</fields>
+        <fields>AsyncActionProcessor__c</fields>
+        <fields>Enabled__c</fields>
         <fields>DeveloperName</fields>
-        <fields>NamespacePrefix</fields>
         <relatedList>AsyncActionScheduledJobItem__mdt.ScheduledJob__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>

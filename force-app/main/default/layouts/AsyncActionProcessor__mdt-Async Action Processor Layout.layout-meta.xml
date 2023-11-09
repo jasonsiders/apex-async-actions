@@ -82,8 +82,8 @@
     </layoutSections>
     <relatedLists>
         <fields>MasterLabel</fields>
+        <fields>ScheduledJob__c</fields>
         <fields>DeveloperName</fields>
-        <fields>NamespacePrefix</fields>
         <relatedList>AsyncActionScheduledJobItem__mdt.AsyncActionProcessor__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
