@@ -13,10 +13,7 @@ private class AsyncActionSchedulableTest {
 			jobSettings
 		);
 		jobItem.Enabled__c = true;
-		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
-		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -46,10 +43,7 @@ private class AsyncActionSchedulableTest {
 			jobSettings
 		);
 		jobItem.Enabled__c = true;
-		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
-		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -72,10 +66,7 @@ private class AsyncActionSchedulableTest {
 			jobSettings
 		);
 		jobItem.Enabled__c = false; // Should not execute the action
-		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
-		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -98,10 +89,7 @@ private class AsyncActionSchedulableTest {
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
 		// No job items!
-		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
-		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
