@@ -32,7 +32,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	public String getJobName() {
-		return JOB_PREFIX + jobSettings?.DeveloperName;
+		return JOB_PREFIX + this.jobSettings?.DeveloperName;
 	}
 
 	public Id scheduleNewJob() {
@@ -46,7 +46,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
 			return jobId;
 		} else {
-			LOGGER?.finest(AsyncActionSchedulable.class + ' is not enabled');
+			LOGGER?.finest(this.jobSettings?.DeveloperName + ' is not enabled');
 			return null;
 		}
 	}
