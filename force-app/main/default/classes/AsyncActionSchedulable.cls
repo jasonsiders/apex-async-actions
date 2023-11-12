@@ -37,7 +37,6 @@ global class AsyncActionSchedulable implements System.Schedulable {
 
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
-		LOGGER?.finest('scheduleNewJob(): Job Settings: ' + JSON.serializePretty(this.jobSettings));
 		if (this.jobSettings?.Enabled__c == true) {
 			String jobName = this.getJobName();
 			Integer interval = this.getInterval();
