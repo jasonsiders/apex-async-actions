@@ -12,8 +12,11 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	global void execute(System.SchedulableContext context) {
-		this.doScheduledActions();
-		this.reschedule(context?.getTriggerId());
+		this.getUpdatedJobSettings();
+		if (this.jobSettings != null) {
+			this.doScheduledActions();
+			this.reschedule(context?.getTriggerId());
+		}
 		LOGGER.publish();
 	}
 
@@ -34,6 +37,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
+		LOGGER?.finest('scheduleNewJob(): Job Settings: ' + JSON.serializePretty(this.jobSettings));
 		if (this.jobSettings?.Enabled__c == true) {
 			String jobName = this.getJobName();
 			Integer interval = this.getInterval();
@@ -79,6 +83,12 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	private Integer getInterval() {
 		Integer interval = this.jobSettings?.Interval__c?.intValue();
 		return (interval != null) ? interval : DEFAULT_INTERVAL;
+	}
+
+	private void getUpdatedJobSettings() {
+		// Get the latest values of the job settings record, in case it changed since the last scheduled run
+		String jobName = this.jobSettings?.DeveloperName; 
+		this.jobSettings = AsyncActionScheduledJobService.get(jobName);
 	}
 
 	private Id reschedule(Id currentJobId) {
