@@ -81,17 +81,6 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		return (interval != null) ? interval : DEFAULT_INTERVAL;
 	}
 
-	private List<AsyncApexJob> getPendingJobs() {
-		return [
-			SELECT Id, CronTriggerId, CronTrigger.CronExpression, CronTrigger.CronJobDetail.Name, Status
-			FROM AsyncApexJob
-			WHERE
-				ApexClass.Name = :AsyncActionSchedulable.class.getName()
-				AND Status IN ('Holding', 'Preparing', 'Processing', 'Queued')
-			ORDER BY CreatedDate ASC
-		];
-	}
-
 	private Id reschedule(Id currentJobId) {
 		// Deletes the current job, then schedules a new one for the defined interval
 		List<AsyncApexJob> currentJobs = [
