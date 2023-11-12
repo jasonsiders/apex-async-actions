@@ -17,6 +17,8 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			this.doScheduledActions();
 			this.reschedule(context?.getTriggerId());
 		}
+		// Once completed, ensure other scheduled jobs match the configuration
+		new AsyncActionScheduleEnforcer().enforce();
 		LOGGER.publish();
 	}
 
