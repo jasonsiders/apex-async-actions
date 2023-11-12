@@ -1,10 +1,6 @@
 public class AsyncActionScheduleEnforcer {
 	// This class can be called at any time to ensure that the Scheduled Jobs queue
 	// is in alignment with the current AsyncActionScheduledJob__mdt records
-	static final Logger LOGGER = new Logger()
-		?.setLoggedFrom(AsyncActionScheduleEnforcer.class)
-		?.setSource(AsyncActionConstants.PACKAGE_NAME);
-
 	public void enforce() {
 		// Ensures that AsyncApexJobs created by the framework matches the current AsyncActionScheduledJob__mdt configuration
 		Map<String, AsyncApexJob> pendingJobs = this.getPendingJobs();
