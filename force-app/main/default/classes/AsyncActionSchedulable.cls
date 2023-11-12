@@ -12,8 +12,13 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	global void execute(System.SchedulableContext context) {
-		this.doScheduledActions();
-		this.reschedule(context?.getTriggerId());
+		this.getUpdatedJobSettings();
+		if (this.jobSettings != null) {
+			this.doScheduledActions();
+			this.reschedule(context?.getTriggerId());
+		}
+		// Once completed, ensure other scheduled jobs match the configuration
+		new AsyncActionScheduleEnforcer().enforce();
 		LOGGER.publish();
 	}
 
@@ -29,7 +34,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	public String getJobName() {
-		return JOB_PREFIX + jobSettings?.DeveloperName;
+		return JOB_PREFIX + this.jobSettings?.DeveloperName;
 	}
 
 	public Id scheduleNewJob() {
@@ -43,7 +48,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
 			return jobId;
 		} else {
-			LOGGER?.finest(AsyncActionSchedulable.class + ' is not enabled');
+			LOGGER?.finest(this.jobSettings?.DeveloperName + ' is not enabled');
 			return null;
 		}
 	}
@@ -81,21 +86,20 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		return (interval != null) ? interval : DEFAULT_INTERVAL;
 	}
 
-	private List<AsyncApexJob> getPendingJobs() {
-		return [
-			SELECT Id, CronTriggerId, CronTrigger.CronExpression, CronTrigger.CronJobDetail.Name, Status
-			FROM AsyncApexJob
-			WHERE
-				ApexClass.Name = :AsyncActionSchedulable.class.getName()
-				AND Status IN ('Holding', 'Preparing', 'Processing', 'Queued')
-			ORDER BY CreatedDate ASC
-		];
+	private void getUpdatedJobSettings() {
+		// Get the latest values of the job settings record, in case it changed since the last scheduled run
+		String jobName = this.jobSettings?.DeveloperName; 
+		this.jobSettings = AsyncActionScheduledJobService.get(jobName);
 	}
 
 	private Id reschedule(Id currentJobId) {
-		// Deletes any existing jobs of this type, then schedules a new one for the defined interval
-		List<AsyncApexJob> pendingJobs = this.getPendingJobs();
-		this.abortJobs(pendingJobs);
+		// Deletes the current job, then schedules a new one for the defined interval
+		List<AsyncApexJob> currentJobs = [
+			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name 
+			FROM AsyncApexJob 
+			WHERE CronTriggerId = :currentJobId
+		];
+		this.abortJobs(currentJobs); 
 		return this.scheduleNewJob();
 	}
 
