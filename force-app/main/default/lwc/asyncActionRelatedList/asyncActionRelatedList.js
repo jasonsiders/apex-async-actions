@@ -69,7 +69,6 @@ export default class AsyncActionRelatedList extends LightningElement {
 	}
 
 	handleRefresh() {
-		console.log(`@jason: handleRefresh()`);
 		this.isLoading = true;
 		refreshApex(this.cachedQueryResponse).then(() => {
 			this.isLoading = false;
