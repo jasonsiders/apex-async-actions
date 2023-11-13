@@ -3,6 +3,7 @@ private class AsyncActionScheduledJobServiceTest {
 	@IsTest
 	static void shouldReturnWhatIsActuallyInOrg() {
 		Set<String> settingNames = AsyncActionScheduledJob__mdt.getAll()?.keySet();
+		AsyncActionScheduledJobService.useRealData = true; 
 
 		Test.startTest();
 		List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll()?.values();
@@ -13,6 +14,17 @@ private class AsyncActionScheduledJobServiceTest {
 		Test.stopTest();
 
 		Assert.areEqual(settingNames?.size(), allSettings?.size(), 'Wrong # of Settings');
+	}
+
+	@IsTest
+	static void shouldReturnEmptyMap() {
+		// In @IsTest context, the service will return an empty list if there is useRealData = false,
+		// and no records have been loaded in via the @TestVisible flags
+		Test.startTest();
+		Map<String, AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll();
+		Test.stopTest();
+
+		Assert.areEqual(0, allSettings?.size(), 'Wrong # of Settings');
 	}
 
 	@IsTest
