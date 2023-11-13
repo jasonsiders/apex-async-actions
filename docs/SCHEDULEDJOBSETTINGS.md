@@ -10,7 +10,7 @@ Follow these steps to create a settings record for the scheduled job:
 3. Set the fields according to your preferences.
 4. Click _Save_. 
 
-Once you've created a settings record for your scheduled job, you'll need to associate Async Actions to your scheduled job. Use the [`AsyncActionScheduledJobItem__mdt`](/docs/ASYNCACTIONSCHEDULEDJOBITEM.md) junction object to accomplish this.
+Once you've created a settings record for your scheduled job, you'll need to associate Async Actions to your scheduled job. Use the [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) junction object to accomplish this.
 
 Each time an Async Action is inserted, or the scheduled job runs, code will run to ensure that each active scheduled job is running at the correct interval. 
 
@@ -21,5 +21,5 @@ Each time an Async Action is inserted, or the scheduled job runs, code will run 
 - **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted. 
 - **Interval**: (Number) Determines the number of minutes that pass between instances of the scheduled job. Must be a valid number between 1-60.
 
-> Read more about the `AsyncActionScheduledJobItem__mdt` Custom Metadata Type [here](/docs/ASYNCACTIONSCHEDULEDJOBITEM.md)
+> Read more about the `AsyncActionScheduledJobItem__mdt` Custom Metadata Type [here](/docs/SCHEDULEDJOBITEMSETTINGS.md)
 > Read more about the `AsyncActionSchedulable` Job [here](/docs/ASYNCACTIONSCHEDULEDABLE.md)
