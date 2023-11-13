@@ -37,6 +37,8 @@ Developers can create a new _Action_ in two easy steps:
 - Run your action near-immediately, set `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will launch shortly after corresponding `AsyncAction__c` record(s) are inserted.
 - Add your action at a regular scheduled interval, using the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types. 
 
+Once these steps have been completed, create `AsyncAction__c` records linked to your processor class via the `ProcessorClass__c` field. When run, the processor will process any `AsyncAction__c` records with a _Pending_ Status.
+
 Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, if it needs to be retried, and logs (including errors) related to the Action.
 
 Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTIONOBJECT.md).

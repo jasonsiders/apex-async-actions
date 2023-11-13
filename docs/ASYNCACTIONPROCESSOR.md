@@ -12,7 +12,7 @@ The abstract class handles the minutia of the framework, and leaves the actual a
 4. Any logs incurred by the transaction to this point are committed.
 5. The `System.Queueable` operation ceases. A `System.Finalizer` operation begins shortly after.
 6. The finalizer checks if the Queueable job succeeded. If an unhandled exception was thrown, the finalizer logs the error and updates all `AsyncAction__c` records in the transaction to reflect the failure using `ALLOW_RETRY` logic.
-7. As a final step, the finalizer re-enqueues the current processor class if it has any remaining _Pending_ `AsyncAction__c` records.
+7. The finalizer re-enqueues the current processor class if it has any remaining _Pending_ `AsyncAction__c` records with a `Scheduled__c` value in the past. 
 
 ## Requirements
 
