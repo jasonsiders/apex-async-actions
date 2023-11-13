@@ -1,6 +1,6 @@
 # The `AsyncActionSchedulable` Class
 
-By default, `AsyncActionProcessor` classes are launched by a scheduled apex class, `AsyncActionSchedulable`. The enablement and frequency of this job are controlled by the [`AsyncActionScheduledJob__mdt`](/docs/ASYNCACTIONSCHEDULEDJOB.md) Custom Metadata Type. The actions launched by each job are controlled by the [`AsyncActionScheduledJobItem__mdt`](/docs/ASYNCACTIONSCHEDULEDJOBITEM.md) Custom Metadata Type. 
+By default, `AsyncActionProcessor` classes are launched by a scheduled apex class, `AsyncActionSchedulable`. The enablement and frequency of this job are controlled by the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) Custom Metadata Type. The actions launched by each job are controlled by the [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) Custom Metadata Type. 
 
 ## Process Overview
 
@@ -16,4 +16,4 @@ The `AsyncActionSchedulable` follows this general process in a `System.Schedulab
 
 ## Best Practices
 
--   Do not manually schedule or abort this job. Instead, control its enablement and frequency through the [`AsyncActionScheduledJob__mdt`](/docs/ASYNCACTIONSCHEDULEDJOB.md) custom metadata type. The framework includes code which "enforces" proper running of this class.
+-   Do not manually schedule or abort this job. Instead, control its enablement and frequency through the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) custom metadata type. The framework includes code which "enforces" proper running of this class.

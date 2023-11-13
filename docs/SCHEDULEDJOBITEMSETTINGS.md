@@ -1,5 +1,5 @@
 # The `AsyncActionScheduledJobItem__mdt` Custom Metadata Type
-The `AsyncActionScheduledJobItem__mdt` can be used to relate a specific [`AsyncActionProcessor__mdt`](/docs/ASYNCACTIONPROCESSOR.md) record to a specific [`AsyncActionScheduledJob__mdt`](/docs/ASYNCACTIONSCHEDULEDJOB.md) record. This junction object could be leveraged to relate a many _Async Actions_ to many _Scheduled Jobs_. 
+The `AsyncActionScheduledJobItem__mdt` can be used to relate a specific [`AsyncActionProcessor__mdt`](/docs/ASYNCACTIONPROCESSOR.md) record to a specific [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) record. This junction object could be leveraged to relate a many _Async Actions_ to many _Scheduled Jobs_. 
 
 ## Creating a Settings Record
 Create a record for each _Async Action_ that you wish to add to a specific scheduled job. 
@@ -20,5 +20,5 @@ Follow these steps to create a a `AsyncActionScheduledJobItem__mdt` record:
 - **Scheduled Job**: (Lookup: `AsyncActionScheduledJob__mdt`) _Required_. Configuration record for the `AsyncActionSchedulable` job that should host the action.
 
 > Read more about the `AsyncActionProcessor__mdt` Custom Metadata Type [here](/docs/ASYNCACTIONPROCESSOR.md)
-> Read more about the `AsyncActionScheduledJob__mdt` Custom Metadata Type [here](/docs/ASYNCACTIONSCHEDULEDJOB.md)
+> Read more about the `AsyncActionScheduledJob__mdt` Custom Metadata Type [here](/docs/SCHEDULEDJOBSETTINGS.md)
 > Read more about the `AsyncActionSchedulable` Job [here](/docs/ASYNCACTIONSCHEDULEDABLE.md)
