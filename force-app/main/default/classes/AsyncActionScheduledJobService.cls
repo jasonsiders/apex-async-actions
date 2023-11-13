@@ -1,6 +1,8 @@
 global abstract class AsyncActionScheduledJobService {
 	@TestVisible
 	static Map<String, AsyncActionScheduledJob__mdt> settings;
+	@TestVisible
+	static Boolean useRealData = (Test.isRunningTest() == false); 
 
 	global static Map<String, AsyncActionScheduledJob__mdt> getAll() {
 		AsyncActionScheduledJobService.retrieveSettings();
@@ -13,6 +15,11 @@ global abstract class AsyncActionScheduledJobService {
 	}
 
 	static void retrieveSettings() {
-		settings = (settings != null) ? settings : AsyncActionScheduledJob__mdt.getAll();
+		// If settings have not already been fetched, instantiate or fetch from org, depending on context
+		if (settings == null && useRealData == true) {
+			settings = AsyncActionScheduledJob__mdt.getAll();
+		} else if (settings == null) {
+			settings = new Map<String, AsyncActionScheduledJob__mdt>();
+		}
 	}
 }
