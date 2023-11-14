@@ -1,6 +1,6 @@
 # The `AsyncActionProcessor` Class
 
-This apex class represents some kind of action to be performed asynchronously, against a collection of [`AsyncAction__c`](/docs/ASYNCACTION.md) records.
+This apex class represents some kind of action to be performed asynchronously, against a collection of [`AsyncAction__c`](/docs/ASYNCACTIONOBJECT.md) records.
 
 ## Process Overview
 
@@ -12,7 +12,7 @@ The abstract class handles the minutia of the framework, and leaves the actual a
 4. Any logs incurred by the transaction to this point are committed.
 5. The `System.Queueable` operation ceases. A `System.Finalizer` operation begins shortly after.
 6. The finalizer checks if the Queueable job succeeded. If an unhandled exception was thrown, the finalizer logs the error and updates all `AsyncAction__c` records in the transaction to reflect the failure using `ALLOW_RETRY` logic.
-7. As a final action, the finalizer any `AsyncActionProcessor` jobs (including the current one) if it has any valid actions to process, provided that instance(s) of those jobs do not already exist.
+7. The finalizer re-enqueues the current processor class if it has any remaining _Pending_ `AsyncAction__c` records with a `Scheduled__c` value in the past. 
 
 ## Requirements
 
@@ -20,7 +20,7 @@ Creating your own `AsyncActionProcessor` is easy, but you must follow these requ
 
 -   Must extend `AsyncActionProcessor` and implement the [abstract methods](#abstract-methods). Else, the class will not compile.
 -   Must be an outer class. The framework uses the `AsyncApexJob` object to check for existing/pending queueable jobs. Its `ApexClass` field always displays the name of the _outer_ type, even if the Queueable job is an inner type. The framework will behave unpredictably if you use an inner class to extend `AsyncActionProcessor`.
--   Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORMETADATA.md) configuration record with a corresponding `ProcessorClass__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
+-   Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORSETTINGS.md) configuration record with a corresponding `ProcessorClass__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
 
 ## Abstract Methods
 
