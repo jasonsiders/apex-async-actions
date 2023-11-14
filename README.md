@@ -30,14 +30,18 @@ Developers can create a new _Action_ in two easy steps:
 
     Read more about this class [here](/docs/ASYNCACTIONPROCESSOR.md).
 
-2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](/docs/PROCESSORMETADATA.md).
+2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](/docs/PROCESSORSETTINGS.md).
    ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
 
-Once an action is defined, developers can trigger its execution by creating an `AsyncAction__c` record related to the Action's class. The action can be configured to run on a trigger, or as part of a recurring scheduled job.
+3. Define how you want your action to be launched. 
+- Run your action near-immediately, set `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will launch shortly after corresponding `AsyncAction__c` record(s) are inserted.
+- Add your action at a regular scheduled interval, using the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types. 
+
+Once these steps have been completed, create `AsyncAction__c` records linked to your processor class via the `ProcessorClass__c` field. When run, the processor will process any `AsyncAction__c` records with a _Pending_ Status.
 
 Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, if it needs to be retried, and logs (including errors) related to the Action.
 
-Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTION.md).
+Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTIONOBJECT.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
 
 Developers can track the status of their Actions through reports, list views, or through a custom "related list" component on records related to the Actions.
@@ -83,10 +87,6 @@ Alternatively, if you wish to contribute to this project, you can deploy its con
 
 You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
 
-### Configure Global Settings
-
-The `AsyncActionSetting__mdt` custom metadata type governs global settings across the application. You will need to configure a `Default` record for the application to function. This process is documented [here](/docs/SETTINGS.md).
-
 ### Enable Logging
 
 This framework uses the `apex-logger` package to post logs related to the execution of Async Actions. When properly configured, these logs will be visible from the Async Action record page.
@@ -97,6 +97,6 @@ Enable logging by creating an org-wide default `LogSetting__c` custom settings r
 -   Above _Default Organization Level Value_, click **_New_**.
 -   Set _Enabled_ to `true`, and _Threshold_ to `INFO`.
 
-> Note: Async Actions always run as the `Automated Process` user, which doesn't appear in Custom Settings' `User` lookup. For this reason, use the org-wide default Log Settings record to govern log visibility for Async Actions.
+> Note: Async Actions always run as the `Automated Process` user, which doesn't appear in Custom Settings' `User` lookup. For this reason, use the org-wide default Log Settings record to govern log visibility for Async Actions, or use an anonymous apex script to create a `LogSetting__c` record for this user.
 
 Read more about `apex-logger` [here](https://github.com/jasonsiders/apex-logger).

@@ -2,7 +2,7 @@
 private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldProcessActions() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
@@ -33,7 +33,7 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldTryAgainIfHasRetries() {
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
@@ -74,7 +74,7 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldNotTryAgainIfNoRetries() {
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -111,7 +111,7 @@ private class AsyncActionProcessorTest {
 	static void shouldKeepAliveIfErrors() {
 		// If KEEP_ALIVE retry behavior is employed, an action will remain in "Pending", and its retries will not be decremented.
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
@@ -147,7 +147,7 @@ private class AsyncActionProcessorTest {
 	static void shouldNotTryAgainIfSuddenDeath() {
 		// If SUDDEN_DEATH retry behavior is employed, an action will be marked as "Failed", even if it has retries
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -180,7 +180,7 @@ private class AsyncActionProcessorTest {
 	static void shouldHandleFinalizerErrors() {
 		// If an exception is thrown during the finalizer, it should be caught and handled like an error during the queueable
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -242,7 +242,7 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldLaunchJob() {
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
@@ -262,7 +262,7 @@ private class AsyncActionProcessorTest {
 		// In a real scenario, the job WOULD keep re-enqueueing on an error
 		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
-		AsyncActionSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 2;
 		config.RetryInterval__c = 0;

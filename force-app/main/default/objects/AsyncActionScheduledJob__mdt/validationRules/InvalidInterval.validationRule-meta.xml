@@ -3,10 +3,10 @@
     <fullName>InvalidInterval</fullName>
     <active>true</active>
     <errorConditionFormula>OR(
-    ISBLANK(ScheduledJobInterval__c),
-    ScheduledJobInterval__c &lt; 1,
-    ScheduledJobInterval__c &gt; 60
+    ISBLANK(Interval__c),
+    Interval__c &lt; 1,
+    Interval__c &gt; 60
 )</errorConditionFormula>
-    <errorDisplayField>ScheduledJobInterval__c</errorDisplayField>
+    <errorDisplayField>Interval__c</errorDisplayField>
     <errorMessage>Enter a value between 1 and 60.</errorMessage>
 </ValidationRule>

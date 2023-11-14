@@ -110,10 +110,10 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			this.handleFinalizerError(context?.getException());
 		}
-		// * Re-launch this, and any other jobs - if still pending
+		// * Re-launch this job if there are still pending records
 		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
 			Id currentJobId = context?.getAsyncApexJobId();
-			AsyncActionLauncher.launchAll(currentJobId);
+			AsyncActionLauncher.launchJobs(this.config, currentJobId);
 		}
 	}
 

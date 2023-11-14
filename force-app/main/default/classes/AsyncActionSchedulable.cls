@@ -1,14 +1,24 @@
 global class AsyncActionSchedulable implements System.Schedulable {
+	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 	static final Integer DEFAULT_INTERVAL = 60;
 	static final String HOURLY = '0 0 * * * ?';
 	static final Logger LOGGER = new Logger()
 		?.setLoggedFrom(AsyncActionSchedulable.class)
 		?.setSource(AsyncActionConstants.PACKAGE_NAME);
-	AsyncActionSetting__mdt settings = AsyncActionSettingService.getSettings();
+	AsyncActionScheduledJob__mdt jobSettings;
+
+	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
+		this.jobSettings = jobSettings;
+	}
 
 	global void execute(System.SchedulableContext context) {
-		this.doScheduledActions(context);
-		this.reschedule(context?.getTriggerId());
+		this.getUpdatedJobSettings();
+		if (this.jobSettings != null) {
+			this.doScheduledActions();
+			this.reschedule(context?.getTriggerId());
+		}
+		// Once completed, ensure other scheduled jobs match the configuration
+		new AsyncActionScheduleEnforcer().enforce();
 		LOGGER.publish();
 	}
 
@@ -23,48 +33,73 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		}
 	}
 
+	public String getJobName() {
+		return JOB_PREFIX + this.jobSettings?.DeveloperName;
+	}
+
 	public Id scheduleNewJob() {
 		// If the Scheduled Job is disabled, do not reschedule
-		if (this.settings?.RunScheduledJob__c == true) {
-			String jobName = AsyncActionSchedulable.class?.getName();
+		if (this.jobSettings?.Enabled__c == true) {
+			String jobName = this.getJobName();
 			Integer interval = this.getInterval();
 			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
-			Id jobId = System.schedule(jobName, cronExp, new AsyncActionSchedulable());
+			System.Schedulable newJob = new AsyncActionSchedulable(this.jobSettings);
+			Id jobId = System.schedule(jobName, cronExp, newJob);
 			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
 			return jobId;
 		} else {
-			LOGGER?.finest(AsyncActionSchedulable.class + ' is not enabled');
+			LOGGER?.finest(this.jobSettings?.DeveloperName + ' is not enabled');
 			return null;
 		}
 	}
 
-	private void doScheduledActions(System.SchedulableContext context) {
-		if (this.settings?.RunScheduledJob__c == true) {
-			AsyncActionStart__e event = new AsyncActionStart__e();
+	private void doScheduledActions() {
+		List<AsyncActionScheduledJobItem__mdt> items = this.getActiveItems();
+		if (this.jobSettings?.Enabled__c == true && items?.isEmpty() == false) {
+			String actions = this.getCommaSeparatedActions(items);
+			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
 			EventBus.publish(event);
 		}
 	}
 
+	private List<AsyncActionScheduledJobItem__mdt> getActiveItems() {
+		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>();
+		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
+			if (item?.Enabled__c == true) {
+				activeItems?.add(item);
+			}
+		}
+		return activeItems;
+	}
+
+	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
+		Set<String> actionSet = new Set<String>();
+		for (AsyncActionScheduledJobItem__mdt item : items) {
+			String processorClass = item?.AsyncActionProcessor__r?.ProcessorClass__c;
+			actionSet?.add(processorClass);
+		}
+		return String.join(actionSet, ',');
+	}
+
 	private Integer getInterval() {
-		Integer interval = AsyncActionSettingService.getSettings()?.ScheduledJobInterval__c?.intValue();
+		Integer interval = this.jobSettings?.Interval__c?.intValue();
 		return (interval != null) ? interval : DEFAULT_INTERVAL;
 	}
 
-	private List<AsyncApexJob> getPendingJobs() {
-		return [
-			SELECT Id, CronTriggerId, CronTrigger.CronExpression, CronTrigger.CronJobDetail.Name, Status
-			FROM AsyncApexJob
-			WHERE
-				ApexClass.Name = :AsyncActionSchedulable.class.getName()
-				AND Status IN ('Holding', 'Preparing', 'Processing', 'Queued')
-			ORDER BY CreatedDate ASC
-		];
+	private void getUpdatedJobSettings() {
+		// Get the latest values of the job settings record, in case it changed since the last scheduled run
+		String jobName = this.jobSettings?.DeveloperName; 
+		this.jobSettings = AsyncActionScheduledJobService.get(jobName);
 	}
 
 	private Id reschedule(Id currentJobId) {
-		// Deletes any existing jobs of this type, then schedules a new one for the defined interval
-		List<AsyncApexJob> pendingJobs = this.getPendingJobs();
-		this.abortJobs(pendingJobs);
+		// Deletes the current job, then schedules a new one for the defined interval
+		List<AsyncApexJob> currentJobs = [
+			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name 
+			FROM AsyncApexJob 
+			WHERE CronTriggerId = :currentJobId
+		];
+		this.abortJobs(currentJobs); 
 		return this.scheduleNewJob();
 	}
 

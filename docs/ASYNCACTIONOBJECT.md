@@ -1,6 +1,6 @@
 # The `AsyncAction__c` Custom Object
 
-Records of this object represent an request to be processed by a `AsyncActionProcessor` class. The class which will process the action is listed in the `ProcessorClass__c` field.
+Records of this object represent an request to be processed by an `AsyncActionProcessor` class. The class which will process the action is listed in the `ProcessorClass__c` field.
 
 The record's primary function is to track the status of asynchronous requests to the framework. Async Action records are always created in _Pending_ Status, but throughout its lifecycle these records may be retried a number of times, before being _Completed_ or _Failed_. They can also be manually _Canceled_ in the UI.
 
