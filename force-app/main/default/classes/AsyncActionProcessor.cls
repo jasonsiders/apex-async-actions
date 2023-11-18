@@ -112,8 +112,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		}
 		// * Re-launch this job if there are still pending records
 		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
-			Id currentJobId = context?.getAsyncApexJobId();
-			AsyncActionLauncher.launchJobs(this.config, currentJobId);
+			this.relaunch(context); 
 		}
 	}
 
@@ -136,6 +135,23 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	private Boolean hasRetries(AsyncAction__c action) {
 		Decimal numRetries = (action?.Retries__c != null) ? action?.Retries__c : 0;
 		return numRetries > 0;
+	}
+
+	private void relaunch(System.FinalizerContext context) {
+		try {
+			// Attempt to re-enqueue the current job
+			Id currentJobId = context?.getAsyncApexJobId();
+			AsyncActionLauncher.launchJobs(this.config, currentJobId);
+		} catch (System.AsyncException error) {
+			// Note: Finalizers can only re-enqueue failed jobs a max of 5 times in a row.
+			// If this happens, a System.AsyncException will be thrown to prevent runaway jobs. 
+			// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this. 
+			// Re-launch the job via a platform event, this resets the stack depth to 0
+			this.logger?.finest('Could not re-launch during finalizer. Re-launching via platform event.\n' + error);
+			String actionName = this.getType()?.getName();
+			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
+			EventBus.publish(event); 
+		}
 	}
 
 	private List<AsyncAction__c> requeryActions() {
