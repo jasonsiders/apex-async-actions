@@ -178,13 +178,12 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldHandleFinalizerErrors() {
-		// If an exception is thrown during the finalizer, it should be caught and handled like an error during the queueable
+		// If an exception is thrown during the finalizer, the job will be aborted, but the actions will not be affected
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
-		processor.retryBehavior = AsyncActionProcessor.RetryBehavior.SUDDEN_DEATH;
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
@@ -194,18 +193,11 @@ private class AsyncActionProcessorTest {
 		Test.stopTest();
 		Test.getEventBus().deliver();
 
-		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		List<AsyncApexJob> jobs = [SELECT Id, CronTriggerId FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor' AND Id != :jobId];
+		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
-			Assert.areEqual(
-				AsyncActionProcessor.Status.FAILED.name(),
-				action?.Status__c,
-				'Action was not marked as failed'
-			);
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
+			String expectedStatus = AsyncActionProcessor.Status.COMPLETED?.name();
+			Assert.areEqual(expectedStatus, action?.Status__c, 'Action progress was overridden by Finalizer error');
 		}
 	}
 

@@ -38,10 +38,11 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
 				EventBus.publish(event); 
 			} else {
-				this.handleFinalizerError(error);
+				this.logger?.error('Aborting job after error during Finalizer: ' + error);
 			}
+		} finally {
+			this.logger?.publish();
 		}
-		this.logger?.publish();
 	}
 
 	// **** PUBLIC **** //
