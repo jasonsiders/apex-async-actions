@@ -26,17 +26,17 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		// Its execution does not count towards the async method limit.
 		// Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_transaction_finalizers.htm
 		try {
-			this.finalize(context);	
+			this.finalize(context);
 		} catch (Exception error) {
-			if (error instanceOf System.AsyncException && this.config?.BypassFinalizerRetryLimit__c == true) {
+			if (error instanceof System.AsyncException && this.config?.BypassFinalizerRetryLimit__c == true) {
 				// Note: Finalizers can only re-enqueue failed jobs a max of 5 times in a row.
-				// If this happens, a System.AsyncException will be thrown to prevent runaway jobs. 
-				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this. 
+				// If this happens, a System.AsyncException will be thrown to prevent runaway jobs.
+				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this.
 				// Re-launch the job via a platform event, this resets the stack depth to 0
 				this.logger?.finest('Could not re-launch during finalizer. Re-launching via platform event.\n' + error);
 				String actionName = this.getType()?.getName();
 				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
-				EventBus.publish(event); 
+				EventBus.publish(event);
 			} else {
 				this.logger?.error('Aborting job after error during Finalizer: ' + error);
 			}

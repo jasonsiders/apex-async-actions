@@ -88,18 +88,18 @@ global class AsyncActionSchedulable implements System.Schedulable {
 
 	private void getUpdatedJobSettings() {
 		// Get the latest values of the job settings record, in case it changed since the last scheduled run
-		String jobName = this.jobSettings?.DeveloperName; 
+		String jobName = this.jobSettings?.DeveloperName;
 		this.jobSettings = AsyncActionScheduledJobService.get(jobName);
 	}
 
 	private Id reschedule(Id currentJobId) {
 		// Deletes the current job, then schedules a new one for the defined interval
 		List<AsyncApexJob> currentJobs = [
-			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name 
-			FROM AsyncApexJob 
+			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name
+			FROM AsyncApexJob
 			WHERE CronTriggerId = :currentJobId
 		];
-		this.abortJobs(currentJobs); 
+		this.abortJobs(currentJobs);
 		return this.scheduleNewJob();
 	}
 
