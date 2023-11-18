@@ -3,7 +3,7 @@ private class AsyncActionScheduledJobServiceTest {
 	@IsTest
 	static void shouldReturnWhatIsActuallyInOrg() {
 		Set<String> settingNames = AsyncActionScheduledJob__mdt.getAll()?.keySet();
-		AsyncActionScheduledJobService.useRealData = true; 
+		AsyncActionScheduledJobService.useRealData = true;
 
 		Test.startTest();
 		List<AsyncActionScheduledJob__mdt> allSettings = AsyncActionScheduledJobService.getAll()?.values();

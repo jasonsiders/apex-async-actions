@@ -193,7 +193,11 @@ private class AsyncActionProcessorTest {
 		Test.stopTest();
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id, CronTriggerId FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor' AND Id != :jobId];
+		List<AsyncApexJob> jobs = [
+			SELECT Id, CronTriggerId
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = 'MockAsyncActionProcessor' AND Id != :jobId
+		];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			String expectedStatus = AsyncActionProcessor.Status.COMPLETED?.name();
@@ -277,14 +281,14 @@ private class AsyncActionProcessorTest {
 		Assert.areEqual(config?.Retries__c, jobs?.size(), 'Wrong # of jobs');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldBypassFinalizerReenqueueLimits() {
-		// Finalizers can re-enqueue failed jobs a limit of 5 times. 
-		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException 
+		// Finalizers can re-enqueue failed jobs a limit of 5 times.
+		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
-		config.BypassFinalizerRetryLimit__c = true; 
+		config.BypassFinalizerRetryLimit__c = true;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.error = new System.AsyncException();
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
@@ -292,24 +296,24 @@ private class AsyncActionProcessorTest {
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
-		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior, 
+		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
 		// but we can check that a job was still enqueued by calling the finzlier directly
-		System.FinalizerContext context; 
+		System.FinalizerContext context;
 		processor?.execute(context);
-		Test.getEventBus().deliver(); 
+		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
 		Assert.areEqual(false, jobs?.isEmpty(), 'Job was not relaunched');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldRespectFinalizerReenqueueLimits() {
-		// Finalizers can re-enqueue failed jobs a limit of 5 times. 
-		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException 
+		// Finalizers can re-enqueue failed jobs a limit of 5 times.
+		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
-		config.BypassFinalizerRetryLimit__c = false; 
+		config.BypassFinalizerRetryLimit__c = false;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.error = new System.AsyncException();
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
@@ -317,11 +321,11 @@ private class AsyncActionProcessorTest {
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
-		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior, 
+		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
 		// but we can check that a job was still enqueued by calling the finzlier directly
-		System.FinalizerContext context; 
+		System.FinalizerContext context;
 		processor?.execute(context);
-		Test.getEventBus().deliver(); 
+		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
