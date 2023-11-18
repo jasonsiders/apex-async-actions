@@ -285,6 +285,16 @@ private class AsyncActionProcessorTest {
 		Assert.areEqual(config?.Retries__c, jobs?.size(), 'Wrong # of jobs');
 	}
 
+	@IsTest 
+	static void shouldHandleAsyncErrorsInFinalizer() {
+		// Finalizers can re-enqueue failed jobs a limit of 5 times. 
+		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException 
+		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
+		// Because of @IsTest stack depth issues, we can't simulate the 5x behavior, but we can check that a job was still enqueued
+
+		
+	}
+
 	// **** HELPER **** //
 	@TestSetup
 	static void setup() {
@@ -333,5 +343,20 @@ private class AsyncActionProcessorTest {
 
 	static void enableLogging(System.LoggingLevel level) {
 		insert new LogSetting__c(Enabled__c = true, Threshold__c = level?.name(), SetupOwnerId = UserInfo.getUserId());
+	}
+
+	// **** INNER **** // 
+	private class ThrowsAsyncErrorProcessor extends AsyncActionProcessor {
+		public override Type getType() {
+			return ThrowsAsyncErrorProcessor.class; 
+		}
+
+		public override void process(List<AsyncAction__c> actions) {
+			// Nothing needed here
+		}
+
+		public override void finalize(System.FinalizerContext context) {
+			throw new System.AsyncException(); 
+		}
 	}
 }
