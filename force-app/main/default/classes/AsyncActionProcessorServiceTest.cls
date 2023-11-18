@@ -6,7 +6,7 @@ private class AsyncActionProcessorServiceTest {
 		// This is to avoid unexpected behaviors while testing in live environments.
 		// If needed, callers can use the @TestVisible flag to bypass this behavior.
 		Map<String, AsyncActionProcessor__mdt> expected = AsyncActionProcessor__mdt.getAll();
-		AsyncActionProcessorService.useRealData = true; 
+		AsyncActionProcessorService.useRealData = true;
 
 		Test.startTest();
 		Map<String, AsyncActionProcessor__mdt> actual = AsyncActionProcessorService.getAll();
@@ -19,7 +19,7 @@ private class AsyncActionProcessorServiceTest {
 		}
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldReturnNothing() {
 		// In @IsTest context, the service will return an empty list if there is useRealData = false,
 		// and no records have been loaded in via the @TestVisible flags

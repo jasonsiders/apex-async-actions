@@ -2,7 +2,7 @@ global abstract without sharing class AsyncActionScheduledJobItemService {
 	@TestVisible
 	static Map<String, List<AsyncActionScheduledJobItem__mdt>> jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>();
 	@TestVisible
-	static Boolean useRealData = (Test.isRunningTest() == false); 
+	static Boolean useRealData = (Test.isRunningTest() == false);
 
 	global static List<AsyncActionScheduledJobItem__mdt> getJobItems(AsyncActionScheduledJob__mdt jobSettings) {
 		// Retrieve all active AsyncActionScheduledJobItem__mdt records that match the scheduled job settings

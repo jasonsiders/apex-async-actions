@@ -2,7 +2,7 @@ global abstract class AsyncActionProcessorService {
 	@TestVisible
 	static Map<String, AsyncActionProcessor__mdt> processors;
 	@TestVisible
-	static Boolean useRealData = (Test.isRunningTest() == false); 
+	static Boolean useRealData = (Test.isRunningTest() == false);
 
 	global static Map<String, AsyncActionProcessor__mdt> getAll() {
 		// Returns a map of AsyncActionProcessor__mdt records by their "Processor Class" value
@@ -16,8 +16,8 @@ global abstract class AsyncActionProcessorService {
 	}
 
 	static Map<String, AsyncActionProcessor__mdt> retrieve() {
-		List<AsyncActionProcessor__mdt> configs = AsyncActionProcessorService.useRealData 
-			? AsyncActionProcessor__mdt.getAll()?.values() 
+		List<AsyncActionProcessor__mdt> configs = AsyncActionProcessorService.useRealData
+			? AsyncActionProcessor__mdt.getAll()?.values()
 			: new List<AsyncActionProcessor__mdt>();
 		Map<String, AsyncActionProcessor__mdt> configMap = AsyncActionProcessorService.mapByProcessorClass(configs);
 		return configMap;

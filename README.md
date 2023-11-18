@@ -33,9 +33,10 @@ Developers can create a new _Action_ in two easy steps:
 2. Create a `AsyncActionProcessor__mdt` custom metadata record related to the class. This can be used to configure certain aspects of the Action; for example, its _Batch Size_. Read more about this custom metadata type [here](/docs/PROCESSORSETTINGS.md).
    ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
 
-3. Define how you want your action to be launched. 
-- Run your action near-immediately, set `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will launch shortly after corresponding `AsyncAction__c` record(s) are inserted.
-- Add your action at a regular scheduled interval, using the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types. 
+3. Define how you want your action to be launched.
+
+-   Run your action near-immediately, set `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will launch shortly after corresponding `AsyncAction__c` record(s) are inserted.
+-   Add your action at a regular scheduled interval, using the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types.
 
 Once these steps have been completed, create `AsyncAction__c` records linked to your processor class via the `ProcessorClass__c` field. When run, the processor will process any `AsyncAction__c` records with a _Pending_ Status.
 

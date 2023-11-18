@@ -5,7 +5,7 @@ private class AsyncActionScheduledJobItemServiceTest {
 		String jobName = 'Testing_123';
 		AsyncActionScheduledJob__mdt jobSettings = new AsyncActionScheduledJob__mdt();
 		jobSettings.DeveloperName = jobName;
-		AsyncActionScheduledJobItemService.useRealData = true; 
+		AsyncActionScheduledJobItemService.useRealData = true;
 		List<AsyncActionScheduledJobItem__mdt> allItems = [
 			SELECT Id
 			FROM AsyncActionScheduledJobItem__mdt

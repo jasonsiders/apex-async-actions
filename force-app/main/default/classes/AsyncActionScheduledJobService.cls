@@ -2,7 +2,7 @@ global abstract class AsyncActionScheduledJobService {
 	@TestVisible
 	static Map<String, AsyncActionScheduledJob__mdt> settings;
 	@TestVisible
-	static Boolean useRealData = (Test.isRunningTest() == false); 
+	static Boolean useRealData = (Test.isRunningTest() == false);
 
 	global static Map<String, AsyncActionScheduledJob__mdt> getAll() {
 		AsyncActionScheduledJobService.retrieveSettings();

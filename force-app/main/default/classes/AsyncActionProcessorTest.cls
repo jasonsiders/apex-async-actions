@@ -178,13 +178,12 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldHandleFinalizerErrors() {
-		// If an exception is thrown during the finalizer, it should be caught and handled like an error during the queueable
+		// If an exception is thrown during the finalizer, the job will be aborted, but the actions will not be affected
 		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
-		processor.retryBehavior = AsyncActionProcessor.RetryBehavior.SUDDEN_DEATH;
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
@@ -194,18 +193,15 @@ private class AsyncActionProcessorTest {
 		Test.stopTest();
 		Test.getEventBus().deliver();
 
-		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
+		List<AsyncApexJob> jobs = [
+			SELECT Id, CronTriggerId
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = 'MockAsyncActionProcessor' AND Id != :jobId
+		];
+		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
-			Assert.areEqual(
-				AsyncActionProcessor.Status.FAILED.name(),
-				action?.Status__c,
-				'Action was not marked as failed'
-			);
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
+			String expectedStatus = AsyncActionProcessor.Status.COMPLETED?.name();
+			Assert.areEqual(expectedStatus, action?.Status__c, 'Action progress was overridden by Finalizer error');
 		}
 	}
 
@@ -283,6 +279,56 @@ private class AsyncActionProcessorTest {
 		// Should keep re-enqueueing until the retries are exhausted
 		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
 		Assert.areEqual(config?.Retries__c, jobs?.size(), 'Wrong # of jobs');
+	}
+
+	@IsTest
+	static void shouldBypassFinalizerReenqueueLimits() {
+		// Finalizers can re-enqueue failed jobs a limit of 5 times.
+		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
+		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		config.BypassFinalizerRetryLimit__c = true;
+		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
+		processor.error = new System.AsyncException();
+		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		AsyncAction__c action = processor?.initAction(null);
+		insert action;
+		AsyncActionTestUtils.setAllowRecursion(true);
+
+		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
+		// but we can check that a job was still enqueued by calling the finzlier directly
+		System.FinalizerContext context;
+		processor?.execute(context);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		Assert.areEqual(false, jobs?.isEmpty(), 'Job was not relaunched');
+	}
+
+	@IsTest
+	static void shouldRespectFinalizerReenqueueLimits() {
+		// Finalizers can re-enqueue failed jobs a limit of 5 times.
+		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
+		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		config.BypassFinalizerRetryLimit__c = false;
+		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
+		processor.error = new System.AsyncException();
+		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		AsyncAction__c action = processor?.initAction(null);
+		insert action;
+		AsyncActionTestUtils.setAllowRecursion(true);
+
+		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
+		// but we can check that a job was still enqueued by calling the finzlier directly
+		System.FinalizerContext context;
+		processor?.execute(context);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 	}
 
 	// **** HELPER **** //
