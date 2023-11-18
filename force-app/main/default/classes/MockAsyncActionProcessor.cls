@@ -3,13 +3,14 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
+	public Exception error = new System.DmlException(); 
 	public Path pathType = Path.SUCCESS;
 	public AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
 
 	public virtual override void process(List<AsyncAction__c> actions) {
 		List<Case> cases = new List<Case>();
 		if (this.pathType == Path.JOB_ERROR) {
-			throw new System.DmlException('This is a fake exception');
+			throw this.error; 
 		} else if (this.pathType == Path.FAIL) {
 			this.fail(actions, this.retryBehavior, 'This is a test error');
 		} else {
@@ -30,9 +31,10 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	}
 
 	public override void finalize(System.FinalizerContext context) {
-		super.finalize(context);
 		if (this.pathType == Path.FINALIZER_ERROR) {
-			throw new System.DmlException('This is a fake exception');
+			throw this.error; 
+		} else {
+			super.finalize(context);
 		}
 	}
 
@@ -48,8 +50,8 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	// **** INNER **** //
 	public enum Path {
 		FAIL,
-		FINALIZER_ERROR,
 		JOB_ERROR,
+		FINALIZER_ERROR,
 		SUCCESS
 	}
 }

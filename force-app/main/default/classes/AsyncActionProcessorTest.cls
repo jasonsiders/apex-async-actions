@@ -290,9 +290,23 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times. 
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException 
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		// Because of @IsTest stack depth issues, we can't simulate the 5x behavior, but we can check that a job was still enqueued
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
+		processor.error = new System.AsyncException();
+		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		AsyncAction__c action = processor?.initAction(null);
+		insert action;
+		AsyncActionTestUtils.setAllowRecursion(true);
 
-		
+		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior, 
+		// but we can check that a job was still enqueued by calling the finzlier directly
+		System.FinalizerContext context; 
+		processor?.execute(context);
+		Test.getEventBus().deliver(); 
+
+		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		Assert.areEqual(false, jobs?.isEmpty(), 'Job was not relaunched');
 	}
 
 	// **** HELPER **** //
@@ -343,20 +357,5 @@ private class AsyncActionProcessorTest {
 
 	static void enableLogging(System.LoggingLevel level) {
 		insert new LogSetting__c(Enabled__c = true, Threshold__c = level?.name(), SetupOwnerId = UserInfo.getUserId());
-	}
-
-	// **** INNER **** // 
-	private class ThrowsAsyncErrorProcessor extends AsyncActionProcessor {
-		public override Type getType() {
-			return ThrowsAsyncErrorProcessor.class; 
-		}
-
-		public override void process(List<AsyncAction__c> actions) {
-			// Nothing needed here
-		}
-
-		public override void finalize(System.FinalizerContext context) {
-			throw new System.AsyncException(); 
-		}
 	}
 }
