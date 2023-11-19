@@ -8,6 +8,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>AsyncAction__c.Error__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>AsyncAction__c.RelatedRecordId__c</field>
         <readable>true</readable>
     </fieldPermissions>
