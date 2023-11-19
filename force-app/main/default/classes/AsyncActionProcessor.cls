@@ -1,7 +1,7 @@
 global abstract class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
 	global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
-	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setSource(AsyncActionConstants.PACKAGE_NAME);
+	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setCategory(AsyncActionConstants.PACKAGE_NAME);
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
 
@@ -13,10 +13,18 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	global void execute(System.QueueableContext context) {
 		System.attachFinalizer(this);
 		if (this.config?.Enabled__c == true) {
-			List<AsyncAction__c> actions = this.getPendingActions();
-			this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-			this.process(actions);
-			this.logger?.publish();
+			try {
+				List<AsyncAction__c> actions = this.getPendingActions();
+				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+				this.process(actions);
+				this.logger?.publish();
+			} catch (Exception error) {
+				// Publish the logs immediately, via platform event,
+				// then allow the error to terminate the current transaction
+				Logger.LogPublisher publisher = new LogEventPublisher();
+				this.logger?.error(error)?.publish(publisher);
+				throw error;
+			}
 		}
 	}
 
@@ -48,6 +56,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	// **** PUBLIC **** //
 	global void fail(AsyncAction__c action, RetryBehavior behavior, Object errorObj) {
 		// Callers can use this method to handle a failed action
+		action.Error__c = String.valueOf(errorObj);
 		if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
 			// Retry the action at some point in the future. Decrement the number of retries.
 			action.Retries__c--;
@@ -59,13 +68,10 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			// If no retries remain, or if SUDDEN_DEATH, mark the record as failed
 			action.Status__c = Status.FAILED.name();
 		}
-		String msg =
-			'Async Action failed: ' +
-			errorObj +
-			'\nNew Status: ' +
-			action?.Status__c +
-			'. Num Retries: ' +
-			action?.Retries__c;
+		String msg = String.format(
+			'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
+			new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
+		);
 		this.logger?.clone()?.setRelatedRecordId(action?.Id)?.error(msg);
 	}
 
@@ -104,6 +110,10 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 
 	global AsyncAction__c initAction(Id relatedRecordId) {
 		return this.initAction(relatedRecordId, null);
+	}
+
+	global AsyncAction__c initAction() {
+		return this.initAction(null);
 	}
 
 	global Boolean isEnabled() {
