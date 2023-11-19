@@ -85,7 +85,7 @@ private class OppInfo {
 ![The Async Action Custom Object](/media/sample_async_action.png)
 
 -   **Data** (Text): A serialized custom data structure used to provide additional context about the action to be used by the processor class. Its use may vary. See [Providing Context to Processors](#providing-context-to-processors) for more.
--   **Error** (Text): Details about the last error that the Action encountered, if any. 
+-   **Error** (Text): Details about the last error that the Action encountered, if any.
 -   **Processor Class**: Identifies the Apex Class which will process the current Async Action record. This must be the fully-qualified API name of a Apex Class which extends the `AsyncActionProcessor` abstract type.
 -   **Related Record** and **Related Record Id**: `RelatedRecordId__c` stores the Id of a Salesforce record which is closely related to the request. `RelatedRecord__c` is a read-only formula field which displays a link to the record in question, for use in the UI.
 -   **Retries**: Indicates the number of times that the record may be retried, if allowed. If a record has 0 retries, any failures to that record will cause the Status to change to _Failed_. This does not apply to custom [error handling](/docs/ASYNCACTIONPROCESSOR.md#error-handling).

@@ -102,7 +102,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action was not marked as failed'
 			);
-			Assert.isNotNull(action?.Error__c, 'Missing Error details'); 
+			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
@@ -172,7 +172,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action was not marked as failed'
 			);
-			Assert.isNotNull(action?.Error__c, 'Missing Error details'); 
+			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
@@ -290,8 +290,8 @@ private class AsyncActionProcessorTest {
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
-		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor); 
-		insert actions; 
+		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
+		insert actions;
 
 		try {
 			Test.startTest();
@@ -303,7 +303,7 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		List<Log__c> logs = [SELECT Id FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
-		Assert.isFalse(logs?.isEmpty(), 'Errors were not logged'); 
+		Assert.isFalse(logs?.isEmpty(), 'Errors were not logged');
 	}
 
 	@IsTest
