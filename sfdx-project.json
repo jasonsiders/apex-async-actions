@@ -23,13 +23,13 @@
 				},
 				{
 					"package": "apex-logger",
-					"versionNumber": "1.0.0.LATEST"
+					"versionNumber": "1.1.0.LATEST"
 				}
 			],
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 1.3.0",
-			"versionNumber": "1.3.0.NEXT",
+			"versionName": "ver 1.4.0",
+			"versionNumber": "1.4.0.NEXT",
 			"versionDescription": ""
 		}
 	],
