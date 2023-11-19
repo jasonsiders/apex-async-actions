@@ -19,7 +19,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				this.process(actions);
 				this.logger?.publish();
 			} catch (Exception error) {
-				// Publish the logs immediately, via platform event, 
+				// Publish the logs immediately, via platform event,
 				// then allow the error to terminate the current transaction
 				Logger.LogPublisher publisher = new LogEventPublisher();
 				this.logger?.error(error)?.publish(publisher);
@@ -56,7 +56,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	// **** PUBLIC **** //
 	global void fail(AsyncAction__c action, RetryBehavior behavior, Object errorObj) {
 		// Callers can use this method to handle a failed action
-		action.Error__c = String.valueOf(errorObj); 
+		action.Error__c = String.valueOf(errorObj);
 		if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
 			// Retry the action at some point in the future. Decrement the number of retries.
 			action.Retries__c--;
@@ -69,7 +69,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			action.Status__c = Status.FAILED.name();
 		}
 		String msg = String.format(
-			'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}', 
+			'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
 			new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
 		);
 		this.logger?.clone()?.setRelatedRecordId(action?.Id)?.error(msg);

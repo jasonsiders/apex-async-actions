@@ -73,7 +73,7 @@ For this, you will need to use the `fail()` method in your `process()` implement
     -   `ALLOW_RETRY`: If the record has a positive `Retries__c` value, it will be decremented, and the record will remain in _Pending_ Status, and the record will be rescheduled X mins in the future, according to the `AsyncActionProcessor__mdt.RetryInterval__c`. However, if the record does **not** have a positive `Retries__c` value, its Status will be updated to _Failed_, and the record will no longer be eligible to be processed.
     -   `KEEP_ALIVE`: Regardless of the number of `Retries__c`, the record will remain in _Pending_ Status and be retired in the future. The number of `Retries__c` will not be decremented. Use this for a trivial failures; ex., after hitting API rate limits.
     -   `SUDDEN_DEATH`: Regardless of the number of `Retries__c`, the record's Status will be updated to _Failed_, and the record will no longer be eligible to be processed.
--   `error`: An Object representing the error (ex., an `Exception` or `String` error message). This error object will be logged against the action record, and stored in the action record's _Error_ field. 
+-   `error`: An Object representing the error (ex., an `Exception` or `String` error message). This error object will be logged against the action record, and stored in the action record's _Error_ field.
 
 Examples:
 
