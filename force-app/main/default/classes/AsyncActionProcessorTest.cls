@@ -102,6 +102,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action was not marked as failed'
 			);
+			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
@@ -171,6 +172,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action was not marked as failed'
 			);
+			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
@@ -264,7 +266,7 @@ private class AsyncActionProcessorTest {
 		config.RetryInterval__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
-		AsyncAction__c action = processor?.initAction(null);
+		AsyncAction__c action = processor?.initAction();
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -282,6 +284,29 @@ private class AsyncActionProcessorTest {
 	}
 
 	@IsTest
+	static void shouldHandleFatalErrors() {
+		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
+		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
+		insert actions;
+
+		try {
+			Test.startTest();
+			Id jobId = System.enqueueJob(processor);
+			Test.stopTest();
+		} catch (Exception error) {
+			// Try/Catch needed to prevent the test from aborting
+		}
+		Test.getEventBus().deliver();
+
+		List<Log__c> logs = [SELECT Id FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
+		Assert.isFalse(logs?.isEmpty(), 'Errors were not logged');
+	}
+
+	@IsTest
 	static void shouldBypassFinalizerReenqueueLimits() {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
@@ -292,7 +317,7 @@ private class AsyncActionProcessorTest {
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.error = new System.AsyncException();
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncAction__c action = processor?.initAction(null);
+		AsyncAction__c action = processor?.initAction();
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -317,7 +342,7 @@ private class AsyncActionProcessorTest {
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.error = new System.AsyncException();
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncAction__c action = processor?.initAction(null);
+		AsyncAction__c action = processor?.initAction();
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -348,7 +373,7 @@ private class AsyncActionProcessorTest {
 
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
-			SELECT Id, Data__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Error__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :originalActions
 		];
