@@ -282,6 +282,29 @@ private class AsyncActionProcessorTest {
 	}
 
 	@IsTest
+	static void shouldHandleFatalErrors() {
+		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
+		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
+		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor); 
+		insert actions; 
+
+		try {
+			Test.startTest();
+			Id jobId = System.enqueueJob(processor);
+			Test.stopTest();
+		} catch (Exception error) {
+			// Try/Catch needed to prevent the test from aborting
+		}
+		Test.getEventBus().deliver();
+
+		List<Log__c> logs = [SELECT Id FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
+		Assert.isFalse(logs?.isEmpty(), 'Errors were not logged'); 
+	}
+
+	@IsTest
 	static void shouldBypassFinalizerReenqueueLimits() {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException

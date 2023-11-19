@@ -13,10 +13,18 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	global void execute(System.QueueableContext context) {
 		System.attachFinalizer(this);
 		if (this.config?.Enabled__c == true) {
-			List<AsyncAction__c> actions = this.getPendingActions();
-			this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-			this.process(actions);
-			this.logger?.publish();
+			try {
+				List<AsyncAction__c> actions = this.getPendingActions();
+				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+				this.process(actions);
+				this.logger?.publish();
+			} catch (Exception error) {
+				// Publish the logs immediately, via platform event, 
+				// then allow the error to terminate the current transaction
+				Logger.LogPublisher publisher = new LogEventPublisher();
+				this.logger?.error(error)?.publish(publisher);
+				throw error;
+			}
 		}
 	}
 
