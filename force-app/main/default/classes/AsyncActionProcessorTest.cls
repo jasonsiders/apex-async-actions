@@ -264,7 +264,7 @@ private class AsyncActionProcessorTest {
 		config.RetryInterval__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
-		AsyncAction__c action = processor?.initAction(null);
+		AsyncAction__c action = processor?.initAction();
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -315,7 +315,7 @@ private class AsyncActionProcessorTest {
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.error = new System.AsyncException();
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncAction__c action = processor?.initAction(null);
+		AsyncAction__c action = processor?.initAction();
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -340,7 +340,7 @@ private class AsyncActionProcessorTest {
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.error = new System.AsyncException();
 		processor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncAction__c action = processor?.initAction(null);
+		AsyncAction__c action = processor?.initAction();
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 

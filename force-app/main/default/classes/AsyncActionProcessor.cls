@@ -1,7 +1,7 @@
 global abstract class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
 	global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
-	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setSource(AsyncActionConstants.PACKAGE_NAME);
+	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setCategory(AsyncActionConstants.PACKAGE_NAME);
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
 
@@ -112,6 +112,10 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 
 	global AsyncAction__c initAction(Id relatedRecordId) {
 		return this.initAction(relatedRecordId, null);
+	}
+
+	global AsyncAction__c initAction() {
+		return this.initAction(null);
 	}
 
 	global Boolean isEnabled() {
