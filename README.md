@@ -58,12 +58,8 @@ Developers can track the status of their Actions through reports, list views, or
 
 ### Install Dependencies
 
-`apex-async-actions` uses the `lwc-related-list` package to display Action records in the UI, and the `apex-logger` package for logging.
-You must install the latest version of each of these packages before installing `apex-async-actions`:
-
-You can view the latest versions of these packages below:
-
--   [lwc-related-list](https://github.com/jasonsiders/lwc-related-list/releases/latest)
+`apex-async-actions` uses the `apex-logger` package for logging.
+You must install the latest version of this package before installing `apex-async-actions`:
 -   [apex-logger](https://github.com/jasonsiders/apex-logger/releases/latest)
 
 Run this sfdx command to install each dependent package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
