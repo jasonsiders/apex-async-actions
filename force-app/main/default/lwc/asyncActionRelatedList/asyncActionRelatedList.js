@@ -7,9 +7,12 @@ import { registerRefreshContainer } from "lightning/refresh";
 import getActions from "@salesforce/apex/AsyncActionRelatedListController.getActions";
 import hasAccess from "@salesforce/apex/AsyncActionRelatedListController.hasAccess";
 import ASYNC_ACTION_OBJECT from "@salesforce/schema/AsyncAction__c";
+import CREATED_DATE_FIELD from "@salesforce/schema/AsyncAction__c.CreatedDate";
+import ERROR_FIELD from "@salesforce/schema/AsyncAction__c.Error__c";
 import ID_FIELD from "@salesforce/schema/AsyncAction__c.Id";
 import NAME_FIELD from "@salesforce/schema/AsyncAction__c.Name";
 import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.ProcessorClass__c";
+import RETRIES_FIELD from "@salesforce/schema/AsyncAction__c.Retries__c";
 import SCHEDULED_FIELD from "@salesforce/schema/AsyncAction__c.Scheduled__c";
 import STATUS_FIELD from "@salesforce/schema/AsyncAction__c.Status__c";
 const MAX_ROWS = 6;
@@ -19,6 +22,7 @@ const COLUMNS = [
 	{
 		fieldName: URL_FIELD,
 		hideDefaultActions: true,
+		includeInRelatedList: true,
 		label: "Async Action",
 		type: "url",
 		typeAttributes: {
@@ -28,18 +32,48 @@ const COLUMNS = [
 	{
 		fieldName: PROCESSOR_FIELD?.fieldApiName,
 		hideDefaultActions: true,
+		includeInRelatedList: true,
 		label: "Processor Class"
 	},
 	{
 		fieldName: STATUS_FIELD?.fieldApiName,
 		hideDefaultActions: true,
+		includeInRelatedList: true,
 		label: "Status"
+	},
+	{
+		fieldName: ERROR_FIELD?.fieldApiName,
+		hideDefaultActions: true,
+		includeInRelatedList: false,
+		label: "Error"
+	},
+	{
+		fieldName: RETRIES_FIELD?.fieldApiName,
+		hideDefaultActions: true,
+		includeInRelatedList: false,
+		label: "Retries",
+		type: "number"
 	},
 	{
 		fieldName: SCHEDULED_FIELD?.fieldApiName,
 		hideDefaultActions: true,
-		isDefaultSort: true,
+		includeInRelatedList: true,
+		isDefaultSort: false,
 		label: "Scheduled",
+		type: "date",
+		typeAttributes: {
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+			month: "2-digit",
+			year: "2-digit"
+		}
+	},
+	{
+		fieldName: CREATED_DATE_FIELD?.fieldApiName,
+		hideDefaultActions: true,
+		includeInRelatedList: false,
+		label: "Created Date",
 		type: "date",
 		typeAttributes: {
 			day: "2-digit",
@@ -76,7 +110,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 	}
 
 	get columns() {
-		return COLUMNS;
+		return COLUMNS?.filter((column) => column?.includeInRelatedList);
 	}
 
 	get hasActions() {
@@ -124,7 +158,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 		return {
 			componentDef: VIEW_ALL_COMPONENT_NAME,
 			attributes: {
-				columns: this.columns,
+				columns: COLUMNS,
 				objectApiName: this.actionObjectName,
 				recordId: this.recordId
 			}
