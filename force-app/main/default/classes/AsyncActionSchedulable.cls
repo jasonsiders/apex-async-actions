@@ -34,7 +34,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	public String getJobName() {
-		return JOB_PREFIX + this.jobSettings?.Id;
+		return JOB_PREFIX + this.jobSettings?.DeveloperName;
 	}
 
 	public Id scheduleNewJob() {
