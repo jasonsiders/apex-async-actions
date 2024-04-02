@@ -22,17 +22,6 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		LOGGER.publish();
 	}
 
-	public void abortJobs(List<AsyncApexJob> jobs) {
-		for (AsyncApexJob job : jobs) {
-			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
-			Id jobId = job?.CronTriggerId;
-			if (jobId != null) {
-				LOGGER?.finest('Aborting job: ' + jobName + ' [' + jobId + ']');
-				System.abortJob(jobId);
-			}
-		}
-	}
-
 	public String getJobName() {
 		return JOB_PREFIX + this.jobSettings?.DeveloperName;
 	}
@@ -99,7 +88,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			FROM AsyncApexJob
 			WHERE CronTriggerId = :currentJobId
 		];
-		this.abortJobs(currentJobs);
+		AsyncActionScheduledJobUtils.abortJobs(currentJobs);
 		return this.scheduleNewJob();
 	}
 
