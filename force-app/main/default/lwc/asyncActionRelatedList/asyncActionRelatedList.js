@@ -100,8 +100,8 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 	set actions(value) {
 		// Use this property to store records/rows from the parent component to display in the list.
 		// Note: Setter used to enforce the maximum # of rows, defined by the MAX_ROWS property.
-		const numRows = value?.length || 0; 
-		this.hasMore = (numRows > MAX_ROWS); 
+		const numRows = value?.length || 0;
+		this.hasMore = numRows > MAX_ROWS;
 		this._actions = value?.slice(0, MAX_ROWS);
 	}
 
@@ -114,7 +114,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 	}
 
 	get hasActions() {
-		return !!this.actions?.length; 
+		return !!this.actions?.length;
 	}
 
 	get hasViewAccess() {
@@ -126,7 +126,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 		// then indicate that the number exceeds the maximum display size
 		// The user should click on the "View All" button in this case
 		const numRows = this.actions?.length || 0;
-		const count = (this.hasMore && numRows > 0) ? `${numRows}+` : numRows; 
+		const count = this.hasMore && numRows > 0 ? `${numRows}+` : numRows;
 		return `${this.title} (${count})`;
 	}
 
@@ -142,8 +142,10 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 		// Used to manipulate the related list's spinner from parent components.
 		// Note: Setter used to implement a short timeout on disable,
 		// to make it more obvious to users when a refresh occurs
-		const waitMs = (value) ? 0 : 50; 
-		setTimeout(() => { this._isLoading = value }, waitMs);
+		const waitMs = value ? 0 : 50;
+		setTimeout(() => {
+			this._isLoading = value;
+		}, waitMs);
 	}
 
 	get title() {
@@ -152,8 +154,8 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 
 	get viewAllComponent() {
 		// Defines the component to be opened when "View All" is clicked
-		// Note: We're not sure why, but for some reason, schema imports in c:asyncActionRelatedPage 
-		// NEVER include the namespace of the object/field - even in namespaced environments. 
+		// Note: We're not sure why, but for some reason, schema imports in c:asyncActionRelatedPage
+		// NEVER include the namespace of the object/field - even in namespaced environments.
 		// Get around this by passing the (correctly namespaced) values to the component (see below).
 		return {
 			componentDef: VIEW_ALL_COMPONENT_NAME,

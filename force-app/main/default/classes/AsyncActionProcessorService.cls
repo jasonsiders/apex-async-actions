@@ -6,8 +6,7 @@ global abstract class AsyncActionProcessorService {
 
 	global static Map<String, AsyncActionProcessor__mdt> getAll() {
 		// Returns a map of AsyncActionProcessor__mdt records by their "Processor Class" value
-		processors = (processors != null) ? processors : AsyncActionProcessorService.retrieve();
-		return processors;
+		return processors ?? AsyncActionProcessorService.retrieve();
 	}
 
 	global static AsyncActionProcessor__mdt get(String processorName) {

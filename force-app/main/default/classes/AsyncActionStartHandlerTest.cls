@@ -5,7 +5,7 @@ private class AsyncActionStartHandlerTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		insert processor?.initAction();
 		AsyncActionStart__e event = new AsyncActionStart__e();
 
 		EventBus.publish(event);
@@ -20,7 +20,7 @@ private class AsyncActionStartHandlerTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		insert processor?.initAction();
 		AsyncActionStart__e event = new AsyncActionStart__e();
 		event.Actions__c = MockAsyncActionProcessor.class?.getName() + ',OtherProcessor,etc';
 
@@ -36,7 +36,7 @@ private class AsyncActionStartHandlerTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		insert processor?.initAction();
 		AsyncActionStart__e event = new AsyncActionStart__e();
 		event.Actions__c = 'FakeClass1,FakeClass2,etc';
 

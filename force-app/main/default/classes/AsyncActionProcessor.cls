@@ -102,7 +102,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			Data__c = data,
 			ProcessorClass__c = this.getType()?.getName(),
 			RelatedRecordId__c = relatedRecordId,
-			Retries__c = this.config?.Retries__c,
+			Retries__c = this.config?.Retries__c ?? 0,
 			Scheduled__c = DateTime.now(),
 			Status__c = Status.PENDING.name()
 		);
@@ -112,8 +112,17 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		return this.initAction(relatedRecordId, null);
 	}
 
+	global AsyncAction__c initAction(SObject record, String data) {
+		return this.initAction(record?.Id, data);
+	}
+
+	global AsyncAction__c initAction(SObject record) {
+		return this.initAction(record?.Id);
+	}
+
 	global AsyncAction__c initAction() {
-		return this.initAction(null);
+		Id nullRecordId = null;
+		return this.initAction(nullRecordId);
 	}
 
 	global Boolean isEnabled() {
@@ -140,13 +149,11 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	}
 
 	private Integer getBatchSize() {
-		Integer batchSize = this.config?.BatchSize__c?.intValue();
-		return (batchSize != null) ? batchSize : 200;
+		return this.config?.BatchSize__c?.intValue() ?? 200;
 	}
 
 	private Integer getRetryInterval() {
-		Integer interval = this.config?.RetryInterval__c?.intValue();
-		return (interval != null) ? interval : 5;
+		return this.config?.RetryInterval__c?.intValue() ?? 5;
 	}
 
 	private void handleFinalizerError(Exception error) {
@@ -156,7 +163,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	}
 
 	private Boolean hasRetries(AsyncAction__c action) {
-		Decimal numRetries = (action?.Retries__c != null) ? action?.Retries__c : 0;
+		Decimal numRetries = action?.Retries__c ?? 0;
 		return numRetries > 0;
 	}
 
