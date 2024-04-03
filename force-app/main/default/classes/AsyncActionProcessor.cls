@@ -102,7 +102,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			Data__c = data,
 			ProcessorClass__c = this.getType()?.getName(),
 			RelatedRecordId__c = relatedRecordId,
-			Retries__c = this.config?.Retries__c,
+			Retries__c = this.config?.Retries__c ?? 0,
 			Scheduled__c = DateTime.now(),
 			Status__c = Status.PENDING.name()
 		);
@@ -156,7 +156,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	}
 
 	private Boolean hasRetries(AsyncAction__c action) {
-		Decimal numRetries = (action?.Retries__c != null) ? action?.Retries__c : 0;
+		Decimal numRetries = action?.Retries__c ?? 0;
 		return numRetries > 0;
 	}
 
