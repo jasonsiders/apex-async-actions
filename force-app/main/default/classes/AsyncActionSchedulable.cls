@@ -71,8 +71,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 	}
 
 	private Integer getInterval() {
-		Integer interval = this.jobSettings?.Interval__c?.intValue();
-		return (interval != null) ? interval : DEFAULT_INTERVAL;
+		return this.jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
 	}
 
 	private void getUpdatedJobSettings() {

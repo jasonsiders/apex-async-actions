@@ -20,7 +20,7 @@ global abstract class AsyncActionPermissionUtils {
 	}
 
 	global static PermissionSet getPermissionSet() {
-		permissionSet = (permissionSet != null) ? permissionSet : AsyncActionPermissionUtils.retrievePermissions();
+		permissionSet = permissionSet ?? AsyncActionPermissionUtils.retrievePermissions();
 		return permissionSet;
 	}
 

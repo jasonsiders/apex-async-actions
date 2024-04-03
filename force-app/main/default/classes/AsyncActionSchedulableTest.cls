@@ -112,7 +112,7 @@ private class AsyncActionSchedulableTest {
 		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
 		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction(null);
+		insert processor?.initAction();
 	}
 
 	static Map<String, AsyncApexJob> mapAsyncJobsByClassName(List<AsyncApexJob> jobs) {
