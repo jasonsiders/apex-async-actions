@@ -149,13 +149,11 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	}
 
 	private Integer getBatchSize() {
-		Integer batchSize = this.config?.BatchSize__c?.intValue();
-		return (batchSize != null) ? batchSize : 200;
+		return this.config?.BatchSize__c?.intValue() ?? 200;
 	}
 
 	private Integer getRetryInterval() {
-		Integer interval = this.config?.RetryInterval__c?.intValue();
-		return (interval != null) ? interval : 5;
+		return this.config?.RetryInterval__c?.intValue() ?? 5;
 	}
 
 	private void handleFinalizerError(Exception error) {
