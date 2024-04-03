@@ -112,8 +112,17 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		return this.initAction(relatedRecordId, null);
 	}
 
+	global AsyncAction__c initAction(SObject record, String data) {
+		return this.initAction(record?.Id, data);
+	}
+
+	global AsyncAction__c initAction(SObject record) {
+		return this.initAction(record?.Id);
+	}
+
 	global AsyncAction__c initAction() {
-		return this.initAction(null);
+		Id nullRecordId = null;
+		return this.initAction(nullRecordId);
 	}
 
 	global Boolean isEnabled() {
