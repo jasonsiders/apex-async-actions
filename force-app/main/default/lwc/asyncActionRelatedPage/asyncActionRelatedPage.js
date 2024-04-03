@@ -15,9 +15,9 @@ const NoDataIllustration = {
 	HEADER: "Nothing to see here",
 	SRC: "/img/chatter/Desert.svg"
 };
-const SortLabels = { 
-	asc: "Ascending", 
-	desc: "Descending" 
+const SortLabels = {
+	asc: "Ascending",
+	desc: "Descending"
 };
 
 export default class AsyncActionRelatedPage extends NavigationMixin(LightningElement) {
@@ -124,16 +124,16 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 
 	get sortingAlgorithm() {
 		// Defines a sorting function used to re-sort columns
-		const sortByField = this.sortByField; 
-		const reverse = (this.sortDirection === "asc") ? 1 : -1;
-        const key = function(x) {
+		const sortByField = this.sortByField;
+		const reverse = this.sortDirection === "asc" ? 1 : -1;
+		const key = function (x) {
 			return x[sortByField];
 		};
-        return function(a, b) {
-            a = key(a);
-            b = key(b);
-            return reverse * ((a > b) - (b > a));
-        };
+		return function (a, b) {
+			a = key(a);
+			b = key(b);
+			return reverse * ((a > b) - (b > a));
+		};
 	}
 
 	get subtitle() {
@@ -213,7 +213,7 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 
 	async handleSort(event) {
 		// Re-sort the actions in the list based on the event details
-		this.isLoading = true; 
+		this.isLoading = true;
 		const params = event?.detail;
 		await this.setSortParams(params);
 		this.sortData();

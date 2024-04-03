@@ -227,7 +227,7 @@ private class AsyncActionProcessorTest {
 		Assert.areEqual(AsyncActionProcessor.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldInitializeActionsFromSObjects() {
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		User user = new User(Id = UserInfo.getUserId());
@@ -236,12 +236,12 @@ private class AsyncActionProcessorTest {
 		// Should work w/SObjects & data
 		AsyncAction__c action1 = processor?.initAction(user, data);
 		Assert.areEqual(user?.Id, action1?.RelatedRecordId__c, 'Wrong Related Record Id');
-		Assert.areEqual(data, action1?.Data__c, 'Wrong Data'); 
+		Assert.areEqual(data, action1?.Data__c, 'Wrong Data');
 
 		// Should work w/SObjects only
 		AsyncAction__c action2 = processor?.initAction(user);
 		Assert.areEqual(user?.Id, action2?.RelatedRecordId__c, 'Wrong Related Record Id');
-		Assert.areEqual(null, action2?.Data__c, 'Wrong Data'); 
+		Assert.areEqual(null, action2?.Data__c, 'Wrong Data');
 	}
 
 	@IsTest

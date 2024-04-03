@@ -69,15 +69,12 @@ private class AsyncActionHandlerTest {
 		Assert.isTrue(jobs?.isEmpty(), 'Disabled Scheduled Job was created');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldDefaultRetriesToConfigIfExists() {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		config.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(
-			ProcessorClass__c = processorType.getName(),
-			Retries__c = null
-		);
+		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = null);
 
 		Test.startTest();
 		insert action;
@@ -87,13 +84,10 @@ private class AsyncActionHandlerTest {
 		Assert.areEqual(config?.Retries__c, action?.Retries__c, 'Wrong # of Retries');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldDefaultRetriesTo0IfNoConfigExists() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncAction__c action = new AsyncAction__c(
-			ProcessorClass__c = processorType.getName(),
-			Retries__c = null
-		);
+		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = null);
 
 		Test.startTest();
 		insert action;
@@ -103,15 +97,12 @@ private class AsyncActionHandlerTest {
 		Assert.areEqual(0, action?.Retries__c, 'Wrong # of Retries');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldNotOverwriteSetRetriesAmount() {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		config.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(
-			ProcessorClass__c = processorType.getName(),
-			Retries__c = 3
-		);
+		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = 3);
 
 		Test.startTest();
 		insert action;
