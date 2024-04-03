@@ -44,12 +44,12 @@ public class AsyncActionScheduleEnforcer {
 			ORDER BY CronTrigger.NextFireTime ASC
 		];
 	}
-	
+
 	private class JobWrapper {
-		AsyncApexJob asyncJob; 
-		Integer interval; 
+		AsyncApexJob asyncJob;
+		Integer interval;
 		AsyncActionScheduledJob__mdt jobSettings;
-		AsyncActionSchedulable scheduler; 
+		AsyncActionSchedulable scheduler;
 
 		public JobWrapper(AsyncActionScheduledJob__mdt jobSettings) {
 			this.jobSettings = jobSettings;
@@ -58,7 +58,7 @@ public class AsyncActionScheduleEnforcer {
 		}
 
 		public JobWrapper addAsyncJob(AsyncApexJob asyncJob) {
-			this.asyncJob = asyncJob; 
+			this.asyncJob = asyncJob;
 			return this;
 		}
 

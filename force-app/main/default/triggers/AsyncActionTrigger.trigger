@@ -1,3 +1,3 @@
-trigger AsyncActionTrigger on AsyncAction__c(after insert) {
+trigger AsyncActionTrigger on AsyncAction__c(before insert, after insert) {
 	new AsyncActionHandler().run();
 }
