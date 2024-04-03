@@ -12,7 +12,8 @@
 		"apex-async-actions@1.3.0-2": "04tDn0000003ngAIAQ",
 		"apex-async-actions@1.4.0-1": "04tDn0000003ngFIAQ",
 		"apex-async-actions@1.5.0-1": "04tDn000000B34qIAC",
-		"apex-async-actions@1.6.0-1": "04tDn000000B35AIAS"
+		"apex-async-actions@1.6.0-1": "04tDn000000B35AIAS",
+		"apex-async-actions@1.7.0-1": "04tDn000000B35oIAC"
 	},
 	"packageDirectories": [
 		{
@@ -26,8 +27,8 @@
 			],
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 1.6.0",
-			"versionNumber": "1.6.0.NEXT",
+			"versionName": "ver 1.7.0",
+			"versionNumber": "1.7.0.NEXT",
 			"versionDescription": ""
 		}
 	],
