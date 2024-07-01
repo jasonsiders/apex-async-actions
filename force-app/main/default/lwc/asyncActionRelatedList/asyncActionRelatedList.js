@@ -1,5 +1,6 @@
 import { LightningElement, api, wire } from "lwc";
 import { EnclosingTabId, IsConsoleNavigation, openSubtab } from "lightning/platformWorkspaceApi";
+import { getObjectInfo } from "lightning/uiObjectInfoApi";
 import { NavigationMixin } from "lightning/navigation";
 import { refreshApex } from "@salesforce/apex";
 import { registerRefreshContainer } from "lightning/refresh";
@@ -14,7 +15,6 @@ import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.ProcessorClass__c
 import RETRIES_FIELD from "@salesforce/schema/AsyncAction__c.Retries__c";
 import SCHEDULED_FIELD from "@salesforce/schema/AsyncAction__c.Scheduled__c";
 import STATUS_FIELD from "@salesforce/schema/AsyncAction__c.Status__c";
-const DEFAULT_TITLE = "Async Actions";
 const MAX_ROWS = 6;
 const URL_FIELD = "ActionUrl";
 const VIEW_ALL_COMPONENT_NAME = "c:asyncActionRelatedPage";
@@ -92,7 +92,6 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 	hasMore = false;
 	_isLoading = true;
 	refreshContainerId;
-	_title;
 
 	get actions() {
 		return this._actions || [];
@@ -150,11 +149,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 	}
 
 	get title() {
-		return this._title || DEFAULT_TITLE;
-	}
-
-	@api set title(value) {
-		this._title = value;
+		return this.objectInfoResponse?.data?.labelPlural || "";
 	}
 
 	get viewAllComponent() {
@@ -167,7 +162,6 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 			attributes: {
 				columns: COLUMNS,
 				objectApiName: this.actionObjectName,
-				title: this.title,
 				recordId: this.recordId
 			}
 		};
@@ -195,6 +189,9 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 
 	@wire(IsConsoleNavigation)
 	isConsole;
+
+	@wire(getObjectInfo, { objectApiName: "$actionObjectName" })
+	objectInfoResponse;
 
 	@wire(getActions, { recordId: "$recordId" })
 	queryResponse(response) {
