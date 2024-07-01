@@ -6,4 +6,9 @@
     <targets>
         <target>lightning__RecordPage</target>
     </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property default="Async Actions" label="Title" name="title" placeholder="Async Actions" type="String" />
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>
