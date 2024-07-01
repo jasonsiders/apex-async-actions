@@ -1,5 +1,6 @@
 import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
+import { getObjectInfo } from "lightning/uiObjectInfoApi";
 import { refreshApex } from "@salesforce/apex";
 import { registerRefreshContainer } from "lightning/refresh";
 import getActions from "@salesforce/apex/AsyncActionRelatedListController.getActions";
@@ -7,8 +8,7 @@ import ID_FIELD from "@salesforce/schema/AsyncAction__c.Id";
 const Defaults = {
 	DISPLAY_SIZE: 50,
 	LOAD_MORE_INCREMENT: 20,
-	SORT_DIRECTION: "desc",
-	TITLE: "Async Actions"
+	SORT_DIRECTION: "desc"
 };
 const NoDataIllustration = {
 	DETAIL: "There's nothing in your list yet. Try adding a new record.",
@@ -35,7 +35,6 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 	sortByLabel;
 	sortDirection = Defaults.SORT_DIRECTION;
 	table;
-	_title;
 
 	@api set columns(values) {
 		// All columns on the full-page version of this component should be sortable
@@ -150,11 +149,7 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 	}
 
 	get title() {
-		return this._title || Defaults.TITLE;
-	}
-
-	@api set title(value) {
-		this._title = value;
+		return this.objectInfoResponse?.data?.labelPlural || "";
 	}
 
 	connectedCallback() {
@@ -166,6 +161,9 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 			console.error(`c:asyncActionRelatedPage: ${error}`);
 		}
 	}
+
+	@wire(getObjectInfo, { objectApiName: "$objectApiName" })
+	objectInfoResponse;
 
 	@wire(getActions, { recordId: "$recordId" })
 	queryResponse(response) {
