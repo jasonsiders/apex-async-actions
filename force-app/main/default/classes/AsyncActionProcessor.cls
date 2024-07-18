@@ -4,6 +4,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setCategory(AsyncActionConstants.PACKAGE_NAME);
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
+	static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	// **** ABSTRACT **** //
 	global abstract Type getType();
@@ -56,7 +57,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	// **** PUBLIC **** //
 	global void fail(AsyncAction__c action, RetryBehavior behavior, Object errorObj) {
 		// Callers can use this method to handle a failed action
-		action.Error__c = String.valueOf(errorObj);
+		action.Error__c = String.valueOf(errorObj)?.abbreviate(ERROR_FIELD_LENGTH);
 		if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
 			// Retry the action at some point in the future. Decrement the number of retries.
 			action.Retries__c--;
