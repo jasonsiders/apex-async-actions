@@ -27,6 +27,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action was not completed'
 			);
+			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 		}
 	}
 
@@ -137,6 +138,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action is not longer pending'
 			);
+			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 			Assert.areEqual(config?.Retries__c, action?.Retries__c, 'Retries was altered');
 			Assert.isTrue(action?.Scheduled__c > DateTime.now(), 'Action was not rescheduled');
 			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
@@ -172,6 +174,7 @@ private class AsyncActionProcessorTest {
 				action?.Status__c,
 				'Action was not marked as failed'
 			);
+			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
 			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
@@ -390,7 +393,7 @@ private class AsyncActionProcessorTest {
 
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
-			SELECT Id, Data__c, Error__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Error__c, LastRun__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :originalActions
 		];
