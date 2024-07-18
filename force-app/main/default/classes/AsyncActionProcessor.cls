@@ -4,6 +4,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setCategory(AsyncActionConstants.PACKAGE_NAME);
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
+	static final String CURRENT_TRANSACTION_ID = System.Request.getCurrent()?.getRequestId();
 	static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	// **** ABSTRACT **** //
@@ -17,6 +18,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			try {
 				List<AsyncAction__c> actions = this.getPendingActions();
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+				this.recordLastRun(actions);
 				this.process(actions);
 				this.logger?.publish();
 			} catch (Exception error) {
@@ -166,6 +168,13 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	private Boolean hasRetries(AsyncAction__c action) {
 		Decimal numRetries = action?.Retries__c ?? 0;
 		return numRetries > 0;
+	}
+
+	private void recordLastRun(List<AsyncAction__c> actions) {
+		// Stamp the current transaction id in the "Last Run" field for each action
+		for (AsyncAction__c action : actions) {
+			action.LastRun__c = CURRENT_TRANSACTION_ID;
+		}
 	}
 
 	private List<AsyncAction__c> requeryActions() {
