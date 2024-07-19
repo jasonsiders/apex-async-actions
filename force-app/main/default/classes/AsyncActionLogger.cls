@@ -36,9 +36,9 @@ public abstract class AsyncActionLogger {
 
         public void log(System.LoggingLevel level, Type loggedFromClass, Id relatedRecordId, Object logMessage) {
             // Print to traditional salesforce debug logs
-            String log = 'Logged From: ' + loggedFromClass + '\n' 
-                + 'Related To: ' + relatedRecordId + '\n'
-                + 'Log Message: ' + logMessage;
+            String loggedFromBlurb = (loggedFromClass != null) ? '\nLogged From: ' + loggedFromClass : '';
+            String relatedToBlurb = (relatedRecordId != null) ? '\nRelated To: ' + relatedRecordId : '';
+            String log = (logMessage + loggedFromBlurb + relatedToBlurb);
             System.debug(level, log);
         }
     
