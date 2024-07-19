@@ -2,6 +2,26 @@
 
 Async Actions uses the power of the Salesforce platform to make it easier to launch, process, and track business-critical asynchronous tasks. Developers can define your own custom _Actions_ through Apex code, and then control and monitor its execution with declarative tools.
 
+## **Getting Started**
+
+`apex-async-actions` is available as an Unlocked package. Follow these instructions to get started.
+
+### Install/Deploy the Package
+
+To use Async Actions in your own project, install the latest version of the package. You can find this version [here](https://github.com/jasonsiders/apex-async-actions/releases/latest).
+
+Run this command to install the package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
+
+```
+sfdx package install -p PACKAGE_VERSION_ID
+```
+
+Alternatively, if you wish to contribute to this project, you can deploy its contents directly to your org. To do this, clone the repo and then run `sfdx force source push`.
+
+### Assign Permissions
+
+You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
+
 ## **Usage**
 
 Developers can create a new _Action_ in two easy steps:
@@ -52,22 +72,42 @@ Developers can track the status of their Actions through reports, list views, or
 
 ---
 
-## **Getting Started**
+## Plugins
 
-`apex-async-actions` is available as an Unlocked package. Follow these instructions to get started.
+### Logging
+By default, the framework will output details about its operations to traditional Salesforce debug logs via `System.debug()` calls. If desired, callers can instead publish logs via their tool of choice, by following these steps:
 
-### Install/Deploy the Package
+#### #1: Create an apex class which implements the `AsyncActionLogger.Adapter` interface, and hooks into your logging tool of choice.
 
-To use Async Actions in your own project, install the latest version of the package. You can find this version [here](https://github.com/jasonsiders/apex-async-actions/releases/latest).
+This interface has two required methods:
+- `void log(System.LoggingLevel level, Type loggedFromClass, Id relatedRecordId, Object logMessage)`
+    - This method is called by the framework to record various log messages. Its parameters are as follows:
+        - `System.LoggingLevel level`: The severity of the log message. 
+        - `Type loggedFromClass`: The Apex Class that the message was logged from.
+        - `Id relatedRecordId`: The Id of a Salesforce record that the log message pertains to.
+        - `Object logMessage`: The message, or object (ie., Exception) to be logged. 
+- `void save(Boolean publishImmediate)`
+    - This method is called by the framework at the end of a transaction, to commit previously stored log messages to the database. Its `publishImmediate` Boolean flag should be used by frameworks which can optionally publish log messages via platform events, as it may help ensure logs are not lost in the wake of uncaught exceptions. 
 
-Run this command to install the package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
+Here's an example of a sample adapter which hooks into the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
+```java
+public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
+    public void log(System.LoggingLevel level, Type loggedFrom, Id recordId, Object msg) {
+        new Logger()?.setLoggedFrom(loggedFrom)?.setRelatedRecordId(recordId)?.log(level, msg);
+    }
 
+    public void save(Boolean publishImmediate) {
+        Logger.LogPublisher publisher = (publishImmediate == true) 
+            ? new LogEventPublisher()
+            : new LogDmlPublisher();
+        new Logger()?.publish(publisher);
+    }
+}
 ```
-sfdx package install -p PACKAGE_VERSION_ID
-```
 
-Alternatively, if you wish to contribute to this project, you can deploy its contents directly to your org. To do this, clone the repo and then run `sfdx force source push`.
+#### #2. Create an `AsyncActionGlobalSetting__mdt` record, and set the _Logger Adapter_ field to the name of your apex class.
 
-### Assign Permissions
+Using the above example:
+![An AsyncActionGlobalSetting__mdt Record](/media/sample_global_setting_record.png)
 
-You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
+> _Note: If your org does not have a `AsyncActionGlobalSetting__mdt` record, or if the "Logger Adapter" is not a valid implementor of the `AsyncActionLogger.Adapter` interface, the framework will use the default logging mechanism instead, and log messages will continue to be published to traditional Salesforce debug logs._
