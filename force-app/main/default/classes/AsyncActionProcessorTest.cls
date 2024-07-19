@@ -33,7 +33,6 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldTryAgainIfHasRetries() {
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
@@ -69,7 +68,6 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldNotTryAgainIfNoRetries() {
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
@@ -102,7 +100,6 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldKeepAliveIfErrors() {
 		// If KEEP_ALIVE retry behavior is employed, an action will remain in "Pending", and its retries will not be decremented.
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
@@ -134,7 +131,6 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldNotTryAgainIfSuddenDeath() {
 		// If SUDDEN_DEATH retry behavior is employed, an action will be marked as "Failed", even if it has retries
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
@@ -164,7 +160,6 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldHandleFinalizerErrors() {
 		// If an exception is thrown during the finalizer, the job will be aborted, but the actions will not be affected
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
@@ -259,7 +254,6 @@ private class AsyncActionProcessorTest {
 		// This prevents tests from running away on failure
 		// In a real scenario, the job WOULD keep re-enqueueing on an error
 		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 2;
@@ -286,7 +280,6 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldHandleFatalErrors() {
 		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
@@ -312,7 +305,6 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.BypassFinalizerRetryLimit__c = true;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -337,7 +329,6 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.BypassFinalizerRetryLimit__c = false;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -386,9 +377,5 @@ private class AsyncActionProcessorTest {
 			actions?.add(action);
 		}
 		return actions;
-	}
-
-	static void enableLogging(System.LoggingLevel level) {
-		insert new LogSetting__c(Enabled__c = true, Threshold__c = level?.name(), SetupOwnerId = UserInfo.getUserId());
 	}
 }
