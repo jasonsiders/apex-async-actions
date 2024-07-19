@@ -10,6 +10,7 @@ private class AsyncActionLoggerTest {
         AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
         Test.stopTest();
 
+        System.debug(logger);
         Assert.isInstanceOfType(logger, adapterType, 'Wrong adapter type');
     }
 
@@ -52,7 +53,7 @@ private class AsyncActionLoggerTest {
     }
 
     // **** INNER **** // 
-    private class MockAdapter implements AsyncActionLogger.Adapter {
+    public class MockAdapter implements AsyncActionLogger.Adapter {
         public void log(System.LoggingLevel level, Type type, Id recordId, Object msg) {
             // Doesn't matter
         }

@@ -1,16 +1,15 @@
 public abstract class AsyncActionLogger {
-    static final Type DEFAULT_LOGGER = DefaultLogger.class;
-
     public static AsyncActionLogger.Adapter init() {
         // Initialize a log adapter object based ont he provided value in custom metadata
         // If no metadata records, or if an invalid adapter is defined, will use the DefaultLogger instead
         AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
-        String adapterName = settings?.LoggerAdapter__c ?? DEFAULT_LOGGER?.getName();
+        String adapterName = settings?.LoggerAdapter__c;
         try {
-            return (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
+            AsyncActionLogger.Adapter adapter = (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
+            return adapter ?? new DefaultLogger();
         } catch (Exception error) {
+            String msg = adapterName + ' is not a valid instance of AsyncActionLogger.Adapter\nOriginal Error: ' + error;
             AsyncActionLogger.Adapter defaultLogger = new DefaultLogger();
-            String msg = adapterName + ' does not exist, or does not implement AsyncActionLogger.Adapter\nOriginal Error: ' + error;
             defaultLogger?.log(System.LoggingLevel.WARN, AsyncActionLogger.class, null, msg); 
             return defaultLogger;
         }
