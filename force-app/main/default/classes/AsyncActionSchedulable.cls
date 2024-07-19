@@ -1,15 +1,15 @@
-global class AsyncActionSchedulable implements System.Schedulable {
+public class AsyncActionSchedulable implements System.Schedulable {
 	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 	static final Integer DEFAULT_INTERVAL = 60;
 	static final String HOURLY = '0 0 * * * ?';
 	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 	AsyncActionScheduledJob__mdt jobSettings;
 
-	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
+	public AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
 		this.jobSettings = jobSettings;
 	}
 
-	global void execute(System.SchedulableContext context) {
+	public void execute(System.SchedulableContext context) {
 		this.getUpdatedJobSettings();
 		if (this.jobSettings != null) {
 			this.doScheduledActions();

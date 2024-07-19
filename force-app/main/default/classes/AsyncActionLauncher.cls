@@ -1,7 +1,7 @@
-global abstract class AsyncActionLauncher {
+public abstract class AsyncActionLauncher {
 	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 
-	global static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
+	public static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
 		try {
 			String processorName = config?.ProcessorClass__c;
 			return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
@@ -11,19 +11,19 @@ global abstract class AsyncActionLauncher {
 		}
 	}
 
-	global static Map<Type, Id> launchAll(Id currentJobId) {
+	public static Map<Type, Id> launchAll(Id currentJobId) {
 		// Create & launch an AsyncActionProcessor class for each AsyncActionConfig__mdt
 		List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
 		return AsyncActionLauncher.launchJobs(processors, currentJobId);
 	}
 
-	global static Map<Type, Id> launchAll() {
+	public static Map<Type, Id> launchAll() {
 		// Create & launch an AsyncActionProcessor class for each AsyncActionConfig__mdt
 		// Use this override when not currently in an AsyncActionProcessor job
 		return AsyncActionLauncher.launchAll(null);
 	}
 
-	global static Map<Type, Id> launchJobs(List<AsyncActionProcessor__mdt> configs, Id currentJobId) {
+	public static Map<Type, Id> launchJobs(List<AsyncActionProcessor__mdt> configs, Id currentJobId) {
 		Map<Type, Id> results = new Map<Type, Id>();
 		// 1. Map configs by their localized name and type
 		Map<String, AsyncActionProcessor__mdt> configsByName = new Map<String, AsyncActionProcessor__mdt>();
@@ -74,7 +74,7 @@ global abstract class AsyncActionLauncher {
 		return results;
 	}
 
-	global static Map<Type, Id> launchJobs(AsyncActionProcessor__mdt config, Id currentJobId) {
+	public static Map<Type, Id> launchJobs(AsyncActionProcessor__mdt config, Id currentJobId) {
 		return AsyncActionLauncher.launchJobs(new List<AsyncActionProcessor__mdt>{ config }, currentJobId);
 	}
 
