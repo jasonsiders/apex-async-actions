@@ -10,7 +10,6 @@ private class AsyncActionLoggerTest {
         AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
         Test.stopTest();
 
-        System.debug(logger);
         Assert.isInstanceOfType(logger, adapterType, 'Wrong adapter type');
     }
 
