@@ -14,8 +14,7 @@ public abstract class AsyncActionLogger {
         try {
             return (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
         } catch (Exception error) {
-            String msg = adapterName + ' is not an instance of AsyncActionLogger.Adapter\nOriginal Error: ' + error;
-            System.debug(System.LoggingLevel.WARN, msg);
+            System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
             return null;
         }
     }

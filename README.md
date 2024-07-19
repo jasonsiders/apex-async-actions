@@ -40,7 +40,7 @@ Developers can create a new _Action_ in two easy steps:
 
 Once these steps have been completed, create `AsyncAction__c` records linked to your processor class via the `ProcessorClass__c` field. When run, the processor will process any `AsyncAction__c` records with a _Pending_ Status.
 
-Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, if it needs to be retried, and logs (including errors) related to the Action.
+Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, any errors that occurred, and if it needs to be retried.
 
 Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTIONOBJECT.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
@@ -55,19 +55,6 @@ Developers can track the status of their Actions through reports, list views, or
 ## **Getting Started**
 
 `apex-async-actions` is available as an Unlocked package. Follow these instructions to get started.
-
-### Install Dependencies
-
-`apex-async-actions` uses the `apex-logger` package for logging.
-You must install the latest version of this package before installing `apex-async-actions`:
-
--   [apex-logger](https://github.com/jasonsiders/apex-logger/releases/latest)
-
-Run this sfdx command to install each dependent package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
-
-```
-sfdx package install -p PACKAGE_VERSION_ID
-```
 
 ### Install/Deploy the Package
 
@@ -84,17 +71,3 @@ Alternatively, if you wish to contribute to this project, you can deploy its con
 ### Assign Permissions
 
 You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
-
-### Enable Logging
-
-This framework uses the `apex-logger` package to post logs related to the execution of Async Actions. When properly configured, these logs will be visible from the Async Action record page.
-
-Enable logging by creating an org-wide default `LogSetting__c` custom settings record:
-
--   Navigate to _Setup > Custom Settings > Log Setting > Manage_.
--   Above _Default Organization Level Value_, click **_New_**.
--   Set _Enabled_ to `true`, and _Threshold_ to `INFO`.
-
-> Note: Async Actions always run as the `Automated Process` user, which doesn't appear in Custom Settings' `User` lookup. For this reason, use the org-wide default Log Settings record to govern log visibility for Async Actions, or use an anonymous apex script to create a `LogSetting__c` record for this user.
-
-Read more about `apex-logger` [here](https://github.com/jasonsiders/apex-logger).
