@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>LoggerAdapter__c</fullName>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText>The fully qualified name of an Apex Class which implements the AsyncActionLogger.Adapter interface. 
+This class will be used to handle logs emitted by the framework. 
+When left blank, or when no records exist, a default logger will print logs to traditional Salesforce debug logs.</inlineHelpText>
+    <label>Logger Adapter</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

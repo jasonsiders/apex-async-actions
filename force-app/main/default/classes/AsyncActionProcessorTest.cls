@@ -33,7 +33,6 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldTryAgainIfHasRetries() {
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
@@ -54,9 +53,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.PENDING.name(),
@@ -67,14 +63,11 @@ private class AsyncActionProcessorTest {
 			DateTime now = DateTime.now();
 			DateTime scheduled = action?.Scheduled__c;
 			Assert.isTrue(scheduled > now, 'Scheduled Date is not in the future: ' + scheduled + '. Expected: ' + now);
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
 	@IsTest
 	static void shouldNotTryAgainIfNoRetries() {
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
@@ -94,9 +87,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.FAILED.name(),
@@ -104,15 +94,12 @@ private class AsyncActionProcessorTest {
 				'Action was not marked as failed'
 			);
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
 	@IsTest
 	static void shouldKeepAliveIfErrors() {
 		// If KEEP_ALIVE retry behavior is employed, an action will remain in "Pending", and its retries will not be decremented.
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
@@ -129,9 +116,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.PENDING.name(),
@@ -141,15 +125,12 @@ private class AsyncActionProcessorTest {
 			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 			Assert.areEqual(config?.Retries__c, action?.Retries__c, 'Retries was altered');
 			Assert.isTrue(action?.Scheduled__c > DateTime.now(), 'Action was not rescheduled');
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
 	@IsTest
 	static void shouldNotTryAgainIfSuddenDeath() {
 		// If SUDDEN_DEATH retry behavior is employed, an action will be marked as "Failed", even if it has retries
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
@@ -165,9 +146,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.FAILED.name(),
@@ -176,15 +154,12 @@ private class AsyncActionProcessorTest {
 			);
 			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
 	@IsTest
 	static void shouldHandleFinalizerErrors() {
 		// If an exception is thrown during the finalizer, the job will be aborted, but the actions will not be affected
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
@@ -279,7 +254,6 @@ private class AsyncActionProcessorTest {
 		// This prevents tests from running away on failure
 		// In a real scenario, the job WOULD keep re-enqueueing on an error
 		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 2;
@@ -306,7 +280,6 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldHandleFatalErrors() {
 		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
@@ -322,8 +295,9 @@ private class AsyncActionProcessorTest {
 		}
 		Test.getEventBus().deliver();
 
-		List<Log__c> logs = [SELECT Id FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
-		Assert.isFalse(logs?.isEmpty(), 'Errors were not logged');
+		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
+			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
+		}
 	}
 
 	@IsTest
@@ -331,7 +305,6 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.BypassFinalizerRetryLimit__c = true;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -356,7 +329,6 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		AsyncActionProcessorTest.enableLogging(System.LoggingLevel.FINEST);
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.BypassFinalizerRetryLimit__c = false;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -387,10 +359,6 @@ private class AsyncActionProcessorTest {
 		insert accounts;
 	}
 
-	static List<Log__c> getErrorLogs() {
-		return [SELECT Id, RelatedRecordId__c FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
-	}
-
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
 			SELECT Id, Data__c, Error__c, LastRun__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
@@ -409,20 +377,5 @@ private class AsyncActionProcessorTest {
 			actions?.add(action);
 		}
 		return actions;
-	}
-
-	static Map<Id, List<Log__c>> mapLogsByRecordId(List<Log__c> logs) {
-		Map<Id, List<Log__c>> results = new Map<Id, List<Log__c>>();
-		for (Log__c log : logs) {
-			Id recordId = (Id) log?.RelatedRecordId__c;
-			List<Log__c> matching = results?.containsKey(recordId) ? results?.get(recordId) : new List<Log__c>();
-			matching?.add(log);
-			results?.put(recordId, matching);
-		}
-		return results;
-	}
-
-	static void enableLogging(System.LoggingLevel level) {
-		insert new LogSetting__c(Enabled__c = true, Threshold__c = level?.name(), SetupOwnerId = UserInfo.getUserId());
 	}
 }

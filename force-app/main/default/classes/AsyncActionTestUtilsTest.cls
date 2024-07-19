@@ -1,5 +1,15 @@
 @IsTest
 private class AsyncActionTestUtilsTest {
+	@IsTest 
+	static void shouldInitGlobalSettings() {
+		Test.startTest();
+		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		Test.stopTest();
+
+		AsyncActionGlobalSetting__mdt fromService = AsyncActionGlobalSettingService.getSettings();
+		Assert.areEqual(settings?.DeveloperName, fromService?.DeveloperName, 'Wrong settings'); 
+	}
+
 	@IsTest
 	static void shouldInitProcessorSettings() {
 		Type processorType = AsyncActionTestUtilsTest.class;
@@ -58,6 +68,18 @@ private class AsyncActionTestUtilsTest {
 
 		Assert.isNotNull(jobSettings, 'AsyncActionScheduledJob__mdt');
 		Assert.areEqual(1, AsyncActionScheduledJobService.getAll()?.size(), 'Wrong # of Settings mocked');
+	}
+
+	@IsTest 
+	static void shouldMockGlobalSettings() {
+		AsyncActionGlobalSetting__mdt mockSettings = new AsyncActionGlobalSetting__mdt(DeveloperName = 'Foo1234');
+
+		Test.startTest();
+		AsyncActionTestUtils.mockGlobalSettings(mockSettings);
+		Test.stopTest();
+
+		AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
+		Assert.areEqual(mockSettings?.DeveloperName, settings?.DeveloperName, 'Did not use mock settings');
 	}
 
 	@IsTest

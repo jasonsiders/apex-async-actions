@@ -9,10 +9,9 @@ The abstract class handles the minutia of the framework, and leaves the actual a
 1. Retrieves a `AsyncActionProcessor__mdt` configuration record with a matching `ProcessorClass__c` value, and checks if the configuration record's `Enabled__c` value. If this is not _true_, or a matching configuration record cannot found, then the job will abort.
 2. Queries `AsyncAction__c` records with a matching `ProcessorClass__c` value, are in _Pending_ status, and have a `Scheduled__c` value in the past. Records are returned in order of its `Scheduled__c` value, prioritizing older records first. This query is limited by the configuration record's `BatchSize__c`.
 3. The user-defined `process(List<AsyncAction__c> actions)` method runs.
-4. Any logs incurred by the transaction to this point are committed.
-5. The `System.Queueable` operation ceases. A `System.Finalizer` operation begins shortly after.
-6. The finalizer checks if the Queueable job succeeded. If an unhandled exception was thrown, the finalizer logs the error and updates all `AsyncAction__c` records in the transaction to reflect the failure using `ALLOW_RETRY` logic.
-7. The finalizer re-enqueues the current processor class if it has any remaining _Pending_ `AsyncAction__c` records with a `Scheduled__c` value in the past.
+4. The `System.Queueable` operation ceases. A `System.Finalizer` operation begins shortly after.
+5. The finalizer checks if the Queueable job succeeded. If an unhandled exception was thrown, the finalizer logs the error and updates all `AsyncAction__c` records in the transaction to reflect the failure using `ALLOW_RETRY` logic.
+6. The finalizer re-enqueues the current processor class if it has any remaining _Pending_ `AsyncAction__c` records with a `Scheduled__c` value in the past.
 
 ## Requirements
 
