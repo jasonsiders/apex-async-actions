@@ -1,19 +1,24 @@
 public abstract class AsyncActionLogger {
+    static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
+    
     public static AsyncActionLogger.Adapter init() {
-        // Initialize a log adapter object based ont he provided value in custom metadata
+        // Returns the current logger instance for this transaction
+        return INSTANCE ?? new DefaultLogger();
+    } 
+
+    static AsyncActionLogger.Adapter getInstance() {
+        // Initialize a log adapter object based on the provided value in custom metadata
         // If no metadata records, or if an invalid adapter is defined, will use the DefaultLogger instead
         AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
         String adapterName = settings?.LoggerAdapter__c;
         try {
-            AsyncActionLogger.Adapter adapter = (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
-            return adapter ?? new DefaultLogger();
+            return (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
         } catch (Exception error) {
-            String msg = adapterName + ' is not a valid instance of AsyncActionLogger.Adapter\nOriginal Error: ' + error;
-            AsyncActionLogger.Adapter defaultLogger = new DefaultLogger();
-            defaultLogger?.log(System.LoggingLevel.WARN, AsyncActionLogger.class, null, msg); 
-            return defaultLogger;
+            String msg = adapterName + ' is not an instance of AsyncActionLogger.Adapter\nOriginal Error: ' + error;
+            System.debug(System.LoggingLevel.WARN, msg);
+            return null;
         }
-    } 
+    }
 
     // **** INNER **** //
     public interface Adapter {
