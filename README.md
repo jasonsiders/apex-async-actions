@@ -89,7 +89,7 @@ This interface has two required methods:
 - `void save(Boolean publishImmediate)`
     - This method is called by the framework at the end of a transaction, to commit previously stored log messages to the database. Its `publishImmediate` Boolean flag should be used by frameworks which can optionally publish log messages via platform events, as it may help ensure logs are not lost in the wake of uncaught exceptions. 
 
-Here's an example of a sample adapter which hooks into the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
+Here's a sample adapter, which hooks into the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
 ```java
 public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
     public void log(System.LoggingLevel level, Type loggedFrom, Id recordId, Object msg) {
