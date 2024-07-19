@@ -54,9 +54,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.PENDING.name(),
@@ -67,8 +64,6 @@ private class AsyncActionProcessorTest {
 			DateTime now = DateTime.now();
 			DateTime scheduled = action?.Scheduled__c;
 			Assert.isTrue(scheduled > now, 'Scheduled Date is not in the future: ' + scheduled + '. Expected: ' + now);
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
@@ -94,9 +89,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.FAILED.name(),
@@ -104,8 +96,6 @@ private class AsyncActionProcessorTest {
 				'Action was not marked as failed'
 			);
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
@@ -129,9 +119,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.PENDING.name(),
@@ -141,8 +128,6 @@ private class AsyncActionProcessorTest {
 			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 			Assert.areEqual(config?.Retries__c, action?.Retries__c, 'Retries was altered');
 			Assert.isTrue(action?.Scheduled__c > DateTime.now(), 'Action was not rescheduled');
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
@@ -165,9 +150,6 @@ private class AsyncActionProcessorTest {
 		Test.getEventBus().deliver();
 
 		Assert.isNotNull(jobId, 'The job was not launched');
-		List<Log__c> logs = AsyncActionProcessorTest.getErrorLogs();
-		Assert.isFalse(logs?.isEmpty(), 'No errors were logged');
-		Map<Id, List<Log__c>> logsByRecordId = AsyncActionProcessorTest.mapLogsByRecordId(logs);
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areEqual(
 				AsyncActionProcessor.Status.FAILED.name(),
@@ -176,8 +158,6 @@ private class AsyncActionProcessorTest {
 			);
 			Assert.isNotNull(action?.LastRun__c, 'Missing Last Run');
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
-			List<Log__c> errorLogs = logsByRecordId?.get(action?.Id);
-			Assert.areEqual(false, errorLogs?.isEmpty(), 'No error logs related to action ' + action?.Id);
 		}
 	}
 
@@ -322,8 +302,9 @@ private class AsyncActionProcessorTest {
 		}
 		Test.getEventBus().deliver();
 
-		List<Log__c> logs = [SELECT Id FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
-		Assert.isFalse(logs?.isEmpty(), 'Errors were not logged');
+		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
+			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
+		}
 	}
 
 	@IsTest
@@ -387,10 +368,6 @@ private class AsyncActionProcessorTest {
 		insert accounts;
 	}
 
-	static List<Log__c> getErrorLogs() {
-		return [SELECT Id, RelatedRecordId__c FROM Log__c WHERE Level__c = :System.LoggingLevel.ERROR.name()];
-	}
-
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
 			SELECT Id, Data__c, Error__c, LastRun__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
@@ -409,17 +386,6 @@ private class AsyncActionProcessorTest {
 			actions?.add(action);
 		}
 		return actions;
-	}
-
-	static Map<Id, List<Log__c>> mapLogsByRecordId(List<Log__c> logs) {
-		Map<Id, List<Log__c>> results = new Map<Id, List<Log__c>>();
-		for (Log__c log : logs) {
-			Id recordId = (Id) log?.RelatedRecordId__c;
-			List<Log__c> matching = results?.containsKey(recordId) ? results?.get(recordId) : new List<Log__c>();
-			matching?.add(log);
-			results?.put(recordId, matching);
-		}
-		return results;
 	}
 
 	static void enableLogging(System.LoggingLevel level) {

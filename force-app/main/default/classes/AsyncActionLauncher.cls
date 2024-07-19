@@ -1,14 +1,12 @@
 global abstract class AsyncActionLauncher {
-	static final Logger LOGGER = new Logger()
-		?.setLoggedFrom(AsyncActionLauncher.class)
-		?.setSource(AsyncActionConstants.PACKAGE_NAME);
+	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 
 	global static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
 		try {
 			String processorName = config?.ProcessorClass__c;
 			return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
 		} catch (Exception error) {
-			LOGGER?.error(error);
+			LOGGER?.log(System.LoggingLevel.ERROR, AsyncActionLauncher.class, null, error);
 			return null;
 		}
 	}
@@ -69,7 +67,8 @@ global abstract class AsyncActionLauncher {
 				// Launch the job and build the results map w/the resulting job Id
 				Id jobId = System.enqueueJob(processor);
 				results?.put(processor?.getType(), jobId);
-				LOGGER?.finest(processor?.getType() + ': launch() -> ' + jobId);
+				String msg = processor?.getType() + ': launch() -> ' + jobId;
+				LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionLauncher.class, null, msg);
 			}
 		}
 		return results;
