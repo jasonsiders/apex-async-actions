@@ -2,7 +2,6 @@
 	"name": "apex-async-actions",
 	"namespace": "",
 	"packageAliases": {
-		"apex-logger": "0HoDn0000010wBfKAI",
 		"apex-async-actions": "0HoDn000000kALJKA2",
 		"apex-async-actions@0.1.0-1": "04tDn0000006wfhIAA",
 		"apex-async-actions@0.2.0-1": "04tDn0000006wfrIAA",
@@ -21,19 +20,13 @@
 		{
 			"default": true,
 			"definitionFile": "config/project-scratch-def.json",
-			"dependencies": [
-				{
-					"package": "apex-logger",
-					"versionNumber": "1.2.0.LATEST"
-				}
-			],
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 1.9.0",
-			"versionNumber": "1.9.0.NEXT",
+			"versionName": "ver 2.0.0",
+			"versionNumber": "2.0.0.NEXT",
 			"versionDescription": ""
 		}
 	],
 	"sfdcLoginUrl": "https://login.salesforce.com",
-	"sourceApiVersion": "59.0"
+	"sourceApiVersion": "61.0"
 }
