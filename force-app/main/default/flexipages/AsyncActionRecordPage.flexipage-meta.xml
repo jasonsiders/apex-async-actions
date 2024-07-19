@@ -306,6 +306,10 @@
                 <identifier>flexipage_fieldSection2</identifier>
             </componentInstance>
         </itemInstances>
+        <name>detailTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
@@ -332,17 +336,7 @@
                 <identifier>force_relatedListSingleContainer</identifier>
             </componentInstance>
         </itemInstances>
-        <name>detailTabContent</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>logRelatedList</componentName>
-                <identifier>logRelatedList</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-b2c83b75-7acb-4cfc-b206-808ed4d5e5bc</name>
+        <name>Facet-de39e2af-2e82-42c8-b50e-c105654c2e7f</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -368,11 +362,11 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-b2c83b75-7acb-4cfc-b206-808ed4d5e5bc</value>
+                    <value>Facet-de39e2af-2e82-42c8-b50e-c105654c2e7f</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Logs</value>
+                    <value>Standard.Tab.relatedLists</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>
