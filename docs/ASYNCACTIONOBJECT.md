@@ -6,10 +6,6 @@ The record's primary function is to track the status of asynchronous requests to
 
 `AsyncActionProcessor` jobs will only run if there are `AsyncAction__c` records with a matching `ProcessorClass__c`, with a `Status__c` of _Pending_, and a `Scheduled__c` value in the past.
 
-Errors and other logs accumulated during processing are displayed on the **Logs** tab in the Lightning Page:
-
-![Logs on an Async Action](/media/asyncactionlogs.png)
-
 ## Creating Async Actions
 
 The `AsyncActionProcessor` class includes methods which let you easily create an Async Action for the given processor class:

@@ -1,15 +1,15 @@
-global abstract class AsyncActionScheduledJobService {
+public abstract class AsyncActionScheduledJobService {
 	@TestVisible
 	static Map<String, AsyncActionScheduledJob__mdt> settings;
 	@TestVisible
 	static Boolean useRealData = (Test.isRunningTest() == false);
 
-	global static Map<String, AsyncActionScheduledJob__mdt> getAll() {
+	public static Map<String, AsyncActionScheduledJob__mdt> getAll() {
 		AsyncActionScheduledJobService.retrieveSettings();
 		return AsyncActionScheduledJobService.settings;
 	}
 
-	global static AsyncActionScheduledJob__mdt get(String developerName) {
+	public static AsyncActionScheduledJob__mdt get(String developerName) {
 		AsyncActionScheduledJobService.retrieveSettings();
 		return settings?.get(developerName);
 	}

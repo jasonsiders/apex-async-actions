@@ -1,7 +1,7 @@
 global abstract class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
 	global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
-	global Logger logger = new Logger()?.setLoggedFrom(this.getType())?.setCategory(AsyncActionConstants.PACKAGE_NAME);
+	global AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
 	static final String CURRENT_TRANSACTION_ID = System.Request.getCurrent()?.getRequestId();
@@ -20,12 +20,12 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
 				this.recordLastRun(actions);
 				this.process(actions);
-				this.logger?.publish();
+				this.logger?.save(false);
 			} catch (Exception error) {
 				// Publish the logs immediately, via platform event,
 				// then allow the error to terminate the current transaction
-				Logger.LogPublisher publisher = new LogEventPublisher();
-				this.logger?.error(error)?.publish(publisher);
+				this.logger?.log(System.LoggingLevel.ERROR, this.getType(), null, error);
+				this.logger?.save(true);
 				throw error;
 			}
 		}
@@ -44,15 +44,17 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				// If this happens, a System.AsyncException will be thrown to prevent runaway jobs.
 				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this.
 				// Re-launch the job via a platform event, this resets the stack depth to 0
-				this.logger?.finest('Could not re-launch during finalizer. Re-launching via platform event.\n' + error);
+				String msg = 'Could not re-launch during finalizer. Re-launching via platform event.\n' + error;
+				this.logger?.log(System.LoggingLevel.FINEST, this.getType(), null, msg);
 				String actionName = this.getType()?.getName();
 				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
 				EventBus.publish(event);
 			} else {
-				this.logger?.error('Aborting job after error during Finalizer: ' + error);
+				String msg = 'Aborting job after error during Finalizer: ' + error;
+				this.logger?.log(System.LoggingLevel.FINEST, this.getType(), null, msg);
 			}
 		} finally {
-			this.logger?.publish();
+			this.logger?.save(false);
 		}
 	}
 
@@ -75,7 +77,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
 			new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
 		);
-		this.logger?.clone()?.setRelatedRecordId(action?.Id)?.error(msg);
+		this.logger?.log(System.LoggingLevel.ERROR, this.getType(), action?.Id, msg);
 	}
 
 	global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {

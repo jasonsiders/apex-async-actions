@@ -1,15 +1,15 @@
-global abstract class AsyncActionProcessorService {
+public abstract class AsyncActionProcessorService {
 	@TestVisible
 	static Map<String, AsyncActionProcessor__mdt> processors;
 	@TestVisible
 	static Boolean useRealData = (Test.isRunningTest() == false);
 
-	global static Map<String, AsyncActionProcessor__mdt> getAll() {
+	public static Map<String, AsyncActionProcessor__mdt> getAll() {
 		// Returns a map of AsyncActionProcessor__mdt records by their "Processor Class" value
 		return processors ?? AsyncActionProcessorService.retrieve();
 	}
 
-	global static AsyncActionProcessor__mdt get(String processorName) {
+	public static AsyncActionProcessor__mdt get(String processorName) {
 		// Return a specific AsyncActionProcessor__mdt record by its "Processor Class" value
 		return AsyncActionProcessorService.getAll()?.get(processorName);
 	}

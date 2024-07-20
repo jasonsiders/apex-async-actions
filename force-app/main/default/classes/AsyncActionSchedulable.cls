@@ -1,17 +1,15 @@
-global class AsyncActionSchedulable implements System.Schedulable {
+public class AsyncActionSchedulable implements System.Schedulable {
 	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 	static final Integer DEFAULT_INTERVAL = 60;
 	static final String HOURLY = '0 0 * * * ?';
-	static final Logger LOGGER = new Logger()
-		?.setLoggedFrom(AsyncActionSchedulable.class)
-		?.setSource(AsyncActionConstants.PACKAGE_NAME);
+	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 	AsyncActionScheduledJob__mdt jobSettings;
 
-	global AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
+	public AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
 		this.jobSettings = jobSettings;
 	}
 
-	global void execute(System.SchedulableContext context) {
+	public void execute(System.SchedulableContext context) {
 		this.getUpdatedJobSettings();
 		if (this.jobSettings != null) {
 			this.doScheduledActions();
@@ -19,7 +17,7 @@ global class AsyncActionSchedulable implements System.Schedulable {
 		}
 		// Once completed, ensure other scheduled jobs match the configuration
 		new AsyncActionScheduleEnforcer().enforce();
-		LOGGER.publish();
+		LOGGER.save(false);
 	}
 
 	public String getJobName() {
@@ -34,10 +32,12 @@ global class AsyncActionSchedulable implements System.Schedulable {
 			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
 			System.Schedulable newJob = new AsyncActionSchedulable(this.jobSettings);
 			Id jobId = System.schedule(jobName, cronExp, newJob);
-			LOGGER?.finest('Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp);
+			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
+			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
 			return jobId;
 		} else {
-			LOGGER?.finest(this.jobSettings?.DeveloperName + ' is not enabled');
+			String msg = this.jobSettings?.DeveloperName + ' is not enabled';
+			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
 			return null;
 		}
 	}

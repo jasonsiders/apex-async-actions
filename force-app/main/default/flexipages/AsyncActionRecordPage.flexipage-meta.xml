@@ -117,49 +117,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Scheduled__c</fieldItem>
-                <identifier>RecordScheduled_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
                 <fieldItem>Record.Status__c</fieldItem>
                 <identifier>RecordStatus_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Error__c</fieldItem>
-                <identifier>RecordError_cField</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.Status__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Failed</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </fieldInstance>
-        </itemInstances>
-        <name>Facet-0f678c39-276b-4f08-a58d-678c51788efa</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.LastRun__c</fieldItem>
-                <identifier>RecordLastRun_cField2</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -170,6 +129,40 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Retries__c</fieldItem>
                 <identifier>RecordRetries_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Error__c</fieldItem>
+                <identifier>RecordError_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <name>Facet-0f678c39-276b-4f08-a58d-678c51788efa</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Scheduled__c</fieldItem>
+                <identifier>RecordScheduled_cField2</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.LastRun__c</fieldItem>
+                <identifier>RecordLastRun_cField2</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-dc086fc9-2d9e-4ab8-95c3-f815981190a1</name>
@@ -260,7 +253,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>horizontalAlignment</name>
-                    <value>false</value>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>label</name>
@@ -278,7 +271,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>horizontalAlignment</name>
-                    <value>false</value>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>label</name>
@@ -296,7 +289,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>horizontalAlignment</name>
-                    <value>false</value>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>label</name>
@@ -306,6 +299,10 @@
                 <identifier>flexipage_fieldSection2</identifier>
             </componentInstance>
         </itemInstances>
+        <name>detailTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
@@ -332,17 +329,7 @@
                 <identifier>force_relatedListSingleContainer</identifier>
             </componentInstance>
         </itemInstances>
-        <name>detailTabContent</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>logRelatedList</componentName>
-                <identifier>logRelatedList</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-b2c83b75-7acb-4cfc-b206-808ed4d5e5bc</name>
+        <name>Facet-de39e2af-2e82-42c8-b50e-c105654c2e7f</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -368,11 +355,11 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-b2c83b75-7acb-4cfc-b206-808ed4d5e5bc</value>
+                    <value>Facet-de39e2af-2e82-42c8-b50e-c105654c2e7f</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Logs</value>
+                    <value>Standard.Tab.relatedLists</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>

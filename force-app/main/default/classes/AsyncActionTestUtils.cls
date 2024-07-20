@@ -1,5 +1,13 @@
 @IsTest
 global class AsyncActionTestUtils {
+	global static AsyncActionGlobalSetting__mdt initGlobalSettings() {
+		AsyncActionGlobalSetting__mdt settings = new AsyncActionGlobalSetting__mdt(
+			DeveloperName = 'Test_Global_Setting'
+		);
+		AsyncActionTestUtils.mockGlobalSettings(settings); 
+		return settings; 
+	}
+
 	global static AsyncActionProcessor__mdt initProcessorSettings(Type processorType) {
 		// Instantiates & returns a processor settings object with default values for testing
 		AsyncActionProcessor__mdt processor = new AsyncActionProcessor__mdt(
@@ -43,6 +51,10 @@ global class AsyncActionTestUtils {
 		);
 		AsyncActionTestUtils.mockScheduledJobItem(item);
 		return item;
+	}
+
+	global static void mockGlobalSettings(AsyncActionGlobalSetting__mdt settings) {
+		AsyncActionGlobalSettingService.settings = settings; 
 	}
 
 	global static void mockProcessorSettings(AsyncActionProcessor__mdt processor) {

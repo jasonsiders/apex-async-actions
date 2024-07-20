@@ -1,14 +1,14 @@
-global abstract class AsyncActionTriggerFramework {
+public abstract class AsyncActionTriggerFramework {
 	// Simple TriggerHandler framework utilized by triggers in this package.
 	// Includes methods to disable triggers, if desired by callers
 	// **** STATIC **** //
 	static Set<Type> bypassed = new Set<Type>();
 
-	global static void disable(Type handlerType) {
+	public static void disable(Type handlerType) {
 		AsyncActionTriggerFramework.bypassed?.add(handlerType);
 	}
 
-	global static void enable(Type handlerType) {
+	public static void enable(Type handlerType) {
 		AsyncActionTriggerFramework.bypassed?.remove(handlerType);
 	}
 
@@ -26,7 +26,7 @@ global abstract class AsyncActionTriggerFramework {
 		this.initialize();
 	}
 
-	global abstract Type getType();
+	public abstract Type getType();
 
 	public void run() {
 		if (this.enabled() == false) {

@@ -1,5 +1,5 @@
 public class AsyncActionHandler extends AsyncActionTriggerFramework {
-	List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
+	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
 
 	public override void beforeInsert() {
 		// Set the # of Retries based on the configured metadata - or 0, if none specified
@@ -22,7 +22,7 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 		}
 		// Ensure the scheduled job aligns with current configuration
 		new AsyncActionScheduleEnforcer()?.enforce();
-		new Logger().publish();
+		AsyncActionLogger.init()?.save(false);
 	}
 
 	public override Type getType() {

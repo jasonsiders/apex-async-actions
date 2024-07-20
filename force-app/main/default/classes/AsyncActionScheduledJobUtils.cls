@@ -1,12 +1,13 @@
 public without sharing abstract class AsyncActionScheduledJobUtils {
-	static Logger LOGGER = new Logger()?.setLoggedFrom(AsyncActionScheduledJobUtils.class);
+	static AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 
 	public static void abortJobs(List<AsyncApexJob> jobs) {
 		for (AsyncApexJob job : jobs) {
 			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
 			Id jobId = job?.CronTriggerId;
 			if (jobId != null) {
-				LOGGER?.finest('Aborting job: ' + jobName + ' [' + jobId + ']');
+				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
+				LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionScheduledJobUtils.class, null, msg);
 				System.abortJob(jobId);
 			}
 		}
