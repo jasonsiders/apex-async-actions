@@ -171,7 +171,7 @@ public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
 }
 ```
 
-#### 2. Set the `AsyncActionGlobalSetting__mdt.LoggerAdapter__c` field to the name of your Apex class.
+#### 2. Set the `AsyncActionGlobalSetting__mdt.LoggerPlugin__c` field to the name of your Apex class.
 
 If such a record does not exist, or if the specified _Logger Adapter_ does not implement the `AsyncActionLogger.Adapter` interface correctly, the framework will use the default logging mechanism instead. 
 

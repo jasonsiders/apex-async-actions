@@ -4,7 +4,7 @@ private class AsyncActionLoggerTest {
     static void shouldInitializeCustomLogAdapter() {
         Type adapterType = MockAdapter.class;
         AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.LoggerAdapter__c = adapterType?.getName();
+        settings.LoggerPlugin__c = adapterType?.getName();
 
         Test.startTest();
         AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
@@ -16,7 +16,7 @@ private class AsyncActionLoggerTest {
     @IsTest 
     static void shouldUseDefaultLogAdapterIfInvalid() {
         AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.LoggerAdapter__c = 'foo/bar';
+        settings.LoggerPlugin__c = 'foo/bar';
 
         Test.startTest();
         AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
@@ -28,7 +28,7 @@ private class AsyncActionLoggerTest {
     @IsTest 
     static void shouldUseDefualtLogAdapterIfNone() {
         AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-        settings.LoggerAdapter__c = null;
+        settings.LoggerPlugin__c = null;
 
         Test.startTest();
         AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
