@@ -163,9 +163,7 @@ public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
 
 **Note**: This package does not ship with a record of this custom  metadata type by default. 
 
-If such a record does tot exist, or if the specified _Logger Adapter_ is not a valid implementor of the `AsyncActionLogger.Adapter` interface, the framework will use the default logging mechanism instead. 
+If such a record does not exist, or if the specified _Logger Adapter_ is not a valid implementor of the `AsyncActionLogger.Adapter` interface, the framework will use the default logging mechanism instead. 
 
 Using the above example:
 ![An AsyncActionGlobalSetting__mdt Record](/media/sample_global_setting_record.png)
-
-> **Note**: The framework should only 
