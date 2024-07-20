@@ -1,19 +1,19 @@
 # `apex-async-actions`
 
-Async Actions uses the power of the Salesforce platform to make it easier to launch, process, and track business-critical asynchronous tasks. Developers can define your own custom _Actions_ through Apex code, and then control and monitor its execution with declarative tools.
+Welcome to `apex-async-actions`, a Salesforce platform tool designed to simplify and enhance asynchronous task management. This tool empowers developers to create and manage custom asynchronous actions using Apex code, enhancing scalability and reliability for complex Salesforce orgs.
+
 
 ## Why?
-As Salesforce orgs grow in size and complexity, the need for asynchronous processing grows in importance. While there is much to be gained from deferring critical business processes, perils await those who do so carelessly, including painful debugging, sudden, unexplained failures, and a lack of configurability.
 
-`apex-async-actions` hopes to address many of these concerns, and to make asynchronous processing easier. 
+As Salesforce orgs scale in size and complexity, asynchronous processing becomes increasingly crucial. Deferring critical business processes offers significant benefits, but it also introduces challenges such as difficult debugging, unexpected failures, and limited configurability.
 
-By tracking each instance of an operation as an `AsyncAction__c` record, developers can quickly trigger, track and troubleshoot their operations, or empower their admins and stakeholders to do so themselves.
+`apex-async-actions` aims to mitigate these issues and simplify asynchronous processing. By tracking each operation instance as an `AsyncAction__c` record, developers can easily trigger, monitor, and troubleshoot their processes, or enable admins and stakeholders to do so independently.
 
-A suite of configuration options allows developers to customize many aspects of their asynchronous jobs:
+A range of configuration options allows developers to tailor various aspects of their asynchronous jobs:
 
-- **How should the job be triggered?** 
-- **How many records should the job process per invocation?**
-- **Should certain types of failures be automatically retried?**
+- **How/When Job is Triggered**: Define how your action processor should be initiated, and how often it should run.
+- **Batch Size**: Specify the number of records to process per invocation.
+- **Error Handling**: Determine if certain types of errors should be automatically retried.
 
 ## **Getting Started**
 
@@ -21,29 +21,32 @@ A suite of configuration options allows developers to customize many aspects of 
 
 ### Install/Deploy the Package
 
-To use Async Actions in your own project, install the latest version of the package. You can find this version [here](https://github.com/jasonsiders/apex-async-actions/releases/latest).
+To use Async Actions in your project, install the latest version of the package from [here](https://github.com/jasonsiders/apex-async-actions/releases/latest).
 
-Run this command to install the package, using the package's `04t...` Id in place of `PACKAGE_VERSION_ID`:
+Run this command to install the package, replacing `<<package_version_id>>` with the package's `04t...` Id:
 
 ```
-sfdx package install -p PACKAGE_VERSION_ID
+sf package install -p <<package_version_id>>
 ```
-
-Alternatively, if you wish to contribute to this project, you can deploy its contents directly to your org. To do this, clone the repo and then run `sfdx force source push`.
 
 ### Assign Permissions
 
-You should assign the `AsyncActionAdministrator` permission set to yourself, along with any user that needs access to view and edit `AsyncAction__c` records. See Salesforce's [documentation](https://help.salesforce.com/s/articleView?id=sf.perm_sets_mass_assign.htm&type=5) for details.
+Assign the `AsyncActionAdministrator` permission set to yourself and any users who need access to view and edit `AsyncAction__c` records:
+
+```
+sf org assign permset -n AsyncActionAdministrator
+```
 
 ## **Usage**
 
-To use this framework, developers start by building their own "actions" - logic contained in an apex class. After some light configuration, admins can invoke 
+To use this framework, developers should first create their own "actions" as logic contained in an Apex class. After some light configuration, these actions can be invoked by inserting `_Async Action_` records that reference the processor/Apex class.
 
 ### Creating Action Processors
 
 Developers can create a new _Action_ processor in three easy steps:
 
 #### 1. Create an Apex Class that extends `AsyncActionProcessor`
+
 This defines what the Action will do when it runs. Here's an example:
 
 ```java
@@ -64,55 +67,59 @@ global class FooCreator extends AsyncActionProcessor {
         return FooCreator.class;
     }
 }
-```
 
 Read more about the `AsyncActionProcessor` class [here](/docs/ASYNCACTIONPROCESSOR.md).
 
 #### 2. Create a Corresponding `AsyncActionProcessor__mdt` Record
 
-This custom metadata type record can be used to configure certain aspects of your action; for example, its _Batch Size_. The record's _Processor Class_ should match the fully-qualified name of your apex class. If such a record does not exist, your async action job will not run. 
+This custom metadata type record configures aspects of your action, such as its _Batch Size_. The record's _Processor Class_ should match the fully-qualified name of your Apex class. If this record is missing, your async action job will not run.
 
 Here's an example processor record:
-   ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
+![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
 
 Read more about this custom metadata type [here](/docs/PROCESSORSETTINGS.md).
 
+
 #### 3. Define How/When Your Job Will Run
 
-If you wish to run your action immediately, set `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will launch shortly after corresponding `AsyncAction__c` record(s) are inserted.
+To run your action immediately, set the `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will start shortly after corresponding `AsyncAction__c` record(s) are inserted.
 
-If you wish to process accumulated actions (or retries) at a regular scheduled interval, using the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types.
+To process accumulated actions (or retries) at regular intervals, use the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types.
 
 #### 4. Create Async Action Records
-Once these steps have been completed, your framework is ready for primetime! Create `AsyncAction__c` records linked to your processor class via the _Processor Class_ field. These _Async Action_ records can be created just like any other custom object, via Flows, Apex, or in the UI. 
 
-When a given processor runs, it will process any `AsyncAction__c` records with a matching _Processor Class_ value and a "Pending" _Status_.
+Once these steps are complete, your framework is ready for use. Create `AsyncAction__c` records linked to your processor class via the _Processor Class_ field. These _Async Action_ records can be created through Flows, Apex, or the UI.
 
-Once the action has been processed, the framework updates the `AsyncAction__c` record with details about its execution, including its _Status_, any errors that occurred, and if it needs to be retried.
+When a processor runs, it will process any `AsyncAction__c` records with a matching _Processor Class_ value and a "Pending" _Status_.
+
+After processing, the framework updates the `AsyncAction__c` record with execution details, including _Status_, any errors, and retry information.
 
 Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTIONOBJECT.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
 
+
 #### 5. Monitor Actions
-Developers can track the status of their actions through reports, list views, or through a custom "related list" component on records related to the Actions.
+
+Developers can track the status of their actions through reports, list views, or a custom "related list" component on records related to the Actions.
 ![Async Action List View](/media/list_view.png)
 
 ![The Async Action Related List Component](/media/related_list.png)
 
----
 
 ## Plugins
 
-Certain aspects of the framework have defined behavior that can be overridden by users through plugins. As time goes on, more plugin options may be added to the section below:
+Certain aspects of the framework have defined behavior that can be overridden by users through plugins. As the framework evolves, additional plugin options may be added to this section:
 
 ### Logging
-By default, the framework will output details about its operations to traditional Salesforce debug logs via `System.debug()` calls. If desired, callers can instead publish logs via their tool of choice, by following these steps:
+
+By default, the framework outputs details about its operations to traditional Salesforce debug logs using `System.debug()` calls. To use a different logging mechanism, follow these steps:
 
 #### 1. Create an Apex Class that implements `AsyncActionLogger.Adapter`
 
- Your own custom implementation will receive log messages from the framework, and can be used to hook into your logging tool of choice.
+Your custom implementation will receive log messages from the framework and can be used to integrate with your preferred logging tool.
 
-The `AsyncActionLogger.Adapter` interface has two methods which must be defined in your class:
+The `AsyncActionLogger.Adapter` interface requires the following two methods to be defined in your class:
+
 ```java
 void log(
     System.LoggingLevel level, 
@@ -121,20 +128,24 @@ void log(
     Object logMessage
 );
 ```
+
 This method is called by the framework to record various log messages.
-- `System.LoggingLevel level`: The severity of the log message. 
-- `Type loggedFromClass`: The Apex Class that the message was logged from.
-- `Id relatedRecordId`: The Id of a Salesforce record that the log message pertains to. 
-- `Object logMessage`: The message, or object (ie., Exception) to be logged. 
+- `System.LoggingLevel level`: The severity of the log message.
+- `Type loggedFromClass`: The Apex Class from which the message was logged.
+- `Id relatedRecordId`: The Id of the Salesforce record associated with the log message.
+- `Object logMessage`: The message or object (e.g., Exception) to be logged.
+
 ```java
 void save(Boolean publishImmediate);
 ```
+
 This method is called by the framework at the end of a transaction, to commit previously stored log messages to the database. 
-- `Boolean publishImmediate`: Indicates to loggers if 
 
----
+This method is called by the framework at the end of a transaction to commit previously stored log messages to the database.
+- `Boolean publishImmediate`: Indicates whether the messages should be saved immediately using a [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_publish_apex.htm) with `Publish Immediately` save behavior, if possible. This ensures that errors are logged even if uncaught exceptions occur.
 
-Here's a sample adapter, which hooks into the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
+
+Here's a sample adapter that integrates with the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
 
 ```java
 public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
@@ -159,11 +170,11 @@ public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
 }
 ```
 
-#### 2. Set the `AsyncActionGlobalSetting__mdt.LoggerAdapter__c` field to the name of your apex class.
+#### 2. Set the `AsyncActionGlobalSetting__mdt.LoggerAdapter__c` field to the name of your Apex class.
 
-**Note**: This package does not ship with a record of this custom  metadata type by default. 
+**Note**: This package does not include a record of this custom metadata type by default.
 
-If such a record does not exist, or if the specified _Logger Adapter_ is not a valid implementor of the `AsyncActionLogger.Adapter` interface, the framework will use the default logging mechanism instead. 
+If such a record does not exist, or if the specified _Logger Adapter_ does not implement the `AsyncActionLogger.Adapter` interface correctly, the framework will use the default logging mechanism instead.
 
 Using the above example:
 ![An AsyncActionGlobalSetting__mdt Record](/media/sample_global_setting_record.png)
