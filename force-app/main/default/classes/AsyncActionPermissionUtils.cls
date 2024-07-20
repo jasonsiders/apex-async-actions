@@ -1,8 +1,8 @@
-global abstract class AsyncActionPermissionUtils {
-	global static final String PERMISSION_SET_NAME = 'AsyncActionAdministrator';
+public abstract class AsyncActionPermissionUtils {
+	public static final String PERMISSION_SET_NAME = 'AsyncActionAdministrator';
 	static PermissionSet permissionSet;
 
-	global static void assignPermissionSet(List<User> users) {
+	public static void assignPermissionSet(List<User> users) {
 		PermissionSet permissionSet = AsyncActionPermissionUtils.getPermissionSet();
 		List<PermissionSetAssignment> assignments = new List<PermissionSetAssignment>();
 		for (User user : users) {
@@ -15,11 +15,11 @@ global abstract class AsyncActionPermissionUtils {
 		insert assignments;
 	}
 
-	global static void assignPermissionSet(User user) {
+	public static void assignPermissionSet(User user) {
 		AsyncActionPermissionUtils.assignPermissionSet(new List<User>{ user });
 	}
 
-	global static PermissionSet getPermissionSet() {
+	public static PermissionSet getPermissionSet() {
 		permissionSet = permissionSet ?? AsyncActionPermissionUtils.retrievePermissions();
 		return permissionSet;
 	}
