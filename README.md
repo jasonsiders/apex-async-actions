@@ -23,7 +23,7 @@ A range of configuration options allows developers to tailor various aspects of 
 
 To use Async Actions in your project, install the latest version of the package from [here](https://github.com/jasonsiders/apex-async-actions/releases/latest).
 
-Run this command to install the package, replacing `<<package_version_id>>` with the package's `04t...` Id:
+Run this command to install the package, replacing `<<package_version_id>>` with the package version Id (starting with `04t`)
 
 ```
 sf package install -p <<package_version_id>>
@@ -39,11 +39,11 @@ sf org assign permset -n AsyncActionAdministrator
 
 ## **Usage**
 
-To use this framework, developers should first create their own "actions" as logic contained in an Apex class. After some light configuration, these actions can be invoked by inserting `_Async Action_` records that reference the processor/Apex class.
+To use this framework, developers should first create their own "actions" as logic contained in an Apex class. After some light configuration, these actions can be invoked by inserting _Async Action_ records that reference the processor/Apex class.
 
 ### Creating Action Processors
 
-Developers can create a new _Action_ processor in three easy steps:
+Developers can define a new action in 
 
 #### 1. Create an Apex Class that extends `AsyncActionProcessor`
 
@@ -67,6 +67,7 @@ global class FooCreator extends AsyncActionProcessor {
         return FooCreator.class;
     }
 }
+```
 
 Read more about the `AsyncActionProcessor` class [here](/docs/ASYNCACTIONPROCESSOR.md).
 
@@ -82,23 +83,24 @@ Read more about this custom metadata type [here](/docs/PROCESSORSETTINGS.md).
 
 #### 3. Define How/When Your Job Will Run
 
-To run your action immediately, set the `AsyncActionProcessor__mdt.RunOnInsert__c` to _true_. An instance of the job will start shortly after corresponding `AsyncAction__c` record(s) are inserted.
+To run your action immediately, set the _Run On Insert_ to `true`. An instance of the job will start shortly after corresponding Async Action record(s) are inserted.
 
-To process accumulated actions (or retries) at regular intervals, use the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) and [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) custom metadata types.
+To process accumulated actions (or retries) at regular intervals, use the `AsyncActionScheduledJob__mdt` and `AsyncActionScheduledJobItem__mdt` custom metadata types to automatically configure scheduled jobs. Read more about using these custom metadata types below:
 
-#### 4. Create Async Action Records
+- [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md)
+- [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md)
 
-Once these steps are complete, your framework is ready for use. Create `AsyncAction__c` records linked to your processor class via the _Processor Class_ field. These _Async Action_ records can be created through Flows, Apex, or the UI.
+### Creating Async Action Records
 
-When a processor runs, it will process any `AsyncAction__c` records with a matching _Processor Class_ value and a "Pending" _Status_.
+Once these steps are complete, your framework is ready for use. Create _Async Action_ records linked to your processor class via the _Processor Class_ field. These records can be created through Flows, Apex, or the UI, like any other custom object.
 
-After processing, the framework updates the `AsyncAction__c` record with execution details, including _Status_, any errors, and retry information.
+When a processor runs, it will process any _Pending_ records with a matching _Processor Class_ value. Once the job finishes, the framework updates the record with execution details, including its _Status_, any errors, and retry information.
 
 Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTIONOBJECT.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
 
 
-#### 5. Monitor Actions
+### Monitoring Actions
 
 Developers can track the status of their actions through reports, list views, or a custom "related list" component on records related to the Actions.
 ![Async Action List View](/media/list_view.png)
@@ -139,9 +141,8 @@ This method is called by the framework to record various log messages.
 void save(Boolean publishImmediate);
 ```
 
-This method is called by the framework at the end of a transaction, to commit previously stored log messages to the database. 
-
 This method is called by the framework at the end of a transaction to commit previously stored log messages to the database.
+
 - `Boolean publishImmediate`: Indicates whether the messages should be saved immediately using a [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_publish_apex.htm) with `Publish Immediately` save behavior, if possible. This ensures that errors are logged even if uncaught exceptions occur.
 
 
@@ -172,9 +173,7 @@ public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
 
 #### 2. Set the `AsyncActionGlobalSetting__mdt.LoggerAdapter__c` field to the name of your Apex class.
 
-**Note**: This package does not include a record of this custom metadata type by default.
-
-If such a record does not exist, or if the specified _Logger Adapter_ does not implement the `AsyncActionLogger.Adapter` interface correctly, the framework will use the default logging mechanism instead.
+If such a record does not exist, or if the specified _Logger Adapter_ does not implement the `AsyncActionLogger.Adapter` interface correctly, the framework will use the default logging mechanism instead. 
 
 Using the above example:
 ![An AsyncActionGlobalSetting__mdt Record](/media/sample_global_setting_record.png)
