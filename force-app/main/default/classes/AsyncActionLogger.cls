@@ -10,7 +10,7 @@ public abstract class AsyncActionLogger {
         // Initialize a log adapter object based on the provided value in custom metadata
         // If no metadata records, or if an invalid adapter is defined, will use the DefaultLogger instead
         AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
-        String adapterName = settings?.LoggerAdapter__c;
+        String adapterName = settings?.LoggerPlugin__c;
         try {
             return (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
         } catch (Exception error) {
