@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Enabled__c</fullName>
     <defaultValue>true</defaultValue>
-    <description>Determines if the job item is active. When false, the item will not be processed through the scheduled job.</description>
+    <description
+	>Determines if the job item is active. When false, the item will not be processed through the scheduled job.</description>
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Enabled</label>
