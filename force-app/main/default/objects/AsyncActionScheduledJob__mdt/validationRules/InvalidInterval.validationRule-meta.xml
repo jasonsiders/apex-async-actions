@@ -3,7 +3,6 @@
     <fullName>InvalidInterval</fullName>
     <active>true</active>
     <errorConditionFormula>OR(
-    ISBLANK(Interval__c),
     Interval__c &lt; 1,
     Interval__c &gt; 60
 )</errorConditionFormula>

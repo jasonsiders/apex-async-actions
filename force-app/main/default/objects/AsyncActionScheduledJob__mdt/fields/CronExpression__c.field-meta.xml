@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CronExpression__c</fullName>
+    <defaultValue>&quot;0 0 * * * ?&quot;</defaultValue>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText>Defines a Cron Expression that will be used to schedule the job, if one is not already active. 
+Defaults to an hourly expression (&quot;0 0 * * * ?&quot;)</inlineHelpText>
+    <label>Cron Expression</label>
+    <length>20</length>
+    <required>true</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
