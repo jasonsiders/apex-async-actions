@@ -7,11 +7,11 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 			// Do not overwrite non-null values
 			if (action?.Retries__c == null) {
 				String className = action?.ProcessorClass__c;
-				action.Retries__c = AsyncActionProcessorService.get(className)?.Retries__c ?? 0; 
+				action.Retries__c = AsyncActionProcessorService.get(className)?.Retries__c ?? 0;
 			}
 		}
 	}
-	
+
 	public override void afterInsert() {
 		// Run any jobs configured to run on insert
 		Set<String> triggeredActions = this.getTriggeredActions();

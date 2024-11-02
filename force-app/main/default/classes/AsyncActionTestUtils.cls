@@ -4,8 +4,8 @@ global class AsyncActionTestUtils {
 		AsyncActionGlobalSetting__mdt settings = new AsyncActionGlobalSetting__mdt(
 			DeveloperName = 'Test_Global_Setting'
 		);
-		AsyncActionTestUtils.mockGlobalSettings(settings); 
-		return settings; 
+		AsyncActionTestUtils.mockGlobalSettings(settings);
+		return settings;
 	}
 
 	global static AsyncActionProcessor__mdt initProcessorSettings(Type processorType) {
@@ -54,7 +54,7 @@ global class AsyncActionTestUtils {
 	}
 
 	global static void mockGlobalSettings(AsyncActionGlobalSetting__mdt settings) {
-		AsyncActionGlobalSettingService.settings = settings; 
+		AsyncActionGlobalSettingService.settings = settings;
 	}
 
 	global static void mockProcessorSettings(AsyncActionProcessor__mdt processor) {

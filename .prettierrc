@@ -1,8 +1,4 @@
 {
-	"printWidth": 120,
-	"tabWidth": 4,
-	"trailingComma": "none",
-	"useTabs": true,
 	"overrides": [
 		{
 			"files": "**/lwc/**/*.html",
@@ -16,5 +12,10 @@
 				"parser": "html"
 			}
 		}
-	]
+	],
+	"plugins": ["prettier-plugin-apex", "@prettier/plugin-xml"],
+	"printWidth": 120,
+	"tabWidth": 4,
+	"trailingComma": "none",
+	"useTabs": true
 }
