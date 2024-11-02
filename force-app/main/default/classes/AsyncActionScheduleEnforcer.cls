@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionScheduleEnforcer {
 	// This class can be called at any time to ensure that the Scheduled Jobs queue
 	// is in alignment with the current AsyncActionScheduledJob__mdt records
@@ -34,6 +35,7 @@ public class AsyncActionScheduleEnforcer {
 				ApexClass.Name,
 				CreatedDate,
 				CronTriggerId,
+				CronTrigger.CronExpression,
 				CronTrigger.CronJobDetail.Name,
 				CronTrigger.NextFireTime,
 				Status
@@ -41,6 +43,7 @@ public class AsyncActionScheduleEnforcer {
 			WHERE
 				ApexClass.Name = :AsyncActionSchedulable.class.getName()
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
+			WITH SYSTEM_MODE
 			ORDER BY CronTrigger.NextFireTime ASC
 		];
 	}
@@ -67,18 +70,52 @@ public class AsyncActionScheduleEnforcer {
 		}
 
 		public void validate() {
-			if (this.asyncJob == null) {
-				// Job doesn't exist. Schedule a new one
-				this.scheduler?.scheduleNewJob();
-			} else {
-				// Job exists; ensure that it matches the configured interval
-				Integer interval = this.jobSettings?.Interval__c?.intValue();
-				if (this.asyncJob?.CronTrigger?.NextFireTime > DateTime.now()?.addMinutes(interval)) {
-					// Out of range of the current interval. Abort it and schedule a new one
-					AsyncActionScheduledJobUtils.abortJobs(this.asyncJob);
+			try {
+				if (this.asyncJob == null) {
+					// Job doesn't exist. Schedule a new one
 					this.scheduler?.scheduleNewJob();
+				} else if (this.jobSettings?.Type__c == 'Custom') {
+					// Job exists; its cron expression should match
+					this.validateCustomJob();
+				} else if (this.jobSettings?.Type__c == 'Hourly') {
+					// Job exists; should be set up to fire hourly
+					this.validateHourlyJob();
+				} else if (this.jobSettings?.Type__c == 'Semi-Hourly') {
+					// Job exists; should fire every X minutes, according to the interval
+					this.validateSemiHourlyJob();
 				}
+			} catch (AsyncActionScheduleEnforcer.ValidationException error) {
+				// Abort the current job, and schedule a new one
+				AsyncActionScheduledJobUtils.abortJobs(this.asyncJob);
+				this.scheduler?.scheduleNewJob();
 			}
 		}
+
+		private void validateCustomJob() {
+			// Ensure the current job's cron expression matches the custom configuration
+			if (this.asyncJob?.CronTrigger?.CronExpression != this.jobSettings?.CronExpression__c) {
+				// This cron expression should always match
+				throw new AsyncActionScheduleEnforcer.ValidationException();
+			}
+		}
+
+		private void validateHourlyJob() {
+			// Ensure that the current job's cron expression is hourly
+			if (this.asyncJob?.CronTrigger?.CronExpression != AsyncActionSchedulable.HOURLY) {
+				throw new AsyncActionScheduleEnforcer.ValidationException();
+			}
+		}
+
+		private void validateSemiHourlyJob() {
+			// Ensure that the current job matches the configured interval
+			Integer interval = this.jobSettings?.Interval__c?.intValue();
+			if (DateTime.now()?.addMinutes(interval) > this.asyncJob?.CronTrigger?.NextFireTime) {
+				// Out of range of the current interval!
+				throw new AsyncActionScheduleEnforcer.ValidationException();
+			}
+		}
+	}
+
+	private class ValidationException extends Exception {
 	}
 }
