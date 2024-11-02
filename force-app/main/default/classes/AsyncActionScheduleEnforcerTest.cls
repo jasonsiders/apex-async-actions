@@ -1,28 +1,65 @@
+@SuppressWarnings('PMD.OperationWithLimitsInLoop')
 @IsTest
 private class AsyncActionScheduleEnforcerTest {
 	@IsTest
-	static void shouldScheduleJobsIfNoneExist() {
-		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
+	static void shouldScheduleCustomJobsIfNoneExist() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSetting.CronExpression__c = '0 0 0 * * ?'; // Nightly at midnight
+		jobSetting.Type__c = 'Custom';
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
-		Assert.areEqual(jobSettings?.size(), jobs?.size(), 'Wrong # of Scheduled Jobs');
-		for (AsyncApexJob job : jobs) {
-			String key = job?.CronTrigger?.CronJobDetail?.Name?.replace(AsyncActionSchedulable.JOB_PREFIX, '');
-			AsyncActionScheduledJob__mdt jobSetting = jobSettings?.get(key);
-			Assert.isNotNull(jobSetting, 'Could not find a matching AsyncActionScheduledJob__mdt: ' + key);
-			Integer interval = jobSetting?.Interval__c?.intValue();
-			Assert.areEqual(
-				DateTime.now()?.addMinutes(interval).minute(),
-				job?.CronTrigger?.NextFireTime?.minute(),
-				'Wrong NextFireTime'
-			);
-		}
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
+		AsyncApexJob job = jobs?.get(0);
+		Assert.areEqual(jobSetting?.CronExpression__c, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
 	}
 
 	@IsTest
-	static void shouldRescheduleJobsIfNoneInRange() {
+	static void shouldScheduleHourlyJobsIfNoneExist() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSetting.Type__c = 'Hourly';
+
+		new AsyncActionScheduleEnforcer().enforce();
+
+		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
+		AsyncApexJob job = jobs?.get(0);
+		Assert.areEqual(AsyncActionSchedulable.HOURLY, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
+	}
+
+	@IsTest
+	static void shouldScheduleSemiHourlyJobsIfNoneExist() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSetting.Interval__c = 10;
+		jobSetting.Type__c = 'Semi-Hourly';
+
+		new AsyncActionScheduleEnforcer().enforce();
+
+		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getScheduledJobs();
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
+		AsyncApexJob job = jobs?.get(0);
+		Integer interval = jobSetting?.Interval__c?.intValue();
+		Assert.areEqual(
+			DateTime.now()?.addMinutes(interval).minute(),
+			job?.CronTrigger?.NextFireTime?.minute(),
+			'Wrong NextFireTime'
+		);
+	}
+
+	@IsTest
+	static void shouldAbortAndRescheduleCustomJob() {
+		Assert.fail('You still need to build this test');
+	}
+
+	@IsTest
+	static void shouldAbortAndRescheduleHourlyJob() {
+		Assert.fail('You still need to build this test');
+	}
+
+	@IsTest
+	static void shouldAbortAndRescheduleSemiHourlyJob() {
+		Assert.fail('You still need to build this test');
 		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
 		// For each jobSetting, create a scheduled job that is "out-of-range" of the current interval.
 		// These existing jobs should be aborted and replaced with a job that respects the current interval.
@@ -64,7 +101,7 @@ private class AsyncActionScheduleEnforcerTest {
 			Integer nextMin = DateTime.now().addMinutes(minsToAdd)?.minute();
 			String cronExp = '0 ' + nextMin + ' * * * ?';
 			System.Schedulable job = new AsyncActionSchedulable(jobSetting);
-			Id jobId = System.schedule(jobName, cronExp, job);
+			System.schedule(jobName, cronExp, job);
 		}
 		// Disable one of the jobs
 		AsyncActionScheduledJob__mdt disabledJob = jobSettings?.values()[0];
@@ -97,7 +134,17 @@ private class AsyncActionScheduleEnforcerTest {
 	}
 
 	@IsTest
-	static void shouldDoNothingIfScheduledJobExistsInRange() {
+	static void shouldDoNothingIfValidCustomJobExists() {
+		Assert.fail('You still need to build this test');
+	}
+
+	@IsTest
+	static void shouldDoNothingIfValidHourlyJobExists() {
+		Assert.fail('You still need to build this test');
+	}
+
+	@IsTest
+	static void shouldDoNothingIfValidSemiHourlyScheduledJobExists() {
 		Map<String, AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduleEnforcerTest.initJobSettings();
 		Set<Id> existingJobIds = new Set<Id>();
 		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings?.values()) {
@@ -131,7 +178,7 @@ private class AsyncActionScheduleEnforcerTest {
 				Status
 			FROM AsyncApexJob
 			WHERE
-				ApexClass.Name = 'AsyncActionSchedulable'
+				ApexClass.Name = :AsyncActionSchedulable.class.getName()
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
 			ORDER BY CreatedDate ASC
 		];
@@ -142,6 +189,7 @@ private class AsyncActionScheduleEnforcerTest {
 			AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
 			jobSetting.Enabled__c = true;
 			jobSetting.Interval__c = interval;
+			jobSetting.Type__c = 'Semi-Hourly';
 		}
 		return AsyncActionScheduledJobService.getAll();
 	}
