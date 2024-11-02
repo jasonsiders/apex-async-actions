@@ -8,6 +8,7 @@ private class AsyncActionSchedulableTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
+		jobSettings.Type__c = 'Semi-Hourly';
 		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
 			actionSettings,
 			jobSettings
@@ -38,6 +39,7 @@ private class AsyncActionSchedulableTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = false; // The scheduled job should do nothing
 		jobSettings.Interval__c = 15;
+		jobSettings.Type__c = 'Semi-Hourly';
 		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
 			actionSettings,
 			jobSettings
@@ -61,6 +63,7 @@ private class AsyncActionSchedulableTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
+		jobSettings.Type__c = 'Semi-Hourly';
 		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
 			actionSettings,
 			jobSettings
@@ -88,6 +91,7 @@ private class AsyncActionSchedulableTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
+		jobSettings.Type__c = 'Semi-Hourly';
 		// No job items!
 		AsyncActionSchedulableTest.insertAction();
 

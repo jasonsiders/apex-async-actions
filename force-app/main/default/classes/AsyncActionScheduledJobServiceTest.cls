@@ -33,7 +33,8 @@ private class AsyncActionScheduledJobServiceTest {
 		AsyncActionScheduledJob__mdt mockSettings = new AsyncActionScheduledJob__mdt(
 			DeveloperName = mockName,
 			Enabled__c = true,
-			Interval__c = Integer.valueOf(Math.random() * 60)
+			Interval__c = Integer.valueOf(Math.random() * 60),
+			Type__c = 'Semi-Hourly'
 		);
 		AsyncActionScheduledJobService.settings = new Map<String, AsyncActionScheduledJob__mdt>();
 		AsyncActionScheduledJobService.settings?.put(mockName, mockSettings);
@@ -47,5 +48,6 @@ private class AsyncActionScheduledJobServiceTest {
 		Assert.areEqual(mockSettings?.DeveloperName, results?.DeveloperName, 'Wrong DeveloperName');
 		Assert.areEqual(mockSettings?.Enabled__c, results?.Enabled__c, 'Wrong Enabled__c');
 		Assert.areEqual(mockSettings?.Interval__c, results?.Interval__c, 'Wrong Interval__c');
+		Assert.areEqual(mockSettings?.Type__c, results?.Type__c, 'Wrong Type__c');
 	}
 }

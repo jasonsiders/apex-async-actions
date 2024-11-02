@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc, PMD.AvoidGlobalModifier')
 @IsTest
 global class AsyncActionTestUtils {
 	global static AsyncActionGlobalSetting__mdt initGlobalSettings() {
@@ -32,8 +33,8 @@ global class AsyncActionTestUtils {
 		AsyncActionScheduledJob__mdt settings = new AsyncActionScheduledJob__mdt(
 			DeveloperName = jobName,
 			Enabled__c = false,
-			Interval__c = 60,
-			MasterLabel = jobName
+			MasterLabel = jobName,
+			Type__c = 'Hourly'
 		);
 		AsyncActionTestUtils.mockScheduledJobSettings(settings);
 		return settings;
