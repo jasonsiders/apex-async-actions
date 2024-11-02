@@ -9,7 +9,7 @@
 - Hourly: The scheduled job runs at the top of each hour.
 - Semi-Hourly: The scheduled job runs every X minutes, as determined by the &quot;Interval&quot; field</inlineHelpText>
     <label>Type</label>
-    <required>false</required>
+    <required>true</required>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
