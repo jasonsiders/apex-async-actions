@@ -4,11 +4,12 @@
     <defaultValue>&quot;0 0 * * * ?&quot;</defaultValue>
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
-    <inlineHelpText>Defines a Cron Expression that will be used to schedule the job, if one is not already active. 
-Defaults to an hourly expression (&quot;0 0 * * * ?&quot;)</inlineHelpText>
+    <inlineHelpText
+	>Defines a custom Cron Expression that will be used to schedule the job, if one is not already active. 
+Required when Type is &quot;Custom&quot;; will be ignored otherwise.</inlineHelpText>
     <label>Cron Expression</label>
     <length>20</length>
-    <required>true</required>
+    <required>false</required>
     <type>Text</type>
     <unique>false</unique>
 </CustomField>

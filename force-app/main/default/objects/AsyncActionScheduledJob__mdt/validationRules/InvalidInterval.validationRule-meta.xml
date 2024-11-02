@@ -2,9 +2,14 @@
 <ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>InvalidInterval</fullName>
     <active>true</active>
-    <errorConditionFormula>OR(
-    Interval__c &lt; 1,
-    Interval__c &gt; 60
+    <description
+	>If an Interval is provided, it must be a valid minute value, excluding 0 (use Type = &quot;Hourly&quot; for 0-minute intervals instead)</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Interval__c)),
+    OR(
+        Interval__c &lt; 1,
+        Interval__c &gt; 60
+    )
 )</errorConditionFormula>
     <errorDisplayField>Interval__c</errorDisplayField>
     <errorMessage>Enter a value between 1 and 60.</errorMessage>

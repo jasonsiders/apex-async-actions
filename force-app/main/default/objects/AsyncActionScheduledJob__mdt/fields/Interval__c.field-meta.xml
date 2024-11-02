@@ -7,7 +7,7 @@
 	>Defines an &quot;offset&quot; number of minutes for future runs of this job to rescheduled in. When used with an hourly cron expression, this can be used to run the job more frequently than once per hour (ex., every 15 minutes). 
 
 If using something other than an hourly cron expression, this field should most commonly be left blank.</inlineHelpText>
-    <label>Offset in Minutes</label>
+    <label>Interval</label>
     <precision>18</precision>
     <required>false</required>
     <scale>0</scale>
