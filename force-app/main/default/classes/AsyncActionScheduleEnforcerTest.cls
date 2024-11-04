@@ -62,7 +62,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areNotEqual(jobId, job?.Id, 'Did not abort pre-existing jobId');
+		Assert.areNotEqual(jobId, job?.CronTriggerId, 'Did not abort pre-existing jobId');
 		Assert.areEqual(jobSetting?.CronExpression__c, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
 	}
 
@@ -78,7 +78,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areNotEqual(jobId, job?.Id, 'Did not abort pre-existing jobId');
+		Assert.areNotEqual(jobId, job?.CronTriggerId, 'Did not abort pre-existing jobId');
 		Assert.areEqual(AsyncActionSchedulable.HOURLY, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
 	}
 
@@ -95,7 +95,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areNotEqual(jobId, job?.Id, 'Did not abort pre-existing jobId');
+		Assert.areNotEqual(jobId, job?.CronTriggerId, 'Did not abort pre-existing jobId');
 		Integer interval = jobSetting?.Interval__c?.intValue();
 		Integer nextMin = DateTime.now().addMinutes(interval)?.minute();
 		String expectedCron = '0 ' + nextMin + ' * * * ?';
@@ -127,7 +127,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(jobId, job?.Id, 'Did not use pre-existing job');
+		Assert.areEqual(jobId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
 	@IsTest
@@ -141,7 +141,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(jobId, job?.Id, 'Did not use pre-existing job');
+		Assert.areEqual(jobId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
 	@IsTest
@@ -159,7 +159,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(jobId, job?.Id, 'Did not use pre-existing job');
+		Assert.areEqual(jobId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
 	// **** HELPER **** //
