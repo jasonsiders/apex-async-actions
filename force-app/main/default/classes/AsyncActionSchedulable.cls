@@ -1,10 +1,13 @@
 @SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionSchedulable implements System.Schedulable {
+	// **** STATIC **** //
 	public static final String HOURLY = '0 0 * * * ?';
 	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 	private static final Integer DEFAULT_INTERVAL = 60;
 	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-	AsyncActionScheduledJob__mdt jobSettings;
+
+	// **** MEMBER **** //
+	private AsyncActionScheduledJob__mdt jobSettings;
 
 	public AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
 		this.jobSettings = jobSettings;
@@ -30,8 +33,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		if (this.jobSettings?.Enabled__c == true) {
 			String jobName = this.getJobName();
 			String cronExp = this.getCronExpression();
-			System.Schedulable newJob = new AsyncActionSchedulable(this.jobSettings);
-			Id jobId = System.schedule(jobName, cronExp, newJob);
+			Id jobId = System.schedule(jobName, cronExp, this);
 			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
 			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
 			return jobId;
