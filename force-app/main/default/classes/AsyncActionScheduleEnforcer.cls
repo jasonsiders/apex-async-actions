@@ -135,7 +135,10 @@ public without sharing class AsyncActionScheduleEnforcer {
 		private void validateSemiHourlyJob() {
 			// Ensure that the current job matches the configured interval
 			Integer interval = this.jobSettings?.Interval__c?.intValue();
-			if (DateTime.now()?.addMinutes(interval) > this.asyncJob?.CronTrigger?.NextFireTime) {
+			DateTime shouldFireBefore = DateTime.now()?.addMinutes(interval);
+			DateTime nextFireTime = this.asyncJob?.CronTrigger?.NextFireTime;
+			System.debug('@jason: Should Fire Before: ' + shouldFireBefore + ' | Next Fire Time: ' + nextFireTime);
+			if (shouldFireBefore > nextFireTime) {
 				// Out of range of the current interval!
 				throw new AsyncActionScheduleEnforcer.ValidationException();
 			}

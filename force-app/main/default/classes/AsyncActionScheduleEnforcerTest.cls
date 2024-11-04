@@ -88,6 +88,7 @@ private class AsyncActionScheduleEnforcerTest {
 		jobSetting.Interval__c = 5;
 		jobSetting.Type__c = 'Semi-Hourly';
 		// Schedule a job for the current settings record, but w/a different cron expression
+		// TODO! schedule the existing job for hourly + interval * 2
 		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, NIGHTLY_AT_MIDNIGHT);
 
 		new AsyncActionScheduleEnforcer().enforce();
