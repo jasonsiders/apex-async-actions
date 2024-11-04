@@ -106,6 +106,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 					System.debug('@jason: ' + this.getJobName() + ': validating semi-hourly job...');
 					this.validateSemiHourlyJob();
 				}
+				System.debug('@jason: ' + this.getJobName() + ': validated!');
 			} catch (AsyncActionScheduleEnforcer.ValidationException error) {
 				// Abort the current job, and schedule a new one
 				System.debug(

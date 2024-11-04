@@ -79,7 +79,7 @@ private class AsyncActionScheduleEnforcerTest {
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
 		Assert.areNotEqual(jobId, job?.Id, 'Did not abort pre-existing jobId');
-		Assert.areEqual(jobSetting?.CronExpression__c, AsyncActionSchedulable.HOURLY, 'Wrong CronExpression');
+		Assert.areEqual(AsyncActionSchedulable.HOURLY, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
 	}
 
 	@IsTest
@@ -99,7 +99,7 @@ private class AsyncActionScheduleEnforcerTest {
 		Integer interval = jobSetting?.Interval__c?.intValue();
 		Integer nextMin = DateTime.now().addMinutes(interval)?.minute();
 		String expectedCron = '0 ' + nextMin + ' * * * ?';
-		Assert.areEqual(jobSetting?.CronExpression__c, expectedCron, 'Wrong CronExpression');
+		Assert.areEqual(expectedCron, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
 		Assert.areEqual(nextMin, job?.CronTrigger?.NextFireTime?.minute(), 'Wrong NextFireTime');
 	}
 
