@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.OperationWithLimitsInLoop')
 @IsTest
 private class AsyncActionScheduleEnforcerTest {
 	private static final String NIGHTLY_AT_MIDNIGHT = '0 0 0 * * ?';
@@ -6,7 +5,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldScheduleCustomJobsIfNoneExist() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.CronExpression__c = NIGHTLY_AT_MIDNIGHT;
 		jobSetting.Type__c = 'Custom';
 
@@ -20,7 +19,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldScheduleHourlyJobsIfNoneExist() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Type__c = 'Hourly';
 
 		new AsyncActionScheduleEnforcer().enforce();
@@ -33,7 +32,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldScheduleSemiHourlyJobsIfNoneExist() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Interval__c = 10;
 		jobSetting.Type__c = 'Semi-Hourly';
 
@@ -52,7 +51,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldAbortAndRescheduleCustomJob() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.CronExpression__c = NIGHTLY_AT_MIDNIGHT;
 		jobSetting.Type__c = 'Custom';
 		// Schedule a job for the current settings record, but w/a different cron expression
@@ -69,7 +68,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldAbortAndRescheduleHourlyJob() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Type__c = 'Hourly';
 		// Schedule a job for the current settings record, but w/a different cron expression
 		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, NIGHTLY_AT_MIDNIGHT);
@@ -85,7 +84,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldAbortAndRescheduleSemiHourlyJob() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Interval__c = 5;
 		jobSetting.Type__c = 'Semi-Hourly';
 		// Schedule a job for the current settings record, but w/a different cron expression
@@ -106,7 +105,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldAbortJobsIfDisabled() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Enabled__c = false;
 		AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, NIGHTLY_AT_MIDNIGHT);
 
@@ -118,7 +117,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldDoNothingIfValidCustomJobExists() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.CronExpression__c = NIGHTLY_AT_MIDNIGHT;
 		jobSetting.Type__c = 'Custom';
 		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, jobSetting?.CronExpression__c);
@@ -133,7 +132,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldDoNothingIfValidHourlyJobExists() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Type__c = 'Hourly';
 		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, AsyncActionSchedulable.HOURLY);
 
@@ -147,7 +146,7 @@ private class AsyncActionScheduleEnforcerTest {
 
 	@IsTest
 	static void shouldDoNothingIfValidSemiHourlyScheduledJobExists() {
-		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Interval__c = 10;
 		jobSetting.Type__c = 'Semi-Hourly';
 		Integer interval = jobSetting?.Interval__c?.intValue();
@@ -179,6 +178,14 @@ private class AsyncActionScheduleEnforcerTest {
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
 			ORDER BY CreatedDate ASC
 		];
+	}
+
+	static AsyncActionScheduledJob__mdt initActiveJobSettings() {
+		// The AsyncActionTestUtils initializes inactive scheduled job settings by default
+		// Use this method to automatically provision *active* scheduled jobs
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSetting.Enabled__c = true;
+		return jobSetting;
 	}
 
 	static Id scheduleExistingJob(AsyncActionScheduledJob__mdt jobSetting, String cron) {
