@@ -35,11 +35,11 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 			String cronExp = this.getCronExpression();
 			Id jobId = System.schedule(jobName, cronExp, this);
 			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
-			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
+			LOGGER?.log(System.LoggingLevel.FINEST, msg);
 			return jobId;
 		} else {
 			String msg = this.jobSettings?.DeveloperName + ' is not enabled';
-			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
+			LOGGER?.log(System.LoggingLevel.FINEST, msg);
 			return null;
 		}
 	}

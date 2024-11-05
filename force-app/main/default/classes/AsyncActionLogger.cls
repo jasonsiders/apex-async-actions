@@ -21,7 +21,7 @@ public abstract class AsyncActionLogger {
 
 	// **** INNER **** //
 	public interface Adapter {
-		void log(System.LoggingLevel level, Type loggedFromClass, Id relatedRecordId, Object logMessage);
+		void log(System.LoggingLevel level, Object logMessage);
 		void save(Boolean publishImmediate);
 	}
 
@@ -33,12 +33,9 @@ public abstract class AsyncActionLogger {
 			// Callers should use the static init() method to retrieve the correct adapter instead.
 		}
 
-		public void log(System.LoggingLevel level, Type loggedFromClass, Id relatedRecordId, Object logMessage) {
+		public void log(System.LoggingLevel level, Object logMessage) {
 			// Print to traditional salesforce debug logs
-			String loggedFromBlurb = (loggedFromClass != null) ? '\nLogged From: ' + loggedFromClass : '';
-			String relatedToBlurb = (relatedRecordId != null) ? '\nRelated To: ' + relatedRecordId : '';
-			String log = (logMessage + loggedFromBlurb + relatedToBlurb);
-			System.debug(level, log);
+			System.debug(level, logMessage);
 		}
 
 		public void save(Boolean publishImmediately) {

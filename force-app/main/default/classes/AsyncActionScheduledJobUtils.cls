@@ -7,7 +7,7 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			Id jobId = job?.CronTriggerId;
 			if (jobId != null) {
 				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
-				LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionScheduledJobUtils.class, null, msg);
+				LOGGER?.log(System.LoggingLevel.FINEST, msg);
 				System.abortJob(jobId);
 			}
 		}

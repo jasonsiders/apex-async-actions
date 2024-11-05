@@ -121,8 +121,6 @@ The `AsyncActionLogger.Adapter` interface requires the following two methods to 
 ```java
 void log(
     System.LoggingLevel level,
-    Type loggedFromClass,
-    Id relatedRecordId,
     Object logMessage
 );
 ```
@@ -130,8 +128,6 @@ void log(
 This method is called by the framework to record various log messages.
 
 -   `System.LoggingLevel level`: The severity of the log message.
--   `Type loggedFromClass`: The Apex Class from which the message was logged.
--   `Id relatedRecordId`: The Id of the Salesforce record associated with the log message.
 -   `Object logMessage`: The message or object (e.g., Exception) to be logged.
 
 ```java
@@ -146,12 +142,7 @@ Here's a sample adapter that integrates with the [apex-logger](https://github.co
 
 ```java
 public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
-    public void log(
-        System.LoggingLevel level,
-        Type loggedFrom,
-        Id recordId,
-        Object msg
-    ) {
+    public void log(System.LoggingLevel level, Object msg) {
         new Logger()
             ?.setLoggedFrom(loggedFrom)
             ?.setRelatedRecordId(recordId)
