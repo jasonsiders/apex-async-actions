@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MustBeValidCronExpression</fullName>
+    <active>true</active>
+    <description>Apply a regex to determine if the chosen Cron Expression is valid.</description>
+    <errorConditionFormula
+	>NOT(ISBLANK(CronExpression__c)) &amp;&amp; REGEX(CronExpression__c, &quot;/(((\\d+,)+\\d+|(\\d+(\\/|-)\\d+)|\\d+|\\*) ?){5,7}/&quot;)</errorConditionFormula>
+    <errorDisplayField>CronExpression__c</errorDisplayField>
+    <errorMessage>Invalid Cron Expression</errorMessage>
+</ValidationRule>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CronMustBeBlankIfNotCustom</fullName>
+    <active>true</active>
+    <description>If Type != &quot;Custom&quot;, the Cron Expression should be blank.
+Exclude hourly Cron Expressions, this doesn&apos;t hurt anything</description>
+    <errorConditionFormula>AND(
+    NOT(ISPICKVAL(Type__c, &quot;Custom&quot;)),
+    NOT(ISBLANK(CronExpression__c)),
+    CronExpression__c != &quot;0 0 * * * ?&quot;
+)</errorConditionFormula>
+    <errorDisplayField>CronExpression__c</errorDisplayField>
+    <errorMessage>Cron Expression must be blank if Type is not &quot;Custom&quot;</errorMessage>
+</ValidationRule>
