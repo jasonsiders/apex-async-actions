@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public abstract class AsyncActionScheduledJobService {
 	@TestVisible
 	static Map<String, AsyncActionScheduledJob__mdt> settings;

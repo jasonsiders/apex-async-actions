@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionRelatedListController {
 	@AuraEnabled(cacheable=true)
 	public static List<AsyncAction__c> getActions(String recordId) {
@@ -20,6 +21,7 @@ public without sharing class AsyncActionRelatedListController {
 				Status__c
 			FROM AsyncAction__c
 			WHERE RelatedRecordId__c = :recordId
+			WITH SYSTEM_MODE
 			ORDER BY Id DESC
 			LIMIT 50000
 		];

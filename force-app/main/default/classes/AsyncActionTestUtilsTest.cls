@@ -143,8 +143,8 @@ private class AsyncActionTestUtilsTest {
 
 		for (String jobName : jobNames) {
 			AsyncActionScheduledJob__mdt job = AsyncActionScheduledJobService.get(jobName);
-			Assert.isNotNull(job, 'AsyncActionScheduledJob__mdt');
-			Assert.areEqual(jobName, job?.DeveloperName);
+			Assert.isNotNull(job, 'Missing AsyncActionScheduledJob__mdt');
+			Assert.areEqual(jobName, job?.DeveloperName, 'Wrong job DeveloperName');
 		}
 	}
 

@@ -1,24 +1,17 @@
+@SuppressWarnings('PMD.ApexDoc, PMD.EmptyStatementBlock')
 public abstract class AsyncActionTriggerFramework {
 	// Simple TriggerHandler framework utilized by triggers in this package.
 	// Includes methods to disable triggers, if desired by callers
-	// **** STATIC **** //
-	static Set<Type> bypassed = new Set<Type>();
+	private static Set<Type> bypassed = new Set<Type>();
 
-	public static void disable(Type handlerType) {
-		AsyncActionTriggerFramework.bypassed?.add(handlerType);
-	}
-
-	public static void enable(Type handlerType) {
-		AsyncActionTriggerFramework.bypassed?.remove(handlerType);
-	}
-
-	// **** MEMBER **** //
 	@TestVisible
-	protected List<SObject> triggerNew,
-		triggerOld;
+	protected List<SObject> triggerNew;
 	@TestVisible
-	protected Map<Id, SObject> triggerNewMap,
-		triggerOldMap;
+	protected List<SObject> triggerOld;
+	@TestVisible
+	protected Map<Id, SObject> triggerNewMap;
+	@TestVisible
+	protected Map<Id, SObject> triggerOldMap;
 	@TestVisible
 	protected System.TriggerOperation operation;
 
@@ -62,6 +55,15 @@ public abstract class AsyncActionTriggerFramework {
 	protected virtual void afterDelete() {
 	}
 	protected virtual void afterUndelete() {
+	}
+
+	// **** STATIC **** //
+	public static void disable(Type handlerType) {
+		AsyncActionTriggerFramework.bypassed?.add(handlerType);
+	}
+
+	public static void enable(Type handlerType) {
+		AsyncActionTriggerFramework.bypassed?.remove(handlerType);
 	}
 
 	// **** PRIVATE **** //

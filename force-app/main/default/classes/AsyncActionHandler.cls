@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionHandler extends AsyncActionTriggerFramework {
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
 

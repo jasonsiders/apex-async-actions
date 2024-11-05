@@ -1,4 +1,5 @@
-global abstract class AsyncActionProcessor implements System.Queueable, System.Finalizer {
+@SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
+global abstract inherited sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
 	global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
 	global AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
@@ -96,6 +97,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				ProcessorClass__c = :typeName
 				AND Scheduled__c <= :DateTime.now()
 				AND Status__c = :Status.PENDING.name()
+			WITH SYSTEM_MODE
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
 		];
@@ -164,7 +166,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	private void handleFinalizerError(Exception error) {
 		List<AsyncAction__c> actions = this.requeryActions();
 		this.fail(actions, RetryBehavior.ALLOW_RETRY, error);
-		update actions;
+		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	private Boolean hasRetries(AsyncAction__c action) {
@@ -186,6 +188,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :this.actionIds
+			WITH SYSTEM_MODE
 		];
 	}
 
@@ -196,8 +199,10 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		SUDDEN_DEATH
 	}
 
+	@SuppressWarnings('PMD.FieldNamingConventions')
 	global enum Status {
 		// Represents the AsyncAction__c.Status__c picklist, offers some type-safety
+		// Note: Since picklists are case-sensitive, casing differs from typical enum values
 		Pending,
 		Completed,
 		Failed,
