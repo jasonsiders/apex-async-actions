@@ -85,11 +85,12 @@ private class AsyncActionScheduleEnforcerTest {
 	@IsTest
 	static void shouldAbortAndRescheduleSemiHourlyJob() {
 		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
-		jobSetting.Interval__c = 5;
+		jobSetting.Interval__c = 5; // Every 5 minutes
 		jobSetting.Type__c = 'Semi-Hourly';
-		// Schedule a job for the current settings record, but w/a different cron expression
-		// TODO! schedule the existing job for hourly + interval * 2
-		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, NIGHTLY_AT_MIDNIGHT);
+		// Schedule a job for the current settings record, more than 5 minutes from now
+		Integer tenMinsFromNow = DateTime.now()?.addMinutes(10)?.minute();
+		String cron = '0 ' + tenMinsFromNow + ' * * * ?';
+		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, cron);
 
 		new AsyncActionScheduleEnforcer().enforce();
 
