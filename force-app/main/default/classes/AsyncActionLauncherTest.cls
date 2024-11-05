@@ -26,8 +26,8 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldLaunchAllJobs() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initProcessorSettings(processorType);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction();
 		insert action;
@@ -43,7 +43,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldLaunchSpecifiedJobs() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction();
@@ -60,8 +60,8 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchInvalidJob() {
 		Type fakeProcessorType = Account.class; // Obv not a real processor!
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(fakeProcessorType);
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initProcessorSettings(fakeProcessorType);
 		insert new AsyncAction__c(
 			ProcessorClass__c = String.valueOf(fakeProcessorType),
 			Scheduled__c = DateTime.now().addMinutes(-1),
@@ -78,7 +78,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		config.Enabled__c = false;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -92,9 +92,10 @@ private class AsyncActionLauncherTest {
 		Assert.isNull(results?.get(processorType), 'Launched disabled job');
 	}
 
+	@SuppressWarnings('PMD.OperationWithLimitsInLoop')
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction();
@@ -115,7 +116,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchWithoutPendingActions() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Enabled__c = false;
 		// No actions inserted!
@@ -129,11 +130,12 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction();
-		Id duplicateJobId = System.enqueueJob(processor);
+		// Create a duplicate job
+		System.enqueueJob(processor);
 
 		Test.startTest();
 		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
@@ -145,7 +147,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldIgnoreCurrentJobId() {
 		// In practice, this should only ever be used from within an existing job
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction();

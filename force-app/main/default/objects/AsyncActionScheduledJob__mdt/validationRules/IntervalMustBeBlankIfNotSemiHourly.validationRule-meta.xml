@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IntervalMustBeBlankIfNotSemiHourly</fullName>
+    <active>true</active>
+    <description>If Type != &quot;Semi-Hourly&quot;, Interval should be blank</description>
+    <errorConditionFormula>AND(
+    NOT(ISPICKVAL(Type__c, &quot;Semi-Hourly&quot;)),
+    NOT(ISBLANK(Interval__c))
+)</errorConditionFormula>
+    <errorDisplayField>Interval__c</errorDisplayField>
+    <errorMessage>Interval must be blank if Type is not &quot;Semi-Hourly&quot;</errorMessage>
+</ValidationRule>

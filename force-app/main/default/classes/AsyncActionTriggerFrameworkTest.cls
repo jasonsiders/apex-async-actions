@@ -1,5 +1,9 @@
+@SuppressWarnings('PMD.ApexDoc, PMD.ApexUnitTestClassShouldHaveAsserts')
 @IsTest
 private class AsyncActionTriggerFrameworkTest {
+	static Map<System.TriggerOperation, List<SObject>> results = new Map<System.TriggerOperation, List<SObject>>();
+
+	// **** TESTS **** //
 	@IsTest
 	static void shouldRunBeforeInsert() {
 		AsyncActionTriggerFrameworkTest.testOperation(System.TriggerOperation.BEFORE_INSERT);
@@ -82,8 +86,6 @@ private class AsyncActionTriggerFrameworkTest {
 	}
 
 	// **** HELPER **** //
-	static Map<System.TriggerOperation, List<SObject>> results = new Map<System.TriggerOperation, List<SObject>>();
-
 	static List<Account> generateRecords() {
 		List<Account> accounts = new List<Account>();
 		for (Integer i = 0; i < 200; i++) {

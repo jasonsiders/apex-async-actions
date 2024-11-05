@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Type__c</fullName>
+    <defaultValue>&quot;Hourly&quot;</defaultValue>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText>Indicates the basis for the job&apos;s schedule:
+
+- Custom: The scheduled job uses the &quot;Cron Expression&quot; field to set its schedule.
+- Hourly: The scheduled job runs at the top of each hour.
+- Semi-Hourly: The scheduled job runs every X minutes, as determined by the &quot;Interval&quot; field</inlineHelpText>
+    <label>Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Custom</fullName>
+                <default>true</default>
+                <label>Custom</label>
+            </value>
+            <value>
+                <fullName>Hourly</fullName>
+                <default>false</default>
+                <label>Hourly</label>
+            </value>
+            <value>
+                <fullName>Semi-Hourly</fullName>
+                <default>false</default>
+                <label>Semi-Hourly</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

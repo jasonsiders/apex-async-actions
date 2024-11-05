@@ -1,9 +1,13 @@
+@SuppressWarnings('PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionProcessorTest {
+	private static final Integer TEST_SIZE = 100;
+
+	// **** TESTS **** //
 	@IsTest
 	static void shouldProcessActions() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
@@ -33,7 +37,7 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldTryAgainIfHasRetries() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
@@ -68,7 +72,7 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldNotTryAgainIfNoRetries() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -100,7 +104,7 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldKeepAliveIfErrors() {
 		// If KEEP_ALIVE retry behavior is employed, an action will remain in "Pending", and its retries will not be decremented.
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
 		config.RetryInterval__c = 3;
@@ -131,7 +135,7 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldNotTryAgainIfSuddenDeath() {
 		// If SUDDEN_DEATH retry behavior is employed, an action will be marked as "Failed", even if it has retries
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 3;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -160,7 +164,7 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldHandleFinalizerErrors() {
 		// If an exception is thrown during the finalizer, the job will be aborted, but the actions will not be affected
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 0;
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
@@ -235,8 +239,8 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldLaunchJob() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
 		insert actions;
@@ -254,7 +258,7 @@ private class AsyncActionProcessorTest {
 		// This prevents tests from running away on failure
 		// In a real scenario, the job WOULD keep re-enqueueing on an error
 		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		config.Retries__c = 2;
 		config.RetryInterval__c = 0;
@@ -280,7 +284,7 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldHandleFatalErrors() {
 		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
 		processor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(processor);
@@ -288,7 +292,7 @@ private class AsyncActionProcessorTest {
 
 		try {
 			Test.startTest();
-			Id jobId = System.enqueueJob(processor);
+			System.enqueueJob(processor);
 			Test.stopTest();
 		} catch (Exception error) {
 			// Try/Catch needed to prevent the test from aborting
@@ -352,7 +356,7 @@ private class AsyncActionProcessorTest {
 	@TestSetup
 	static void setup() {
 		List<Account> accounts = new List<Account>();
-		for (Integer i = 0; i < 100; i++) {
+		for (Integer i = 0; i < TEST_SIZE; i++) {
 			Account account = new Account(Name = 'Test Account #' + i);
 			accounts.add(account);
 		}
@@ -369,7 +373,7 @@ private class AsyncActionProcessorTest {
 
 	static List<AsyncAction__c> initTestActions(AsyncActionProcessor processor) {
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
-		for (Account account : [SELECT Id FROM Account]) {
+		for (Account account : [SELECT Id FROM Account LIMIT :TEST_SIZE]) {
 			Integer numCases = Integer.valueOf(Math.random() * 3);
 			Map<String, Object> params = new Map<String, Object>{ 'numCases' => numCases };
 			AsyncAction__c action = processor?.initAction(account?.Id);

@@ -1,4 +1,5 @@
-public abstract class AsyncActionPermissionUtils {
+@SuppressWarnings('PMD.ApexDoc')
+public abstract without sharing class AsyncActionPermissionUtils {
 	public static final String PERMISSION_SET_NAME = 'AsyncActionAdministrator';
 	static PermissionSet permissionSet;
 
@@ -12,7 +13,7 @@ public abstract class AsyncActionPermissionUtils {
 			);
 			assignments?.add(assignment);
 		}
-		insert assignments;
+		Database.insert(assignments, true, System.AccessLevel.USER_MODE);
 	}
 
 	public static void assignPermissionSet(User user) {
@@ -25,7 +26,13 @@ public abstract class AsyncActionPermissionUtils {
 	}
 
 	static PermissionSet retrievePermissions() {
-		List<PermissionSet> permissionSet = [SELECT Id FROM PermissionSet WHERE Name = :PERMISSION_SET_NAME LIMIT 1];
+		List<PermissionSet> permissionSet = [
+			SELECT Id
+			FROM PermissionSet
+			WHERE Name = :PERMISSION_SET_NAME
+			WITH SYSTEM_MODE
+			LIMIT 1
+		];
 		return (permissionSet?.isEmpty() == false) ? permissionSet[0] : null;
 	}
 }
