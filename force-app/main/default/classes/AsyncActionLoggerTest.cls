@@ -43,7 +43,7 @@ private class AsyncActionLoggerTest {
 
 		Test.startTest();
 		try {
-			logger?.log(System.LoggingLevel.FINEST, AsyncActionLoggerTest.class, UserInfo.getUserId(), 'Hello world!');
+			logger?.log(System.LoggingLevel.FINEST, 'Hello world!');
 			logger?.save(false);
 		} catch (Exception error) {
 			Assert.fail('An error was thrown while performing default logging logic: ' + error);
@@ -53,7 +53,7 @@ private class AsyncActionLoggerTest {
 
 	// **** INNER **** //
 	public class MockAdapter implements AsyncActionLogger.Adapter {
-		public void log(System.LoggingLevel level, Type type, Id recordId, Object msg) {
+		public void log(System.LoggingLevel level, Object msg) {
 			// Doesn't matter
 		}
 

@@ -6,7 +6,7 @@ public abstract class AsyncActionLauncher {
 			String processorName = config?.ProcessorClass__c;
 			return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
 		} catch (Exception error) {
-			LOGGER?.log(System.LoggingLevel.ERROR, AsyncActionLauncher.class, null, error);
+			LOGGER?.log(System.LoggingLevel.ERROR, error);
 			return null;
 		}
 	}
@@ -68,7 +68,7 @@ public abstract class AsyncActionLauncher {
 				Id jobId = System.enqueueJob(processor);
 				results?.put(processor?.getType(), jobId);
 				String msg = processor?.getType() + ': launch() -> ' + jobId;
-				LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionLauncher.class, null, msg);
+				LOGGER?.log(System.LoggingLevel.FINEST, msg);
 			}
 		}
 		return results;
