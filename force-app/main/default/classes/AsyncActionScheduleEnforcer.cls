@@ -10,23 +10,10 @@ public without sharing class AsyncActionScheduleEnforcer {
 
 	public void enforce() {
 		// Ensures that AsyncApexJobs created by the framework matches the current AsyncActionScheduledJob__mdt configuration
-		// 1. Map scheduled jobs by the expected job name
-		List<AsyncActionScheduledJob__mdt> jobSettings = AsyncActionScheduledJobService.getAll()?.values();
-		this.wrapAndMapJobs(jobSettings);
-		// 2. Query for and add asyncapexjobs to the wrappers, processing them
+		this.retrieveJobSettings();
 		List<AsyncApexJob> asyncJobs = this.getPendingJobs();
-		for (AsyncApexJob asyncJob : asyncJobs) {
-			String jobName = asyncJob?.CronTrigger?.CronJobDetail?.Name;
-			JobWrapper wrapper = this.jobs?.get(jobName)?.addAsyncJob(asyncJob);
-			if (wrapper == null) {
-				// A corresponding job does not exist, or is not active. Abort it
-				AsyncActionScheduledJobUtils.abortJobs(asyncJob);
-			}
-		}
-		// 3. Iterate through the jobs and ensure that they are configured for the correct intervals
-		for (JobWrapper job : this.jobs?.values()) {
-			job?.validate();
-		}
+		this.registerExistingJobs(asyncJobs);
+		this.validateJobs();
 	}
 
 	private List<AsyncApexJob> getPendingJobs() {
@@ -49,8 +36,28 @@ public without sharing class AsyncActionScheduleEnforcer {
 		];
 	}
 
-	private void wrapAndMapJobs(List<AsyncActionScheduledJob__mdt> jobSettings) {
-		for (AsyncActionScheduledJob__mdt jobSetting : jobSettings) {
+	private void registerExistingJobs(List<AsyncApexJob> asyncJobs) {
+		// Add each provided AsyncApexJob to its corresponding JobWrapper
+		for (AsyncApexJob asyncJob : asyncJobs) {
+			String jobName = asyncJob?.CronTrigger?.CronJobDetail?.Name;
+			JobWrapper wrapper = this.jobs?.get(jobName)?.addAsyncJob(asyncJob);
+			if (wrapper == null) {
+				// A corresponding job does not exist, or is not active. Abort it
+				AsyncActionScheduledJobUtils.abortJobs(asyncJob);
+			}
+		}
+	}
+
+	private void validateJobs() {
+		// Iterate through the jobs and ensure that they are configured for the correct intervals
+		for (JobWrapper job : this.jobs?.values()) {
+			job?.validate();
+		}
+	}
+
+	private void retrieveJobSettings() {
+		// Retrieve scheduled job settings, create a wrapper for each, and map by their job name
+		for (AsyncActionScheduledJob__mdt jobSetting : AsyncActionScheduledJobService.getAll()?.values()) {
 			if (jobSetting?.Enabled__c == true) {
 				JobWrapper wrapper = new JobWrapper(jobSetting);
 				String jobName = wrapper?.getJobName();
@@ -59,6 +66,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 		}
 	}
 
+	// **** INNER **** //
 	private class JobWrapper {
 		AsyncApexJob asyncJob;
 		Integer interval;
