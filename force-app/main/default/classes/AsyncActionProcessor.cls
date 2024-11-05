@@ -1,4 +1,5 @@
-global abstract class AsyncActionProcessor implements System.Queueable, System.Finalizer {
+@SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
+global abstract inherited sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
 	global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
 	global AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
@@ -24,7 +25,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			} catch (Exception error) {
 				// Publish the logs immediately, via platform event,
 				// then allow the error to terminate the current transaction
-				this.logger?.log(System.LoggingLevel.ERROR, this.getType(), null, error);
+				this.logger?.log(System.LoggingLevel.ERROR, error);
 				this.logger?.save(true);
 				throw error;
 			}
@@ -45,13 +46,13 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this.
 				// Re-launch the job via a platform event, this resets the stack depth to 0
 				String msg = 'Could not re-launch during finalizer. Re-launching via platform event.\n' + error;
-				this.logger?.log(System.LoggingLevel.FINEST, this.getType(), null, msg);
+				this.logger?.log(System.LoggingLevel.FINEST, msg);
 				String actionName = this.getType()?.getName();
 				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
 				EventBus.publish(event);
 			} else {
 				String msg = 'Aborting job after error during Finalizer: ' + error;
-				this.logger?.log(System.LoggingLevel.FINEST, this.getType(), null, msg);
+				this.logger?.log(System.LoggingLevel.FINEST, msg);
 			}
 		} finally {
 			this.logger?.save(false);
@@ -77,7 +78,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
 			new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
 		);
-		this.logger?.log(System.LoggingLevel.ERROR, this.getType(), action?.Id, msg);
+		this.logger?.log(System.LoggingLevel.ERROR, msg);
 	}
 
 	global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {
@@ -96,6 +97,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 				ProcessorClass__c = :typeName
 				AND Scheduled__c <= :DateTime.now()
 				AND Status__c = :Status.PENDING.name()
+			WITH SYSTEM_MODE
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
 		];
@@ -164,7 +166,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 	private void handleFinalizerError(Exception error) {
 		List<AsyncAction__c> actions = this.requeryActions();
 		this.fail(actions, RetryBehavior.ALLOW_RETRY, error);
-		update actions;
+		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	private Boolean hasRetries(AsyncAction__c action) {
@@ -186,6 +188,7 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :this.actionIds
+			WITH SYSTEM_MODE
 		];
 	}
 
@@ -196,8 +199,10 @@ global abstract class AsyncActionProcessor implements System.Queueable, System.F
 		SUDDEN_DEATH
 	}
 
+	@SuppressWarnings('PMD.FieldNamingConventions')
 	global enum Status {
 		// Represents the AsyncAction__c.Status__c picklist, offers some type-safety
+		// Note: Since picklists are case-sensitive, casing differs from typical enum values
 		Pending,
 		Completed,
 		Failed,

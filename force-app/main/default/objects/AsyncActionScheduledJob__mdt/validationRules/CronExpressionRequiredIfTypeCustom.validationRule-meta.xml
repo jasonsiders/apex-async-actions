@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CronExpressionRequiredIfTypeCustom</fullName>
+    <active>true</active>
+    <description>If Type = &quot;Custom&quot;, a Cron Expression is required.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Type__c, &quot;Custom&quot;),
+    ISBLANK(CronExpression__c)
+)</errorConditionFormula>
+    <errorDisplayField>CronExpression__c</errorDisplayField>
+    <errorMessage>Cron Expression is required when Type is &quot;Custom&quot;</errorMessage>
+</ValidationRule>

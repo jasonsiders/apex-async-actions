@@ -2,8 +2,8 @@
 private class RunAsyncActionNowControllerTest {
 	@IsTest
 	static void shouldLaunchAction() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 
 		Test.startTest();
@@ -17,8 +17,8 @@ private class RunAsyncActionNowControllerTest {
 
 	@IsTest
 	static void shouldHandleFutureScheduledAction() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 		// The action should process this action now, regardless of its scheduled value
 		action.Scheduled__c = DateTime.now().addDays(10);

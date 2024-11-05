@@ -1,13 +1,13 @@
 @IsTest
 private class AsyncActionTestUtilsTest {
-	@IsTest 
+	@IsTest
 	static void shouldInitGlobalSettings() {
 		Test.startTest();
 		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		Test.stopTest();
 
 		AsyncActionGlobalSetting__mdt fromService = AsyncActionGlobalSettingService.getSettings();
-		Assert.areEqual(settings?.DeveloperName, fromService?.DeveloperName, 'Wrong settings'); 
+		Assert.areEqual(settings?.DeveloperName, fromService?.DeveloperName, 'Wrong settings');
 	}
 
 	@IsTest
@@ -70,7 +70,7 @@ private class AsyncActionTestUtilsTest {
 		Assert.areEqual(1, AsyncActionScheduledJobService.getAll()?.size(), 'Wrong # of Settings mocked');
 	}
 
-	@IsTest 
+	@IsTest
 	static void shouldMockGlobalSettings() {
 		AsyncActionGlobalSetting__mdt mockSettings = new AsyncActionGlobalSetting__mdt(DeveloperName = 'Foo1234');
 
@@ -143,8 +143,8 @@ private class AsyncActionTestUtilsTest {
 
 		for (String jobName : jobNames) {
 			AsyncActionScheduledJob__mdt job = AsyncActionScheduledJobService.get(jobName);
-			Assert.isNotNull(job, 'AsyncActionScheduledJob__mdt');
-			Assert.areEqual(jobName, job?.DeveloperName);
+			Assert.isNotNull(job, 'Missing AsyncActionScheduledJob__mdt');
+			Assert.areEqual(jobName, job?.DeveloperName, 'Wrong job DeveloperName');
 		}
 	}
 

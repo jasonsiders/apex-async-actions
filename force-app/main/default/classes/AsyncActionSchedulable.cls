@@ -1,9 +1,13 @@
-public class AsyncActionSchedulable implements System.Schedulable {
+@SuppressWarnings('PMD.ApexDoc')
+public without sharing class AsyncActionSchedulable implements System.Schedulable {
+	// **** STATIC **** //
+	public static final String HOURLY = '0 0 * * * ?';
 	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
-	static final Integer DEFAULT_INTERVAL = 60;
-	static final String HOURLY = '0 0 * * * ?';
-	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-	AsyncActionScheduledJob__mdt jobSettings;
+	private static final Integer DEFAULT_INTERVAL = 60;
+	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
+
+	// **** MEMBER **** //
+	private AsyncActionScheduledJob__mdt jobSettings;
 
 	public AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
 		this.jobSettings = jobSettings;
@@ -28,16 +32,14 @@ public class AsyncActionSchedulable implements System.Schedulable {
 		// If the Scheduled Job is disabled, do not reschedule
 		if (this.jobSettings?.Enabled__c == true) {
 			String jobName = this.getJobName();
-			Integer interval = this.getInterval();
-			String cronExp = new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
-			System.Schedulable newJob = new AsyncActionSchedulable(this.jobSettings);
-			Id jobId = System.schedule(jobName, cronExp, newJob);
+			String cronExp = this.getCronExpression();
+			Id jobId = System.schedule(jobName, cronExp, this);
 			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
-			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
+			LOGGER?.log(System.LoggingLevel.FINEST, msg);
 			return jobId;
 		} else {
 			String msg = this.jobSettings?.DeveloperName + ' is not enabled';
-			LOGGER?.log(System.LoggingLevel.FINEST, AsyncActionSchedulable.class, null, msg);
+			LOGGER?.log(System.LoggingLevel.FINEST, msg);
 			return null;
 		}
 	}
@@ -70,6 +72,21 @@ public class AsyncActionSchedulable implements System.Schedulable {
 		return String.join(actionSet, ',');
 	}
 
+	private String getCronExpression() {
+		// Generate a Cron Expression based on the current scheduled job's configuration
+		if (this.jobSettings?.Type__c == 'Custom') {
+			// Use the provided Cron Expression
+			return this.jobSettings?.CronExpression__c ?? HOURLY;
+		} else if (this.jobSettings?.Type__c == 'Semi-Hourly') {
+			// Run the job every X minutes, starting X minutes from now
+			Integer interval = this.getInterval();
+			return new Cron(HOURLY)?.minutesFromNow(interval)?.expression();
+		} else {
+			// Default to Hourly
+			return HOURLY;
+		}
+	}
+
 	private Integer getInterval() {
 		return this.jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
 	}
@@ -86,6 +103,7 @@ public class AsyncActionSchedulable implements System.Schedulable {
 			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name
 			FROM AsyncApexJob
 			WHERE CronTriggerId = :currentJobId
+			WITH SYSTEM_MODE
 		];
 		AsyncActionScheduledJobUtils.abortJobs(currentJobs);
 		return this.scheduleNewJob();
