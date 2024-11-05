@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public abstract class AsyncActionProcessorService {
 	@TestVisible
 	static Map<String, AsyncActionProcessor__mdt> processors;

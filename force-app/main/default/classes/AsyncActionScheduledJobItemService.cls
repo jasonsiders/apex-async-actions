@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public abstract without sharing class AsyncActionScheduledJobItemService {
 	@TestVisible
 	static Map<String, List<AsyncActionScheduledJobItem__mdt>> jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>();
@@ -17,6 +18,7 @@ public abstract without sharing class AsyncActionScheduledJobItemService {
 					ScheduledJob__r.DeveloperName
 				FROM AsyncActionScheduledJobItem__mdt
 				WHERE Enabled__c = TRUE AND ScheduledJob__r.DeveloperName = :jobName
+				WITH SYSTEM_MODE
 			];
 			jobItems?.put(jobName, matching);
 		}

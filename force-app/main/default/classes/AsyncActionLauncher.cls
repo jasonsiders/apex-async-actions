@@ -1,4 +1,5 @@
-public abstract class AsyncActionLauncher {
+@SuppressWarnings('PMD.ApexDoc')
+public abstract without sharing class AsyncActionLauncher {
 	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 
 	public static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
@@ -39,6 +40,7 @@ public abstract class AsyncActionLauncher {
 				Id != :currentJobId
 				AND JobType = 'Queueable'
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
+			WITH SYSTEM_MODE
 			ORDER BY CronTrigger.NextFireTime ASC
 		]) {
 			// Remove the job from contention
@@ -47,19 +49,19 @@ public abstract class AsyncActionLauncher {
 			String className = String.join(parts, '.');
 			configsByName?.remove(className);
 		}
-		// 3. Get all pending Actions
-		List<AggregateResult> aggResults = [
+		// 3. Get all pending Actions by their processor class, and launch each
+		for (AggregateResult agg : [
 			SELECT ProcessorClass__c className
 			FROM AsyncAction__c
 			WHERE
 				ProcessorClass__c IN :configsByName.keySet()
 				AND Scheduled__c <= :DateTime.now()
 				AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
+			WITH SYSTEM_MODE
 			GROUP BY ProcessorClass__c
 			HAVING COUNT(Id) > 0
 			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
-		];
-		for (AggregateResult agg : aggResults) {
+		]) {
 			String className = (String) agg?.get('className');
 			AsyncActionProcessor__mdt config = configsByName?.get(className);
 			AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);

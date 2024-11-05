@@ -1,5 +1,9 @@
 @IsTest
 private class AsyncActionRelatedListControllerTest {
+	private static final Integer NUM_TEST_ACTIONS = 200;
+	private static final String TEST_USER_ALIAS = 'tUser123';
+
+	// **** TESTS **** //
 	@IsTest
 	static void shouldReturnRelatedActions() {
 		Account account = AsyncActionRelatedListControllerTest.getAccount();
@@ -16,13 +20,12 @@ private class AsyncActionRelatedListControllerTest {
 
 	@IsTest
 	static void shouldHandleNullId() {
-		Account account = AsyncActionRelatedListControllerTest.getAccount();
 		Id recordId = null;
 
 		Test.startTest();
 		Exception error;
 		try {
-			List<AsyncAction__c> actions = AsyncActionRelatedListController.getActions(recordId);
+			AsyncActionRelatedListController.getActions(recordId);
 		} catch (AuraHandledException caughtError) {
 			error = caughtError;
 		}
@@ -63,19 +66,14 @@ private class AsyncActionRelatedListControllerTest {
 	}
 
 	// **** HELPER **** //
-	static final Integer NUM_TEST_ACTIONS = 200;
-	static final String TEST_USER_ALIAS = 'tUser123';
-
 	@TestSetup
 	static void setup() {
-		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
-		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
-		User user = AsyncActionRelatedListControllerTest.createTestUser();
+		AsyncActionRelatedListControllerTest.createTestUser();
 		// Create an Account
 		Account account = new Account(Name = 'Test Account');
 		insert account;
 		// Create actions related to the Account
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(FakeProcessor.class);
+		AsyncActionTestUtils.initProcessorSettings(FakeProcessor.class);
 		AsyncActionProcessor processor = new FakeProcessor();
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {

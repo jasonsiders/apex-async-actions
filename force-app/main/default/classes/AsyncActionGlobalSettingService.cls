@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public abstract class AsyncActionGlobalSettingService {
 	@TestVisible
 	static AsyncActionGlobalSetting__mdt settings;

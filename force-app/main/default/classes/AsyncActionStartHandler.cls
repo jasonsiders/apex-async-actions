@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
 	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 

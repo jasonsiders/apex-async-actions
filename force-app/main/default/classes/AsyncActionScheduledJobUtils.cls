@@ -1,5 +1,6 @@
+@SuppressWarnings('PMD.ApexDoc')
 public without sharing abstract class AsyncActionScheduledJobUtils {
-	static AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
+	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 
 	public static void abortJobs(List<AsyncApexJob> jobs) {
 		for (AsyncApexJob job : jobs) {

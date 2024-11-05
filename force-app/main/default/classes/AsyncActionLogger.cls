@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.EmptyStatementBlock')
 public abstract class AsyncActionLogger {
 	static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
 

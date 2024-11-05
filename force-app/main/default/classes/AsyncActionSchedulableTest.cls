@@ -144,9 +144,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfNoJobItems() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initProcessorSettings(
-			MockAsyncActionProcessor.class
-		);
+		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
@@ -168,7 +166,7 @@ private class AsyncActionSchedulableTest {
 
 	// **** HELPER **** //
 	static List<AsyncApexJob> getAsyncJobs() {
-		return [SELECT ApexClass.Name, CronTrigger.NextFireTime FROM AsyncApexJob];
+		return [SELECT ApexClass.Name, CronTrigger.NextFireTime FROM AsyncApexJob LIMIT 50000];
 	}
 
 	static void insertAction() {
