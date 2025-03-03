@@ -1,6 +1,6 @@
 @SuppressWarnings('PMD.ApexDoc')
 public abstract without sharing class AsyncActionLauncher {
-	private static final String CLASS_NAME_PARAMTER = 'className';
+	private static final String CLASS_NAME_PARAMETER = 'className';
 	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 	private static Map<String, AsyncActionProcessor__mdt> configsByName;
 	private static Map<Type, Id> results;
