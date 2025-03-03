@@ -14,7 +14,7 @@ public without sharing class AsyncActionRelatedListController {
 				CreatedBy.Name,
 				CreatedDate,
 				Name,
-				ProcessorClass__c,
+				Processor__c,
 				RelatedRecordId__c,
 				Retries__c,
 				Scheduled__c,

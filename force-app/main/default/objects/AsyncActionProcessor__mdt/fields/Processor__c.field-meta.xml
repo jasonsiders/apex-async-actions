@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Processor__c</fullName>
+    <caseSensitive>false</caseSensitive>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText>The fully qualified API name of a Flow, or an Apex Class which extends the
+        AsyncActionProcessor abstract type. This should include its namespace prefix if applicable.
+        Ex., &quot;FooProcessor&quot;, &quot;some_namespace.BarProcessor&quot;,
+        &quot;My_Processor_Flow&quot;</inlineHelpText>
+    <label>Processor</label>
+    <length>255</length>
+    <required>true</required>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>

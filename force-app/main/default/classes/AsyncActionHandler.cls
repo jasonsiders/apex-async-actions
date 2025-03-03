@@ -7,7 +7,7 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 		for (AsyncAction__c action : this.actions) {
 			// Do not overwrite non-null values
 			if (action?.Retries__c == null) {
-				String className = action?.ProcessorClass__c;
+				String className = action?.Processor__c;
 				action.Retries__c = AsyncActionProcessorService.get(className)?.Retries__c ?? 0;
 			}
 		}
@@ -34,7 +34,7 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 		// Returns a collection of ProcessorClass names of current Action(s) that are configured to run on insert
 		Set<String> results = new Set<String>();
 		for (AsyncAction__c action : this.actions) {
-			String actionName = action?.ProcessorClass__c;
+			String actionName = action?.Processor__c;
 			if (
 				results?.contains(actionName) == false &&
 				AsyncActionProcessorService.get(actionName)?.RunOnInsert__c == true

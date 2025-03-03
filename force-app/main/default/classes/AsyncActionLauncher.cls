@@ -7,7 +7,7 @@ public abstract without sharing class AsyncActionLauncher {
 
 	public static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
 		try {
-			String processorName = config?.ProcessorClass__c;
+			String processorName = config?.Processor__c;
 			return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
 		} catch (Exception error) {
 			LOGGER?.log(System.LoggingLevel.ERROR, error);
@@ -66,7 +66,7 @@ public abstract without sharing class AsyncActionLauncher {
 	private static Map<String, AsyncActionProcessor__mdt> mapConfigsByName(List<AsyncActionProcessor__mdt> configs) {
 		Map<String, AsyncActionProcessor__mdt> configsByName = new Map<String, AsyncActionProcessor__mdt>();
 		for (AsyncActionProcessor__mdt config : configs) {
-			String processorName = config?.ProcessorClass__c;
+			String processorName = config?.Processor__c;
 			configsByName?.put(processorName, config);
 		}
 		return configsByName;
@@ -88,14 +88,14 @@ public abstract without sharing class AsyncActionLauncher {
 	private static List<AggregateResult> queryAggregateActions() {
 		Set<String> configNames = AsyncActionLauncher.configsByName?.keySet() ?? new Set<String>();
 		return [
-			SELECT ProcessorClass__c className
+			SELECT Processor__c className
 			FROM AsyncAction__c
 			WHERE
-				ProcessorClass__c IN :configNames
+				Processor__c IN :configNames
 				AND Scheduled__c <= :DateTime.now()
 				AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
 			WITH SYSTEM_MODE
-			GROUP BY ProcessorClass__c
+			GROUP BY Processor__c
 			HAVING COUNT(Id) > 0
 			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
 		];

@@ -13,7 +13,7 @@ public abstract without sharing class AsyncActionScheduledJobItemService {
 			List<AsyncActionScheduledJobItem__mdt> matching = [
 				SELECT
 					AsyncActionProcessor__r.DeveloperName,
-					AsyncActionProcessor__r.ProcessorClass__c,
+					AsyncActionProcessor__r.Processor__c,
 					Enabled__c,
 					ScheduledJob__r.DeveloperName
 				FROM AsyncActionScheduledJobItem__mdt

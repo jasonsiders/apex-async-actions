@@ -74,7 +74,7 @@ private class AsyncActionHandlerTest {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		config.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = null);
+		AsyncAction__c action = new AsyncAction__c(Processor__c = processorType.getName(), Retries__c = null);
 
 		Test.startTest();
 		insert action;
@@ -87,7 +87,7 @@ private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldDefaultRetriesTo0IfNoConfigExists() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = null);
+		AsyncAction__c action = new AsyncAction__c(Processor__c = processorType.getName(), Retries__c = null);
 
 		Test.startTest();
 		insert action;
@@ -102,7 +102,7 @@ private class AsyncActionHandlerTest {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
 		config.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = 3);
+		AsyncAction__c action = new AsyncAction__c(Processor__c = processorType.getName(), Retries__c = 3);
 
 		Test.startTest();
 		insert action;

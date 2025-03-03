@@ -16,7 +16,7 @@ global class AsyncActionTestUtils {
 			DeveloperName = 'Test_' + processorType?.getName(),
 			Enabled__c = true,
 			MasterLabel = 'Test ' + processorType?.getName(),
-			ProcessorClass__c = processorType?.getName(),
+			Processor__c = processorType?.getName(),
 			Retries__c = 3,
 			RetryInterval__c = 3,
 			RunOnInsert__c = false
@@ -63,7 +63,7 @@ global class AsyncActionTestUtils {
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
 			? AsyncActionProcessorService.processors
 			: new Map<String, AsyncActionProcessor__mdt>();
-		String processorName = processor?.ProcessorClass__c;
+		String processorName = processor?.Processor__c;
 		AsyncActionProcessorService.processors?.put(processorName, processor);
 	}
 

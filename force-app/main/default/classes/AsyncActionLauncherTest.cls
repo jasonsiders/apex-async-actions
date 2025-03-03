@@ -14,7 +14,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldReturnNullIfInvalidProcessor() {
-		AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(ProcessorClass__c = null);
+		AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(Processor__c = null);
 
 		Test.startTest();
 		AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);
@@ -63,7 +63,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionTestUtils.initProcessorSettings(fakeProcessorType);
 		insert new AsyncAction__c(
-			ProcessorClass__c = String.valueOf(fakeProcessorType),
+			Processor__c = String.valueOf(fakeProcessorType),
 			Scheduled__c = DateTime.now().addMinutes(-1),
 			Status__c = 'Pending'
 		);

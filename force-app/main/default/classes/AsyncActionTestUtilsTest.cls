@@ -88,7 +88,7 @@ private class AsyncActionTestUtilsTest {
 
 		Test.startTest();
 		for (String processorName : processorNames) {
-			AsyncActionProcessor__mdt processor = new AsyncActionProcessor__mdt(ProcessorClass__c = processorName);
+			AsyncActionProcessor__mdt processor = new AsyncActionProcessor__mdt(Processor__c = processorName);
 			AsyncActionTestUtils.mockProcessorSettings(processor);
 		}
 		Test.stopTest();
@@ -96,7 +96,7 @@ private class AsyncActionTestUtilsTest {
 		List<AsyncActionProcessor__mdt> allProcessors = AsyncActionProcessorService.getAll()?.values();
 		Assert.areEqual(processorNames?.size(), allProcessors?.size(), 'Wrong # of processors');
 		for (AsyncActionProcessor__mdt processor : allProcessors) {
-			String processorName = processor?.ProcessorClass__c;
+			String processorName = processor?.Processor__c;
 			Assert.isTrue(processorNames?.contains(processorName), processorName + ' was not mapped');
 		}
 	}
