@@ -1,11 +1,11 @@
 @IsTest
 private class AsyncActionLauncherTest {
 	@IsTest
-	static void shouldCreateAValidProcessor() {
+	static void shouldCreateAValidApexProcessor() {
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 
 		Test.startTest();
-		AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);
+		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(config);
 		Test.stopTest();
 
 		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
@@ -13,11 +13,23 @@ private class AsyncActionLauncherTest {
 	}
 
 	@IsTest
-	static void shouldReturnNullIfInvalidProcessor() {
-		AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(Processor__c = null);
+	static void shouldCreateAValidFlowProcessor() {
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initFlowProcessor('My_Test_Flow');
 
 		Test.startTest();
-		AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);
+		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(config);
+		Test.stopTest();
+
+		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
+		Assert.isInstanceOfType(processor, AsyncActionFlowProcessor.class, 'Wrong processor type generated');
+	}
+
+	@IsTest
+	static void shouldReturnNullIfInvalidProcessor() {
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(null);
+
+		Test.startTest();
+		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(config);
 		Test.stopTest();
 
 		Assert.isNull(processor, 'Invalid processorName generated a AsyncActionProcessor anyways');
@@ -33,11 +45,13 @@ private class AsyncActionLauncherTest {
 		insert action;
 
 		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchAll();
+		new AsyncActionLauncher()?.launchAll();
 		Test.stopTest();
 
-		Assert.isTrue(results?.containsKey(processorType), 'Did not attempt to launch ' + processorType);
-		Assert.isNotNull(results?.get(processorType), 'Did not launch ' + processorType);
+		Map<String, List<AsyncApexJob>> results = AsyncActionLauncherTest.getAsyncJobs();
+		String processorName = processorType?.getName();
+		Assert.isTrue(results?.containsKey(processorName), 'Did not attempt to launch ' + processorName);
+		Assert.areEqual(1, results?.get(processorName)?.size(), 'Wrong # of jobs launched: ' + processorName);
 	}
 
 	@IsTest
@@ -50,11 +64,10 @@ private class AsyncActionLauncherTest {
 		insert action;
 
 		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchJobs(new List<AsyncActionProcessor__mdt>{ config }, null);
+		Id jobId = new AsyncActionLauncher()?.launch(config);
 		Test.stopTest();
 
-		Assert.isTrue(results?.containsKey(processorType), 'Did not attempt to launch ' + processorType);
-		Assert.isNotNull(results?.get(processorType), 'Did not launch ' + processorType);
+		Assert.isNotNull(jobId, 'A job was not launched');
 	}
 
 	@IsTest
@@ -69,10 +82,12 @@ private class AsyncActionLauncherTest {
 		);
 
 		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchAll();
+		new AsyncActionLauncher()?.launchAll();
 		Test.stopTest();
 
-		Assert.isNull(results?.get(fakeProcessorType), 'Launched a job for an invalid config');
+		Map<String, List<AsyncApexJob>> results = AsyncActionLauncherTest.getAsyncJobs();
+		String processorName = fakeProcessorType?.getName();
+		Assert.isFalse(results?.containsKey(processorName), 'Launched a job for an invalid config');
 	}
 
 	@IsTest
@@ -86,32 +101,29 @@ private class AsyncActionLauncherTest {
 		insert action;
 
 		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchJobs(new List<AsyncActionProcessor__mdt>{ config }, null);
+		Id jobId = new AsyncActionLauncher()?.launch(config);
 		Test.stopTest();
 
-		Assert.isNull(results?.get(processorType), 'Launched disabled job');
+		Assert.isNull(jobId, 'Launched disabled job');
 	}
 
-	@SuppressWarnings('PMD.OperationWithLimitsInLoop')
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		insert processor?.initAction();
+
+		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
 			System.enqueueJob(processor);
 		}
-
-		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
+		// NOW try to launch the job
+		Id jobId = new AsyncActionLauncher()?.launch(config);
 		Test.stopTest();
 
-		Assert.isNull(
-			results?.get(MockAsyncActionProcessor.class),
-			'A job was launched despite hitting queueable limits'
-		);
+		Assert.isNull(jobId, 'A job was launched despite hitting queueable limits');
 	}
 
 	@IsTest
@@ -122,44 +134,41 @@ private class AsyncActionLauncherTest {
 		// No actions inserted!
 
 		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
+		Id jobId = new AsyncActionLauncher()?.launch(config);
 		Test.stopTest();
 
-		Assert.isNull(results?.get(MockAsyncActionProcessor.class), 'A job was launched despite having no data');
+		Assert.isNull(jobId, 'A job was launched despite having no data');
 	}
 
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction();
-		// Create a duplicate job
-		System.enqueueJob(processor);
+		AsyncAction__c action = new MockAsyncActionProcessor()?.initAction();
+		insert action;
 
 		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, null);
+		Id jobId1 = new AsyncActionLauncher()?.launch(config);
+		Id jobId2 = new AsyncActionLauncher()?.launch(config);
 		Test.stopTest();
 
-		Assert.isNull(results?.get(MockAsyncActionProcessor.class), 'A duplicate job was launched');
+		Assert.isNotNull(jobId1, 'Initial job was not launched');
+		Assert.isNull(jobId2, 'Duplicate job was launched');
 	}
 
-	@IsTest
-	static void shouldIgnoreCurrentJobId() {
-		// In practice, this should only ever be used from within an existing job
-		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction();
-		Id originalJobId = System.enqueueJob(processor);
-
-		Test.startTest();
-		Map<Type, Id> results = AsyncActionLauncher.launchJobs(config, originalJobId);
-		Test.stopTest();
-
-		Assert.isNotNull(
-			results?.get(MockAsyncActionProcessor.class),
-			'A new job was not launched from the original job'
-		);
+	// **** HELPER **** //
+	private static Map<String, List<AsyncApexJob>> getAsyncJobs() {
+		Map<String, List<AsyncApexJob>> results = new Map<String, List<AsyncApexJob>>();
+		for (AsyncApexJob job : [
+			SELECT Id, ApexClass.Name
+			FROM AsyncApexJob
+			WHERE JobType = 'Queueable'
+		]) {
+			String className = job?.ApexClass?.Name;
+			List<AsyncApexJob> matching = results?.get(className) ?? new List<AsyncApexJob>();
+			matching?.add(job);
+			results?.put(className, matching);
+		}
+		return results;
 	}
 }

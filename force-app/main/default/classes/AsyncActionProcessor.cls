@@ -93,10 +93,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		return [
 			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
-			WHERE
-				Processor__c = :typeName
-				AND Scheduled__c <= :DateTime.now()
-				AND Status__c = :Status.PENDING.name()
+			WHERE Processor__c = :typeName AND Scheduled__c <= :DateTime.now() AND Status__c = :Status.PENDING.name()
 			WITH SYSTEM_MODE
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
@@ -151,7 +148,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// * Re-launch this job if there are still pending records
 		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
 			Id currentJobId = context?.getAsyncApexJobId();
-			AsyncActionLauncher.launchJobs(this.config, currentJobId);
+			new AsyncActionLauncher()?.launch(this.config);
 		}
 	}
 
