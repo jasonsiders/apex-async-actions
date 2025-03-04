@@ -6,7 +6,7 @@ public without sharing class AsyncActionLauncher {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
 		for (PendingAction result : this.queryPendingActions(configs)) {
-			String processorName = result?.getProcessorName();
+			String processorName = result?.processorName;
 			Id jobId = this.launchJobForProcessor(processorName);
 			results?.put(processorName, jobId);
 		}
@@ -39,21 +39,12 @@ public without sharing class AsyncActionLauncher {
 	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
 		try {
 			return (config?.ProcessorType__c == 'Apex')
-				? this.initApexProcessor(config)
-				: this.initFlowProcessor(config);
+				? (AsyncActionProcessor) Type.forName(config?.Processor__c)?.newInstance()
+				: new AsyncActionFlowProcessor(config);
 		} catch (Exception error) {
 			LOGGER?.log(System.LoggingLevel.ERROR, error);
 			return null;
 		}
-	}
-
-	private AsyncActionProcessor initApexProcessor(AsyncActionProcessor__mdt config) {
-		String processorName = config?.Processor__c;
-		return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
-	}
-
-	private AsyncActionProcessor initFlowProcessor(AsyncActionProcessor__mdt config) {
-		return new AsyncActionFlowProcessor(config);
 	}
 
 	private Id launchJobForProcessor(String processorName) {
@@ -82,7 +73,7 @@ public without sharing class AsyncActionLauncher {
 		// Retrieves a list of processors w/open actions, in FIFO order
 		Set<String> processorNames = this.extractProcessorNames(configs);
 		List<AggregateResult> results = [
-			SELECT Processor__c processor
+			SELECT Processor__c processorName
 			FROM AsyncAction__c
 			WHERE
 				Processor__c IN :processorNames
@@ -112,10 +103,8 @@ public without sharing class AsyncActionLauncher {
 	}
 
 	private class PendingAction {
-		public String processor;
-
-		private String getProcessorName() {
-			return this.processor;
-		}
+		// This class is used to store aggregate query results
+		// Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions
+		public String processorName { get; private set; }
 	}
 }
