@@ -199,11 +199,7 @@ private class AsyncActionProcessorTest {
 		Test.stopTest();
 
 		Assert.areEqual(config?.Retries__c, action?.Retries__c, 'Wrong # of retries');
-		Assert.areEqual(
-			MockAsyncActionProcessor.class?.getName(),
-			action?.Processor__c,
-			'Unexpected Processor Class'
-		);
+		Assert.areEqual(MockAsyncActionProcessor.class?.getName(), action?.Processor__c, 'Unexpected Processor Class');
 		Assert.areEqual(recordId, action?.RelatedRecordId__c, 'Unexpected Related Record Id');
 		Assert.isNotNull(action?.Scheduled__c, 'Invalid Scheduled value');
 		Assert.areEqual(AsyncActionProcessor.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
