@@ -73,7 +73,7 @@ private class AsyncActionRelatedListControllerTest {
 		Account account = new Account(Name = 'Test Account');
 		insert account;
 		// Create actions related to the Account
-		AsyncActionTestUtils.initProcessorSettings(FakeProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(FakeProcessor.class);
 		AsyncActionProcessor processor = new FakeProcessor();
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {

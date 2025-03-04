@@ -91,12 +91,9 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	global virtual List<AsyncAction__c> getPendingActions() {
 		final String typeName = this.getType()?.getName();
 		return [
-			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
-			WHERE
-				ProcessorClass__c = :typeName
-				AND Scheduled__c <= :DateTime.now()
-				AND Status__c = :Status.PENDING.name()
+			WHERE Processor__c = :typeName AND Scheduled__c <= :DateTime.now() AND Status__c = :Status.PENDING.name()
 			WITH SYSTEM_MODE
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
@@ -107,7 +104,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// Returns a new action related to the current processor type
 		return new AsyncAction__c(
 			Data__c = data,
-			ProcessorClass__c = this.getType()?.getName(),
+			Processor__c = this.getType()?.getName(),
 			RelatedRecordId__c = relatedRecordId,
 			Retries__c = this.config?.Retries__c ?? 0,
 			Scheduled__c = DateTime.now(),
@@ -151,7 +148,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// * Re-launch this job if there are still pending records
 		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
 			Id currentJobId = context?.getAsyncApexJobId();
-			AsyncActionLauncher.launchJobs(this.config, currentJobId);
+			new AsyncActionLauncher()?.launch(this.config);
 		}
 	}
 
@@ -185,7 +182,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// Note: SObject lists persist from Queueable to Finalizer, but in a truncated form (only Ids retained)
 		// Necessary to re-query to avoid "SObject row retrieved via SOQL" errors
 		return [
-			SELECT Id, Data__c, Retries__c, ProcessorClass__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :this.actionIds
 			WITH SYSTEM_MODE

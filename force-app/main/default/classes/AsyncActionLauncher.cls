@@ -1,114 +1,110 @@
 @SuppressWarnings('PMD.ApexDoc')
-public abstract without sharing class AsyncActionLauncher {
-	private static final String CLASS_NAME_PARAMTER = 'className';
+public without sharing class AsyncActionLauncher {
 	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-	private static Map<String, AsyncActionProcessor__mdt> configsByName;
-	private static Map<Type, Id> results;
 
-	public static AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
+	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> configs) {
+		// Get all specified pending Actions by their processor class, and launch each
+		Map<String, Id> results = new Map<String, Id>();
+		for (PendingAction result : this.queryPendingActions(configs)) {
+			String processorName = result?.processorName;
+			Id jobId = this.launchJobForProcessor(processorName);
+			results?.put(processorName, jobId);
+		}
+		return results;
+	}
+
+	public Id launch(AsyncActionProcessor__mdt config) {
+		// Overload launches a single AsyncActionProcessor job
+		String processorName = config?.Processor__c;
+		return this.launch(new List<AsyncActionProcessor__mdt>{ config })?.get(processorName);
+	}
+
+	public Map<String, Id> launchAll() {
+		// Create & launch an AsyncActionProcessor job for every AsyncActionConfig__mdt
+		List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
+		return this.launch(processors);
+	}
+
+	// **** PRIVATE **** //
+	private Set<String> extractProcessorNames(List<AsyncActionProcessor__mdt> configs) {
+		Set<String> results = new Set<String>();
+		for (AsyncActionProcessor__mdt config : configs) {
+			String processorName = config?.Processor__c;
+			results?.add(processorName);
+		}
+		return results;
+	}
+
+	@TestVisible
+	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
 		try {
-			String processorName = config?.ProcessorClass__c;
-			return (AsyncActionProcessor) Type.forName(processorName)?.newInstance();
+			return (config?.ProcessorType__c == 'Apex')
+				? (AsyncActionProcessor) Type.forName(config?.Processor__c)?.newInstance()
+				: new AsyncActionFlowProcessor(config);
 		} catch (Exception error) {
 			LOGGER?.log(System.LoggingLevel.ERROR, error);
 			return null;
 		}
 	}
 
-	public static Map<Type, Id> launchAll(Id currentJobId) {
-		// Create & launch an AsyncActionProcessor class for each AsyncActionConfig__mdt
-		List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
-		return AsyncActionLauncher.launchJobs(processors, currentJobId);
-	}
-
-	public static Map<Type, Id> launchAll() {
-		// Create & launch an AsyncActionProcessor class for each AsyncActionConfig__mdt
-		// Use this override when not currently in an AsyncActionProcessor job
-		return AsyncActionLauncher.launchAll(null);
-	}
-
-	public static Map<Type, Id> launchJobs(List<AsyncActionProcessor__mdt> configs, Id currentJobId) {
-		AsyncActionLauncher.results = new Map<Type, Id>();
-		// 1. Map configs by their localized name and type
-		AsyncActionLauncher.configsByName = AsyncActionLauncher.mapConfigsByName(configs);
-		// 2. Get all active jobs related to the processors
-		List<AsyncApexJob> activeJobs = AsyncActionLauncher.queryActiveJobs(currentJobId);
-		AsyncActionLauncher.removeActiveJobs(activeJobs);
-		// 3. Get all pending Actions by their processor class, and launch each
-		for (AggregateResult agg : AsyncActionLauncher.queryAggregateActions()) {
-			String processorClass = (String) agg?.get('className');
-			AsyncActionLauncher.launchJobForProcessor(processorClass);
-		}
-		return AsyncActionLauncher.results;
-	}
-
-	public static Map<Type, Id> launchJobs(AsyncActionProcessor__mdt config, Id currentJobId) {
-		return AsyncActionLauncher.launchJobs(new List<AsyncActionProcessor__mdt>{ config }, currentJobId);
-	}
-
-	private static Boolean isLaunchable(AsyncActionProcessor processor) {
-		Boolean canRunQueueable = (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs());
-		return canRunQueueable == true && processor?.isEnabled() == true;
-	}
-
-	private static void launchJobForProcessor(String processorClass) {
-		AsyncActionProcessor__mdt config = AsyncActionLauncher.configsByName?.get(processorClass);
-		AsyncActionProcessor processor = AsyncActionLauncher.initProcessor(config);
-		if (AsyncActionLauncher.isLaunchable(processor)) {
-			// Launch the job and build the results map w/the resulting job Id
-			Id jobId = System.enqueueJob(processor);
-			AsyncActionLauncher.results?.put(processor?.getType(), jobId);
-			String msg = processor?.getType() + ': launch() -> ' + jobId;
+	private Id launchJobForProcessor(String processorName) {
+		try {
+			AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(processorName);
+			this.validateJob(config);
+			this.validateQueueableLimits();
+			AsyncActionProcessor processor = this.initProcessor(config);
+			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
+			System.AsyncOptions options = new System.AsyncOptions();
+			options.DuplicateSignature = new System.QueueableDuplicateSignature.Builder()
+				?.addString(config?.DeveloperName)
+				?.build();
+			Id jobId = System.enqueueJob(processor, options);
+			String msg = processorName + ': launch() -> ' + jobId;
 			LOGGER?.log(System.LoggingLevel.FINEST, msg);
+			return jobId;
+		} catch (Exception error) {
+			String msg = processorName + ' failed to launch: ' + error + '\n' + error?.getStackTraceString();
+			LOGGER?.log(System.LoggingLevel.WARN, msg);
+			return null;
 		}
 	}
 
-	private static Map<String, AsyncActionProcessor__mdt> mapConfigsByName(List<AsyncActionProcessor__mdt> configs) {
-		Map<String, AsyncActionProcessor__mdt> configsByName = new Map<String, AsyncActionProcessor__mdt>();
-		for (AsyncActionProcessor__mdt config : configs) {
-			String processorName = config?.ProcessorClass__c;
-			configsByName?.put(processorName, config);
-		}
-		return configsByName;
-	}
-
-	private static List<AsyncApexJob> queryActiveJobs(id currentJobId) {
-		return [
-			SELECT ApexClass.NamespacePrefix, ApexClass.Name
-			FROM AsyncApexJob
-			WHERE
-				Id != :currentJobId
-				AND JobType = 'Queueable'
-				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
-			WITH SYSTEM_MODE
-			ORDER BY CronTrigger.NextFireTime ASC
-		];
-	}
-
-	private static List<AggregateResult> queryAggregateActions() {
-		Set<String> configNames = AsyncActionLauncher.configsByName?.keySet() ?? new Set<String>();
-		return [
-			SELECT ProcessorClass__c className
+	private List<PendingAction> queryPendingActions(List<AsyncActionProcessor__mdt> configs) {
+		// Retrieves a list of processors w/open actions, in FIFO order
+		Set<String> processorNames = this.extractProcessorNames(configs);
+		List<AggregateResult> results = [
+			SELECT Processor__c processorName
 			FROM AsyncAction__c
 			WHERE
-				ProcessorClass__c IN :configNames
+				Processor__c IN :processorNames
 				AND Scheduled__c <= :DateTime.now()
 				AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
 			WITH SYSTEM_MODE
-			GROUP BY ProcessorClass__c
+			GROUP BY Processor__c
 			HAVING COUNT(Id) > 0
 			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
 		];
+		// Convert & return the query results in a common format
+		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
 	}
 
-	private static void removeActiveJobs(List<AsyncApexJob> jobs) {
-		// Remove each AsyncApexJob's corresponding processor config from the map of configs to be launched
-		for (AsyncApexJob job : jobs) {
-			// Remove the job from contention
-			Set<String> parts = new Set<String>{ job?.ApexClass?.NamespacePrefix, job?.ApexClass?.Name };
-			parts?.remove(null);
-			String className = String.join(parts, '.');
-			AsyncActionLauncher.configsByName?.remove(className);
+	private void validateJob(AsyncActionProcessor__mdt config) {
+		// Throws an exception if the current job is disabled
+		if (config?.Enabled__c != true) {
+			throw new System.AsyncException(config?.DeveloperName + ' is disabled');
 		}
+	}
+
+	private void validateQueueableLimits() {
+		// Throws an exception if Queueable limits have been reached
+		if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
+			throw new System.AsyncException('Reached Queueable job limit: ' + Limits.getQueueableJobs());
+		}
+	}
+
+	private class PendingAction {
+		// This class is used to store aggregate query results
+		// Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions
+		public String processorName { get; private set; }
 	}
 }

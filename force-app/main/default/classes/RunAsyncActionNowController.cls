@@ -5,7 +5,7 @@ public with sharing class RunAsyncActionNowController {
 		try {
 			Id actionId = (Id) recordId;
 			List<AsyncAction__c> actions = [
-				SELECT Id, ProcessorClass__c, Scheduled__c
+				SELECT Id, Processor__c, Scheduled__c
 				FROM AsyncAction__c
 				WHERE Id = :actionId
 				WITH SYSTEM_MODE
@@ -15,7 +15,7 @@ public with sharing class RunAsyncActionNowController {
 			action.Scheduled__c = (scheduledForPast) ? action?.Scheduled__c : DateTime.now();
 			action.Status__c = AsyncActionProcessor.Status.PENDING.name();
 			Database.update(action, true, System.AccessLevel.USER_MODE);
-			AsyncActionStart__e startEvent = new AsyncActionStart__e(Actions__c = action?.ProcessorClass__c);
+			AsyncActionStart__e startEvent = new AsyncActionStart__e(Actions__c = action?.Processor__c);
 			EventBus.publish(startEvent);
 		} catch (Exception anyError) {
 			String msg = anyError?.getMessage();

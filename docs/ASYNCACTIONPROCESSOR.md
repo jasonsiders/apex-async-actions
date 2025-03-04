@@ -6,8 +6,8 @@ This apex class represents some kind of action to be performed asynchronously, a
 
 The abstract class handles the minutia of the framework, and leaves the actual actions to be processed up to the user to define, via the `process(List<AsyncAction__c> actions)` abstract method. Each time the `AsyncActionProcessor` Queueable is run, it follows this process:
 
-1. Retrieves a `AsyncActionProcessor__mdt` configuration record with a matching `ProcessorClass__c` value, and checks if the configuration record's `Enabled__c` value. If this is not _true_, or a matching configuration record cannot found, then the job will abort.
-2. Queries `AsyncAction__c` records with a matching `ProcessorClass__c` value, are in _Pending_ status, and have a `Scheduled__c` value in the past. Records are returned in order of its `Scheduled__c` value, prioritizing older records first. This query is limited by the configuration record's `BatchSize__c`.
+1. Retrieves a `AsyncActionProcessor__mdt` configuration record with a matching `Processor__c` value, and checks if the configuration record's `Enabled__c` value. If this is not _true_, or a matching configuration record cannot found, then the job will abort.
+2. Queries `AsyncAction__c` records with a matching `Processor__c` value, are in _Pending_ status, and have a `Scheduled__c` value in the past. Records are returned in order of its `Scheduled__c` value, prioritizing older records first. This query is limited by the configuration record's `BatchSize__c`.
 3. The user-defined `process(List<AsyncAction__c> actions)` method runs.
 4. The `System.Queueable` operation ceases. A `System.Finalizer` operation begins shortly after.
 5. The finalizer checks if the Queueable job succeeded. If an unhandled exception was thrown, the finalizer logs the error and updates all `AsyncAction__c` records in the transaction to reflect the failure using `ALLOW_RETRY` logic.
@@ -19,7 +19,7 @@ Creating your own `AsyncActionProcessor` is easy, but you must follow these requ
 
 -   Must extend `AsyncActionProcessor` and implement the [abstract methods](#abstract-methods). Else, the class will not compile.
 -   Must be an outer class. The framework uses the `AsyncApexJob` object to check for existing/pending queueable jobs. Its `ApexClass` field always displays the name of the _outer_ type, even if the Queueable job is an inner type. The framework will behave unpredictably if you use an inner class to extend `AsyncActionProcessor`.
--   Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORSETTINGS.md) configuration record with a corresponding `ProcessorClass__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
+-   Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORSETTINGS.md) configuration record with a corresponding `Processor__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
 
 ## Abstract Methods
 
@@ -112,5 +112,5 @@ global override void process(List<AsyncAction__c> actions) {
 ## Best Practices
 
 -   To avoid endless looping, remember to update each `AsyncAction__c` record with the results of the transaction. If the action succeeded, set the `Status__c` field to _"Completed"_. If the action failed, use the `fail()` method to mark the action as failed. Read more about error handling [here](#error-handling).
--   Do not attempt to launch `AsyncActionProcessor` classes on your own, via the `System.enqueueJob()` method or by other means. The Async Action Framework handles all of the launching internally. It includes checks against limits, custom metadata configuration, and more. Bypassing these checks can lead to unexpected results and potentially compromise the integrity of the framework. Instead, use the `AsyncActionProcessor__mdt` to dictate when and if a job is launched. If necessary, you can use the `AsyncActionLauncher.launchJobs(List<AsyncActionProcessor__mdt> configs, Id currentJobId)` method to safely launch a processor on your own.
+-   Do not attempt to launch `AsyncActionProcessor` classes on your own, via the `System.enqueueJob()` method or by other means. The Async Action Framework handles all of the launching internally. It includes checks against limits, custom metadata configuration, and more. Bypassing these checks can lead to unexpected results and potentially compromise the integrity of the framework. Instead, use the `AsyncActionProcessor__mdt` to dictate when and if a job is launched. If necessary, you can use the `AsyncActionLauncher` class's `launch` method to safely launch a processor on your own.
 -   Be careful when fetching `Id` values from `RelatedRecordId__c`, as well as custom data structures from `Data__c`. Always guard against unexpected inputs to avoid an unhandled exception.

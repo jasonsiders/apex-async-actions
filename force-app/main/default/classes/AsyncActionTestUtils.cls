@@ -9,18 +9,28 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
-	global static AsyncActionProcessor__mdt initProcessorSettings(Type processorType) {
-		// Instantiates & returns a processor settings object with default values for testing
+	global static AsyncActionProcessor__mdt initFlowProcessor(String flowName) {
+		// Instantiates & returns a Flow processor settings object with default values for testing
 		AsyncActionProcessor__mdt processor = new AsyncActionProcessor__mdt(
 			BatchSize__c = 200,
-			DeveloperName = 'Test_' + processorType?.getName(),
+			DeveloperName = 'Test_' + flowName,
 			Enabled__c = true,
-			MasterLabel = 'Test ' + processorType?.getName(),
-			ProcessorClass__c = processorType?.getName(),
+			MasterLabel = 'Test ' + flowName,
+			Processor__c = flowName,
+			ProcessorType__c = 'Flow',
 			Retries__c = 3,
 			RetryInterval__c = 3,
 			RunOnInsert__c = false
 		);
+		AsyncActionTestUtils.mockProcessorSettings(processor);
+		return processor;
+	}
+
+	global static AsyncActionProcessor__mdt initApexProcessor(Type processorType) {
+		// Instantiates & returns an Apex processor settings object with default values for testing
+		String className = processorType?.getName();
+		AsyncActionProcessor__mdt processor = AsyncActionTestUtils.initFlowProcessor(className);
+		processor.ProcessorType__c = 'Apex';
 		AsyncActionTestUtils.mockProcessorSettings(processor);
 		return processor;
 	}
@@ -63,7 +73,7 @@ global class AsyncActionTestUtils {
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
 			? AsyncActionProcessorService.processors
 			: new Map<String, AsyncActionProcessor__mdt>();
-		String processorName = processor?.ProcessorClass__c;
+		String processorName = processor?.Processor__c;
 		AsyncActionProcessorService.processors?.put(processorName, processor);
 	}
 

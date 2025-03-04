@@ -1,6 +1,6 @@
 # The `AsyncActionProcessor__mdt` Custom Metadata Type
 
-This Custom Metadata Type is used to govern configuration behavior for a specific instance of the `AsyncActionProcessor`. The class that it controls is listed in the `ProcessorClass__c` field. A record of this type should be created for each `AsyncActionProcessor` class you create. If a matching record does not exist, the processor class will fail to run.
+This Custom Metadata Type is used to govern configuration behavior for a specific instance of the `AsyncActionProcessor`. The class that it controls is listed in the `Processor__c` field. A record of this type should be created for each `AsyncActionProcessor` class you create. If a matching record does not exist, the processor class will fail to run.
 
 ## Fields
 

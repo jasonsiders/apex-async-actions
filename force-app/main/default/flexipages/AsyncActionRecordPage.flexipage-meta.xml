@@ -55,7 +55,7 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.ProcessorClass__c</fieldItem>
+                <fieldItem>Record.Processor__c</fieldItem>
                 <identifier>RecordProcessorClass_cField</identifier>
             </fieldInstance>
         </itemInstances>

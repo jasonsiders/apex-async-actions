@@ -1,5 +1,5 @@
 import ACTION_NAME_FIELD from "@salesforce/schema/AsyncAction__c.Name";
-import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.ProcessorClass__c";
+import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.Processor__c";
 import SCHEDULED_FIELD from "@salesforce/schema/AsyncAction__c.Scheduled__c";
 import STATUS_FIELD from "@salesforce/schema/AsyncAction__c.Status__c";
 const CREATED_BY_NAME_FIELD = "CreatedByName";

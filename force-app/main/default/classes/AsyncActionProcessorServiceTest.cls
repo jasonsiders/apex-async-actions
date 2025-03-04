@@ -15,7 +15,7 @@ private class AsyncActionProcessorServiceTest {
 		Assert.areEqual(expected?.size(), actual?.size(), 'Wrong # of results returned');
 		for (String processorName : actual?.keySet()) {
 			AsyncActionProcessor__mdt processor = actual?.get(processorName);
-			Assert.areEqual(processorName, processor?.ProcessorClass__c, 'Not mapped by processor');
+			Assert.areEqual(processorName, processor?.Processor__c, 'Not mapped by processor');
 		}
 	}
 
@@ -35,7 +35,7 @@ private class AsyncActionProcessorServiceTest {
 		String processorName = AsyncActionProcessorServiceTest.class.getName();
 		AsyncActionProcessor__mdt testProcessor = new AsyncActionProcessor__mdt(
 			DeveloperName = 'Test_Config',
-			ProcessorClass__c = processorName
+			Processor__c = processorName
 		);
 		AsyncActionProcessorService.processors = new Map<String, AsyncActionProcessor__mdt>{
 			processorName => testProcessor
@@ -54,7 +54,7 @@ private class AsyncActionProcessorServiceTest {
 		String processorName = AsyncActionProcessorServiceTest.class.getName();
 		AsyncActionProcessor__mdt testProcessor = new AsyncActionProcessor__mdt(
 			DeveloperName = 'Test_Config',
-			ProcessorClass__c = processorName
+			Processor__c = processorName
 		);
 		AsyncActionProcessorService.processors = new Map<String, AsyncActionProcessor__mdt>{
 			processorName => testProcessor
@@ -65,7 +65,7 @@ private class AsyncActionProcessorServiceTest {
 		Test.stopTest();
 
 		Assert.isNotNull(processor, 'A processor was not returned');
-		Assert.areEqual(processorName, processor?.ProcessorClass__c, 'Wrong processor returned');
+		Assert.areEqual(processorName, processor?.Processor__c, 'Wrong processor returned');
 	}
 
 	@IsTest
@@ -73,7 +73,7 @@ private class AsyncActionProcessorServiceTest {
 		Set<String> classNames = new Set<String>{ 'processor_1', 'processor_2', 'processor_3' };
 		List<AsyncActionProcessor__mdt> configs = new List<AsyncActionProcessor__mdt>();
 		for (String className : classNames) {
-			AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(ProcessorClass__c = className);
+			AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(Processor__c = className);
 			configs?.add(config);
 		}
 

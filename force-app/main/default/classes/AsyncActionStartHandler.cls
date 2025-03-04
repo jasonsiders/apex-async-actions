@@ -5,7 +5,7 @@ public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
 	public override void afterInsert() {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
-		AsyncActionLauncher.launchJobs(actions, null);
+		new AsyncActionLauncher()?.launch(actions);
 		LOGGER?.save(false);
 	}
 

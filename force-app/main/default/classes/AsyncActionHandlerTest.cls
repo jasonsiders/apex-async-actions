@@ -2,7 +2,7 @@
 private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsIfTriggerEnabled() {
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		config.RunOnInsert__c = true;
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction();
@@ -21,7 +21,7 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldNotLaunchJobsIfTriggerDisabled() {
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		config.RunOnInsert__c = false;
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction();
@@ -43,7 +43,7 @@ private class AsyncActionHandlerTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
-		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction();
 
@@ -58,7 +58,7 @@ private class AsyncActionHandlerTest {
 	static void shouldScheduleIfDisabled() {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = false;
-		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		AsyncAction__c action = processor?.initAction();
 
@@ -72,9 +72,9 @@ private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldDefaultRetriesToConfigIfExists() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(processorType);
 		config.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = null);
+		AsyncAction__c action = new AsyncAction__c(Processor__c = processorType.getName(), Retries__c = null);
 
 		Test.startTest();
 		insert action;
@@ -87,7 +87,7 @@ private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldDefaultRetriesTo0IfNoConfigExists() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = null);
+		AsyncAction__c action = new AsyncAction__c(Processor__c = processorType.getName(), Retries__c = null);
 
 		Test.startTest();
 		insert action;
@@ -100,9 +100,9 @@ private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldNotOverwriteSetRetriesAmount() {
 		Type processorType = MockAsyncActionProcessor.class;
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(processorType);
+		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(processorType);
 		config.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(ProcessorClass__c = processorType.getName(), Retries__c = 3);
+		AsyncAction__c action = new AsyncAction__c(Processor__c = processorType.getName(), Retries__c = 3);
 
 		Test.startTest();
 		insert action;
