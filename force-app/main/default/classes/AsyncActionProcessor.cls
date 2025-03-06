@@ -2,7 +2,6 @@
 global abstract inherited sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
 	global AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(this.getType()?.getName());
-	global AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
 	static final String CURRENT_TRANSACTION_ID = System.Request.getCurrent()?.getRequestId();
@@ -21,12 +20,12 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
 				this.recordLastRun(actions);
 				this.process(actions);
-				this.logger?.save(false);
+				AsyncActionLogger.save(false);
 			} catch (Exception error) {
 				// Publish the logs immediately, via platform event,
 				// then allow the error to terminate the current transaction
-				this.logger?.log(System.LoggingLevel.ERROR, error);
-				this.logger?.save(true);
+				AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
+				AsyncActionLogger.save(true);
 				throw error;
 			}
 		}
@@ -46,16 +45,16 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this.
 				// Re-launch the job via a platform event, this resets the stack depth to 0
 				String msg = 'Could not re-launch during finalizer. Re-launching via platform event.\n' + error;
-				this.logger?.log(System.LoggingLevel.FINEST, msg);
+				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 				String actionName = this.getType()?.getName();
 				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
 				EventBus.publish(event);
 			} else {
 				String msg = 'Aborting job after error during Finalizer: ' + error;
-				this.logger?.log(System.LoggingLevel.FINEST, msg);
+				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 			}
 		} finally {
-			this.logger?.save(false);
+			AsyncActionLogger.save(false);
 		}
 	}
 
@@ -176,7 +175,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 					'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
 					new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
 				);
-				AsyncActionLogger.init()?.log(System.LoggingLevel.ERROR, msg);
+				AsyncActionLogger.log(System.LoggingLevel.ERROR, msg);
 			}
 		}
 

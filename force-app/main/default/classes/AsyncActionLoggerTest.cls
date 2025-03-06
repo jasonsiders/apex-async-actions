@@ -8,10 +8,10 @@ private class AsyncActionLoggerTest {
 		settings.LoggerPlugin__c = adapterType?.getName();
 
 		Test.startTest();
-		AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
+		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
 		Test.stopTest();
 
-		Assert.isInstanceOfType(logger, adapterType, 'Wrong adapter type');
+		Assert.isInstanceOfType(logger, adapterType, 'Wrong adapter type: ' + AsyncActionLogger.INSTANCE);
 	}
 
 	@IsTest
@@ -20,10 +20,14 @@ private class AsyncActionLoggerTest {
 		settings.LoggerPlugin__c = 'foo/bar';
 
 		Test.startTest();
-		AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
+		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
 		Test.stopTest();
 
-		Assert.isInstanceOfType(logger, AsyncActionLogger.DefaultLogger.class, 'Wrong adapter type');
+		Assert.isInstanceOfType(
+			logger,
+			AsyncActionLogger.DefaultLogger.class,
+			'Wrong adapter type: ' + AsyncActionLogger.INSTANCE
+		);
 	}
 
 	@IsTest
@@ -32,15 +36,19 @@ private class AsyncActionLoggerTest {
 		settings.LoggerPlugin__c = null;
 
 		Test.startTest();
-		AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
+		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
 		Test.stopTest();
 
-		Assert.isInstanceOfType(logger, AsyncActionLogger.DefaultLogger.class, 'Wrong adapter type');
+		Assert.isInstanceOfType(
+			logger,
+			AsyncActionLogger.DefaultLogger.class,
+			'Wrong adapter type: ' + AsyncActionLogger.INSTANCE
+		);
 	}
 
 	@IsTest
 	static void shouldPerformDefaultLoggingLogic() {
-		AsyncActionLogger.DefaultLogger logger = (AsyncActionLogger.DefaultLogger) AsyncActionLogger.init();
+		AsyncActionLogger.DefaultLogger logger = (AsyncActionLogger.DefaultLogger) AsyncActionLogger.INSTANCE;
 
 		Test.startTest();
 		try {

@@ -1,12 +1,10 @@
 @SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
-	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-
 	public override void afterInsert() {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
 		new AsyncActionLauncher()?.launch(actions);
-		LOGGER?.save(false);
+		AsyncActionLogger.save(false);
 	}
 
 	public override Type getType() {

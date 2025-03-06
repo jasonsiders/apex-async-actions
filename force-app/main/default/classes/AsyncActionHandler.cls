@@ -23,7 +23,7 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 		}
 		// Ensure the scheduled job aligns with current configuration
 		new AsyncActionScheduleEnforcer()?.enforce();
-		AsyncActionLogger.init()?.save(false);
+		AsyncActionLogger.save(false);
 	}
 
 	public override Type getType() {

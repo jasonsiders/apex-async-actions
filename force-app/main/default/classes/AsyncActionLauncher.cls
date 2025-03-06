@@ -1,7 +1,5 @@
 @SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionLauncher {
-	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-
 	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> configs) {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
@@ -42,7 +40,7 @@ public without sharing class AsyncActionLauncher {
 				? (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance()
 				: new AsyncActionFlowProcessor(settings);
 		} catch (Exception error) {
-			LOGGER?.log(System.LoggingLevel.ERROR, error);
+			AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
 			return null;
 		}
 	}
@@ -60,11 +58,11 @@ public without sharing class AsyncActionLauncher {
 				?.build();
 			Id jobId = System.enqueueJob(processor, options);
 			String msg = processorName + ': launch() -> ' + jobId;
-			LOGGER?.log(System.LoggingLevel.FINEST, msg);
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 			return jobId;
 		} catch (Exception error) {
 			String msg = processorName + ' failed to launch: ' + error + '\n' + error?.getStackTraceString();
-			LOGGER?.log(System.LoggingLevel.WARN, msg);
+			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
 			return null;
 		}
 	}
