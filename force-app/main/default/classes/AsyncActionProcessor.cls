@@ -59,50 +59,34 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		}
 	}
 
-	// **** PUBLIC **** //
-	global virtual List<AsyncAction__c> getPendingActions() {
-		final String typeName = this.getType()?.getName();
-		return [
-			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
-			FROM AsyncAction__c
-			WHERE Processor__c = :typeName AND Scheduled__c <= :DateTime.now() AND Status__c = :Status.PENDING.name()
-			WITH SYSTEM_MODE
-			ORDER BY Scheduled__c ASC
-			LIMIT :this.getBatchSize()
-		];
-	}
-
-	global AsyncAction__c initAction(Id relatedRecordId, String data) {
+	// **** STATIC **** //
+	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId, String data) {
 		// Returns a new action related to the current processor type
 		return new AsyncAction__c(
 			Data__c = data,
-			Processor__c = this.getType()?.getName(),
+			Processor__c = settings?.Processor__c,
 			RelatedRecordId__c = relatedRecordId,
-			Retries__c = this.settings?.Retries__c ?? 0,
+			Retries__c = settings?.Retries__c ?? 0,
 			Scheduled__c = DateTime.now(),
 			Status__c = Status.PENDING.name()
 		);
 	}
 
-	global AsyncAction__c initAction(Id relatedRecordId) {
-		return this.initAction(relatedRecordId, null);
+	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record, String data) {
+		return AsyncActionProcessor.initAction(settings, record?.Id, data);
 	}
 
-	global AsyncAction__c initAction(SObject record, String data) {
-		return this.initAction(record?.Id, data);
+	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId) {
+		return AsyncActionProcessor.initAction(settings, relatedRecordId, null);
 	}
 
-	global AsyncAction__c initAction(SObject record) {
-		return this.initAction(record?.Id);
+	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record) {
+		return AsyncActionProcessor.initAction(settings, record?.Id);
 	}
 
-	global AsyncAction__c initAction() {
+	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings) {
 		Id nullRecordId = null;
-		return this.initAction(nullRecordId);
-	}
-
-	global Boolean isEnabled() {
-		return this.settings?.Enabled__c == true;
+		return AsyncActionProcessor.initAction(settings, nullRecordId);
 	}
 
 	// **** PRIVATE **** //
@@ -113,7 +97,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 			this.handleFinalizerError(context?.getException());
 		}
 		// * Re-launch this job if there are still pending records
-		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
+		if (this.settings?.Enabled__c == true && AsyncActionProcessor.allowRecursion == true) {
 			Id currentJobId = context?.getAsyncApexJobId();
 			new AsyncActionLauncher()?.launch(this.settings);
 		}
@@ -121,6 +105,18 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 
 	private Integer getBatchSize() {
 		return this.settings?.BatchSize__c?.intValue() ?? 200;
+	}
+
+	protected List<AsyncAction__c> getPendingActions() {
+		String typeName = this.getType()?.getName();
+		return [
+			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
+			FROM AsyncAction__c
+			WHERE Processor__c = :typeName AND Scheduled__c <= :DateTime.now() AND Status__c = :Status.PENDING.name()
+			WITH SYSTEM_MODE
+			ORDER BY Scheduled__c ASC
+			LIMIT :this.getBatchSize()
+		];
 	}
 
 	private void handleFinalizerError(Exception error) {

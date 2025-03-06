@@ -2,10 +2,10 @@
 private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldCreateAValidApexProcessor() {
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 
 		Test.startTest();
-		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(config);
+		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(settings);
 		Test.stopTest();
 
 		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
@@ -14,10 +14,10 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldCreateAValidFlowProcessor() {
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initFlowProcessor('My_Test_Flow');
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor('My_Test_Flow');
 
 		Test.startTest();
-		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(config);
+		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(settings);
 		Test.stopTest();
 
 		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
@@ -26,10 +26,10 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldReturnNullIfInvalidProcessor() {
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(null);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(null);
 
 		Test.startTest();
-		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(config);
+		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(settings);
 		Test.stopTest();
 
 		Assert.isNull(processor, 'Invalid processorName generated a AsyncActionProcessor anyways');
@@ -39,9 +39,8 @@ private class AsyncActionLauncherTest {
 	static void shouldLaunchAllJobs() {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(processorType);
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
-		AsyncAction__c action = processor?.initAction();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -58,13 +57,12 @@ private class AsyncActionLauncherTest {
 	static void shouldLaunchSpecifiedJobs() {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(processorType);
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
-		AsyncAction__c action = processor?.initAction();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 
 		Test.startTest();
-		Id jobId = new AsyncActionLauncher()?.launch(config);
+		Id jobId = new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
 		Assert.isNotNull(jobId, 'A job was not launched');
@@ -87,21 +85,20 @@ private class AsyncActionLauncherTest {
 
 		Map<String, List<AsyncApexJob>> results = AsyncActionLauncherTest.getAsyncJobs();
 		String processorName = fakeProcessorType?.getName();
-		Assert.isFalse(results?.containsKey(processorName), 'Launched a job for an invalid config');
+		Assert.isFalse(results?.containsKey(processorName), 'Launched a job for an invalid settings');
 	}
 
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(processorType);
-		config.Enabled__c = false;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor();
-		AsyncAction__c action = processor?.initAction();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
+		settings.Enabled__c = false;
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 
 		Test.startTest();
-		Id jobId = new AsyncActionLauncher()?.launch(config);
+		Id jobId = new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
 		Assert.isNull(jobId, 'Launched disabled job');
@@ -110,17 +107,17 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		insert processor?.initAction();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		insert action;
 
 		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			System.enqueueJob(processor);
+			System.enqueueJob(new MockAsyncActionProcessor());
 		}
 		// NOW try to launch the job
-		Id jobId = new AsyncActionLauncher()?.launch(config);
+		Id jobId = new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
 		Assert.isNull(jobId, 'A job was launched despite hitting queueable limits');
@@ -129,12 +126,12 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchWithoutPendingActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		config.Enabled__c = false;
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.Enabled__c = false;
 		// No actions inserted!
 
 		Test.startTest();
-		Id jobId = new AsyncActionLauncher()?.launch(config);
+		Id jobId = new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
 		Assert.isNull(jobId, 'A job was launched despite having no data');
@@ -143,13 +140,13 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c action = new MockAsyncActionProcessor()?.initAction();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 
 		Test.startTest();
-		Id jobId1 = new AsyncActionLauncher()?.launch(config);
-		Id jobId2 = new AsyncActionLauncher()?.launch(config);
+		Id jobId1 = new AsyncActionLauncher()?.launch(settings);
+		Id jobId2 = new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
 		Assert.isNotNull(jobId1, 'Initial job was not launched');

@@ -26,9 +26,9 @@ public abstract class AsyncActionProcessorService {
 	@TestVisible
 	static Map<String, AsyncActionProcessor__mdt> mapByProcessorClass(List<AsyncActionProcessor__mdt> configs) {
 		Map<String, AsyncActionProcessor__mdt> results = new Map<String, AsyncActionProcessor__mdt>();
-		for (AsyncActionProcessor__mdt config : configs) {
-			String processorName = config?.Processor__c;
-			results?.put(processorName, config);
+		for (AsyncActionProcessor__mdt settings : configs) {
+			String processorName = settings?.Processor__c;
+			results?.put(processorName, settings);
 		}
 		return results;
 	}

@@ -53,12 +53,12 @@ private class RunAsyncActionNowControllerTest {
 	static void setup() {
 		Account account = new Account(Name = 'Test Account');
 		insert account;
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		config.Retries__c = 0;
-		config.RunOnInsert__c = false;
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.Retries__c = 0;
+		settings.RunOnInsert__c = false;
 		AsyncActionProcessor processor = new MockAsyncActionProcessor();
 		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
-		AsyncAction__c action = processor?.initAction(account?.Id, data);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings, account?.Id, data);
 		action.Status__c = AsyncActionProcessor.Status.CANCELED.name();
 		insert action;
 	}

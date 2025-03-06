@@ -13,10 +13,10 @@ public without sharing class AsyncActionLauncher {
 		return results;
 	}
 
-	public Id launch(AsyncActionProcessor__mdt config) {
+	public Id launch(AsyncActionProcessor__mdt settings) {
 		// Overload launches a single AsyncActionProcessor job
-		String processorName = config?.Processor__c;
-		return this.launch(new List<AsyncActionProcessor__mdt>{ config })?.get(processorName);
+		String processorName = settings?.Processor__c;
+		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
 
 	public Map<String, Id> launchAll() {
@@ -28,19 +28,19 @@ public without sharing class AsyncActionLauncher {
 	// **** PRIVATE **** //
 	private Set<String> extractProcessorNames(List<AsyncActionProcessor__mdt> configs) {
 		Set<String> results = new Set<String>();
-		for (AsyncActionProcessor__mdt config : configs) {
-			String processorName = config?.Processor__c;
+		for (AsyncActionProcessor__mdt settings : configs) {
+			String processorName = settings?.Processor__c;
 			results?.add(processorName);
 		}
 		return results;
 	}
 
 	@TestVisible
-	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
+	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt settings) {
 		try {
-			return (config?.ProcessorType__c == 'Apex')
-				? (AsyncActionProcessor) Type.forName(config?.Processor__c)?.newInstance()
-				: new AsyncActionFlowProcessor(config);
+			return (settings?.ProcessorType__c == 'Apex')
+				? (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance()
+				: new AsyncActionFlowProcessor(settings);
 		} catch (Exception error) {
 			LOGGER?.log(System.LoggingLevel.ERROR, error);
 			return null;
@@ -49,14 +49,14 @@ public without sharing class AsyncActionLauncher {
 
 	private Id launchJobForProcessor(String processorName) {
 		try {
-			AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(processorName);
-			this.validateJob(config);
+			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
+			this.validateJob(settings);
 			this.validateQueueableLimits();
-			AsyncActionProcessor processor = this.initProcessor(config);
+			AsyncActionProcessor processor = this.initProcessor(settings);
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
 			options.DuplicateSignature = new System.QueueableDuplicateSignature.Builder()
-				?.addString(config?.DeveloperName)
+				?.addString(settings?.DeveloperName)
 				?.build();
 			Id jobId = System.enqueueJob(processor, options);
 			String msg = processorName + ': launch() -> ' + jobId;
@@ -88,10 +88,10 @@ public without sharing class AsyncActionLauncher {
 		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
 	}
 
-	private void validateJob(AsyncActionProcessor__mdt config) {
+	private void validateJob(AsyncActionProcessor__mdt settings) {
 		// Throws an exception if the current job is disabled
-		if (config?.Enabled__c != true) {
-			throw new System.AsyncException(config?.DeveloperName + ' is disabled');
+		if (settings?.Enabled__c != true) {
+			throw new System.AsyncException(settings?.DeveloperName + ' is disabled');
 		}
 	}
 

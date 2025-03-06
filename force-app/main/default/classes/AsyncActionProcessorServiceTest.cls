@@ -73,8 +73,8 @@ private class AsyncActionProcessorServiceTest {
 		Set<String> classNames = new Set<String>{ 'processor_1', 'processor_2', 'processor_3' };
 		List<AsyncActionProcessor__mdt> configs = new List<AsyncActionProcessor__mdt>();
 		for (String className : classNames) {
-			AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(Processor__c = className);
-			configs?.add(config);
+			AsyncActionProcessor__mdt settings = new AsyncActionProcessor__mdt(Processor__c = className);
+			configs?.add(settings);
 		}
 
 		Test.startTest();

@@ -1,9 +1,9 @@
 public class AsyncActionFlowProcessor extends AsyncActionProcessor {
 	@TestVisible
-	private AsyncActionProcessor__mdt config;
+	private AsyncActionProcessor__mdt settings;
 
-	public AsyncActionFlowProcessor(AsyncActionProcessor__mdt config) {
-		this.config = config;
+	public AsyncActionFlowProcessor(AsyncActionProcessor__mdt settings) {
+		this.settings = settings;
 	}
 
 	public override Type getType() {
