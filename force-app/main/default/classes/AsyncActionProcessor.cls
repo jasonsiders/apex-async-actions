@@ -4,7 +4,6 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	global AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(this.getType()?.getName());
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
-	static final String CURRENT_TRANSACTION_ID = System.Request.getCurrent()?.getRequestId();
 	static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	// **** ABSTRACT **** //
@@ -18,7 +17,6 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 			try {
 				List<AsyncAction__c> actions = this.getPendingActions();
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-				this.recordLastRun(actions);
 				this.process(actions);
 				AsyncActionLogger.save(false);
 			} catch (Exception error) {
@@ -122,13 +120,6 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		List<AsyncAction__c> actions = this.requeryActions();
 		new FailureLogic(this.settings)?.fail(actions, error);
 		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
-	}
-
-	private void recordLastRun(List<AsyncAction__c> actions) {
-		// Stamp the current transaction id in the "Last Run" field for each action
-		for (AsyncAction__c action : actions) {
-			action.LastRun__c = CURRENT_TRANSACTION_ID;
-		}
 	}
 
 	private List<AsyncAction__c> requeryActions() {

@@ -57,10 +57,6 @@
                 <behavior>Required</behavior>
                 <field>Scheduled__c</field>
             </layoutItems>
-            <layoutItems>
-                <behavior>Readonly</behavior>
-                <field>LastRun__c</field>
-            </layoutItems>
         </layoutColumns>
         <style>TwoColumnsLeftToRight</style>
     </layoutSections>
