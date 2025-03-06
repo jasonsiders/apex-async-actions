@@ -1,7 +1,7 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
 global abstract inherited sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	global Set<Id> actionIds;
-	global AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(this.getType()?.getName());
+	global AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(this.getType()?.getName());
 	global AsyncActionLogger.Adapter logger = AsyncActionLogger.init();
 	@TestVisible
 	static Boolean allowRecursion = !Test.isRunningTest();
@@ -15,7 +15,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	// **** QUEUEABLE **** //
 	global void execute(System.QueueableContext context) {
 		System.attachFinalizer(this);
-		if (this.config?.Enabled__c == true) {
+		if (this.settings?.Enabled__c == true) {
 			try {
 				List<AsyncAction__c> actions = this.getPendingActions();
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
@@ -40,7 +40,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		try {
 			this.finalize(context);
 		} catch (Exception error) {
-			if (error instanceof System.AsyncException && this.config?.BypassFinalizerRetryLimit__c == true) {
+			if (error instanceof System.AsyncException && this.settings?.BypassFinalizerRetryLimit__c == true) {
 				// Note: Finalizers can only re-enqueue failed jobs a max of 5 times in a row.
 				// If this happens, a System.AsyncException will be thrown to prevent runaway jobs.
 				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this.
@@ -60,34 +60,6 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	}
 
 	// **** PUBLIC **** //
-	global void fail(AsyncAction__c action, RetryBehavior behavior, Object errorObj) {
-		// Callers can use this method to handle a failed action
-		action.Error__c = String.valueOf(errorObj)?.abbreviate(ERROR_FIELD_LENGTH);
-		if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
-			// Retry the action at some point in the future. Decrement the number of retries.
-			action.Retries__c--;
-			this.reschedule(action);
-		} else if (behavior == RetryBehavior.KEEP_ALIVE) {
-			// Retry the action at some point in the future. Do not decrement the number of retries.
-			this.reschedule(action);
-		} else {
-			// If no retries remain, or if SUDDEN_DEATH, mark the record as failed
-			action.Status__c = Status.FAILED.name();
-		}
-		String msg = String.format(
-			'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
-			new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
-		);
-		this.logger?.log(System.LoggingLevel.ERROR, msg);
-	}
-
-	global void fail(List<AsyncAction__c> actions, RetryBehavior behavior, Object errorObj) {
-		// Callers can use this method to handle failed actions in bulk
-		for (AsyncAction__c action : actions) {
-			this.fail(action, behavior, errorObj);
-		}
-	}
-
 	global virtual List<AsyncAction__c> getPendingActions() {
 		final String typeName = this.getType()?.getName();
 		return [
@@ -106,7 +78,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 			Data__c = data,
 			Processor__c = this.getType()?.getName(),
 			RelatedRecordId__c = relatedRecordId,
-			Retries__c = this.config?.Retries__c ?? 0,
+			Retries__c = this.settings?.Retries__c ?? 0,
 			Scheduled__c = DateTime.now(),
 			Status__c = Status.PENDING.name()
 		);
@@ -130,12 +102,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	}
 
 	global Boolean isEnabled() {
-		return this.config?.Enabled__c == true;
-	}
-
-	global virtual void reschedule(AsyncAction__c action) {
-		Integer interval = this.getRetryInterval();
-		action.Scheduled__c = DateTime.now()?.addMinutes(interval);
+		return this.settings?.Enabled__c == true;
 	}
 
 	// **** PRIVATE **** //
@@ -148,27 +115,18 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// * Re-launch this job if there are still pending records
 		if (this.isEnabled() && AsyncActionProcessor.allowRecursion == true) {
 			Id currentJobId = context?.getAsyncApexJobId();
-			new AsyncActionLauncher()?.launch(this.config);
+			new AsyncActionLauncher()?.launch(this.settings);
 		}
 	}
 
 	private Integer getBatchSize() {
-		return this.config?.BatchSize__c?.intValue() ?? 200;
-	}
-
-	private Integer getRetryInterval() {
-		return this.config?.RetryInterval__c?.intValue() ?? 5;
+		return this.settings?.BatchSize__c?.intValue() ?? 200;
 	}
 
 	private void handleFinalizerError(Exception error) {
 		List<AsyncAction__c> actions = this.requeryActions();
-		this.fail(actions, RetryBehavior.ALLOW_RETRY, error);
+		new FailureLogic(this.settings)?.fail(actions, error);
 		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
-	}
-
-	private Boolean hasRetries(AsyncAction__c action) {
-		Decimal numRetries = action?.Retries__c ?? 0;
-		return numRetries > 0;
 	}
 
 	private void recordLastRun(List<AsyncAction__c> actions) {
@@ -190,6 +148,61 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	}
 
 	// **** INNER **** //
+	global class FailureLogic {
+		private AsyncActionProcessor.RetryBehavior behavior;
+		private AsyncActionProcessor__mdt settings;
+
+		global FailureLogic(AsyncActionProcessor__mdt settings, AsyncActionProcessor.RetryBehavior behavior) {
+			this.behavior = behavior;
+			this.settings = settings;
+		}
+
+		global FailureLogic(AsyncActionProcessor__mdt settings) {
+			this(settings, AsyncActionProcessor.RetryBehavior.ALLOW_RETRY);
+		}
+
+		global void fail(List<AsyncAction__c> actions, Object errorObj) {
+			for (AsyncAction__c action : actions) {
+				// Callers can use this method to handle a failed action
+				action.Error__c = String.valueOf(errorObj)?.abbreviate(ERROR_FIELD_LENGTH);
+				if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
+					// Retry the action at some point in the future. Decrement the number of retries.
+					action.Retries__c--;
+					this.reschedule(action);
+				} else if (behavior == RetryBehavior.KEEP_ALIVE) {
+					// Retry the action at some point in the future. Do not decrement the number of retries.
+					this.reschedule(action);
+				} else {
+					// If no retries remain, or if SUDDEN_DEATH, mark the record as failed
+					action.Status__c = Status.FAILED.name();
+				}
+				String msg = String.format(
+					'Async Action failed: {0}\nNew Status: {1}. Num Retries: {2}',
+					new List<String>{ String.valueOf(errorObj), action?.Status__c, String.valueOf(action?.Retries__c) }
+				);
+				AsyncActionLogger.init()?.log(System.LoggingLevel.ERROR, msg);
+			}
+		}
+
+		global void fail(AsyncAction__c action, Object errorObj) {
+			this.fail(new List<AsyncAction__c>{ action }, errorObj);
+		}
+
+		private Boolean hasRetries(AsyncAction__c action) {
+			Decimal numRetries = action?.Retries__c ?? 0;
+			return numRetries > 0;
+		}
+
+		private void reschedule(AsyncAction__c action) {
+			Integer interval = this.settings?.RetryInterval__c?.intValue() ?? 5;
+			action.Scheduled__c = DateTime.now()?.addMinutes(interval);
+		}
+	}
+
+	global interface Logic {
+		void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions);
+	}
+
 	global enum RetryBehavior {
 		ALLOW_RETRY,
 		KEEP_ALIVE,

@@ -12,7 +12,7 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 		if (this.pathType == Path.JOB_ERROR) {
 			throw this.error;
 		} else if (this.pathType == Path.FAIL) {
-			this.fail(actions, this.retryBehavior, 'This is a test error');
+			new FailureLogic(this.settings, this.retryBehavior)?.fail(actions, 'This is a test error');
 		} else {
 			for (AsyncAction__c action : actions) {
 				// Create cases for the action's related account
