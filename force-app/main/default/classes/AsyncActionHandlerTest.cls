@@ -14,7 +14,7 @@ private class AsyncActionHandlerTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = 'MockAsyncActionProcessor'
+			WHERE JobType = 'Queueable'
 			LIMIT 1
 		];
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert');
@@ -34,7 +34,7 @@ private class AsyncActionHandlerTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = 'MockAsyncActionProcessor'
+			WHERE JobType = 'Queueable'
 			LIMIT 1
 		];
 		Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched on insert');
@@ -90,9 +90,7 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldDefaultRetriesTo0IfNoConfigExists() {
-		Type processorType = MockAsyncActionProcessor.Logic.class;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
-		AsyncAction__c action = new AsyncAction__c(ProcessorName__c = settings?.DeveloperName, Retries__c = null);
+		AsyncAction__c action = new AsyncAction__c(ProcessorName__c = 'Some_Processor', Retries__c = null);
 
 		Test.startTest();
 		insert action;

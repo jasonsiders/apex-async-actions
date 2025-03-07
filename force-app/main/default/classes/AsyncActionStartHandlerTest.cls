@@ -13,7 +13,11 @@ private class AsyncActionStartHandlerTest {
 		EventBus.publish(event);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		List<AsyncApexJob> jobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionProcessor.class.getName()
+		];
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched');
 	}
 
@@ -31,7 +35,11 @@ private class AsyncActionStartHandlerTest {
 		EventBus.publish(event);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		List<AsyncApexJob> jobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionProcessor.class.getName()
+		];
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched');
 	}
 
@@ -49,7 +57,11 @@ private class AsyncActionStartHandlerTest {
 		EventBus.publish(event);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		List<AsyncApexJob> jobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionProcessor.class.getName()
+		];
 		Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched, but not listed in Actions__c');
 	}
 }

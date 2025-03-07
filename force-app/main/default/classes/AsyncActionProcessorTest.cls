@@ -189,7 +189,7 @@ private class AsyncActionProcessorTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id, CronTriggerId
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = 'MockAsyncActionProcessor' AND Id != :jobId
+			WHERE ApexClass.Name = :MockAsyncActionProcessor.class.getName() AND Id != :jobId
 		];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
@@ -362,7 +362,11 @@ private class AsyncActionProcessorTest {
 		processor?.execute(context);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		List<AsyncApexJob> jobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :MockAsyncActionProcessor.class.getName()
+		];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 	}
 
