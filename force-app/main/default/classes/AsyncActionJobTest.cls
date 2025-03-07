@@ -275,59 +275,6 @@ private class AsyncActionJobTest {
 		}
 	}
 
-	@IsTest
-	static void shouldBypassFinalizerReenqueueLimits() {
-		// Finalizers can re-enqueue failed jobs a limit of 5 times.
-		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
-		// The AsyncActionJob should catch this error and launch again, this time via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		settings.BypassFinalizerRetryLimit__c = true;
-		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
-		MockAsyncActionProcessor.error = new System.AsyncException();
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncActionTestUtils.setAllowRecursion(true);
-
-		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
-		// but we can check that a job was still enqueued by calling the finalizer directly
-		Test.startTest();
-		System.FinalizerContext context;
-		new AsyncActionJob(settings)?.execute(context);
-		Test.getEventBus().deliver();
-		Test.stopTest();
-
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE JobType = 'Queueable'];
-		Assert.areEqual(false, jobs?.isEmpty(), 'Job was not relaunched');
-	}
-
-	@IsTest
-	static void shouldRespectFinalizerReenqueueLimits() {
-		// Finalizers can re-enqueue failed jobs a limit of 5 times.
-		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
-		// The AsyncActionJob should catch this error and launch again, this time via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		settings.BypassFinalizerRetryLimit__c = false;
-		AsyncActionJob job = new AsyncActionJob(settings);
-		MockAsyncActionProcessor.error = new System.AsyncException();
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
-		AsyncActionTestUtils.setAllowRecursion(true);
-
-		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
-		// but we can check that a job was still enqueued by calling the finzlier directly
-		System.FinalizerContext context;
-		job?.execute(context);
-		Test.getEventBus().deliver();
-
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-		];
-		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
-	}
-
 	// **** HELPER **** //
 	@TestSetup
 	static void setup() {

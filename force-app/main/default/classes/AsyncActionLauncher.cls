@@ -39,8 +39,14 @@ public without sharing class AsyncActionLauncher {
 		return results;
 	}
 
+	private Integer getMaxStackDepth(AsyncActionProcessor__mdt settings) {
+		// Returns the maximum stack depth value defined in the settings
+		// Defaults to 5 if none found; this matches the current Queueable defaults
+		return (settings?.MaxStackDepth__c)?.intValue() ?? 5;
+	}
+
 	private String hashProcessorName(AsyncActionProcessor__mdt settings) {
-		// Note: Max size of QueueableDuplicateSignature is32 bytes; hash the processor value to prevent exceeding this value
+		// Note: Max size of QueueableDuplicateSignature is 32 bytes; hash the processor value to prevent exceeding this value
 		Blob hashBlob = Crypto.generateDigest('SHA-256', Blob.valueOf(settings?.DeveloperName));
 		String hashHex = EncodingUtil.convertToHex(hashBlob);
 		return hashHex?.substring(0, 32);
@@ -54,6 +60,7 @@ public without sharing class AsyncActionLauncher {
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
 			options.DuplicateSignature = this.buildDuplicateSignature(settings);
+			options.MaximumQueueableStackDepth = this.getMaxStackDepth(settings);
 			Id jobId = System.enqueueJob(new AsyncActionJob(settings), options);
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
 			return jobId;

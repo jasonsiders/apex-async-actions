@@ -1,10 +1,10 @@
 @SuppressWarnings('PMD.ApexDoc')
-public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
+public without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
 	private Set<Id> actionIds;
 	private AsyncActions.Processor processor;
 	private AsyncActionProcessor__mdt settings;
 	@TestVisible
-	private static Boolean allowRecursion = !Test.isRunningTest();
+	private static Boolean allowRecursion = (Test.isRunningTest() == false);
 
 	public AsyncActionJob(AsyncActionProcessor__mdt settings) {
 		this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
@@ -36,28 +36,15 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		try {
 			this.finalize(context);
 		} catch (Exception error) {
-			if (error instanceof System.AsyncException && this.settings?.BypassFinalizerRetryLimit__c == true) {
-				// Note: Finalizers can only re-enqueue failed jobs a max of 5 times in a row.
-				// If this happens, a System.AsyncException will be thrown to prevent runaway jobs.
-				// Our finalizer handles failed jobs by marking actions as failed, so we don't need to worry about this.
-				// Re-launch the job via a platform event, this resets the stack depth to 0
-				String msg = 'Could not re-launch during finalizer. Re-launching via platform event.\n' + error;
-				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-				String actionName = this.settings?.DeveloperName;
-				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
-				EventBus.publish(event);
-			} else {
-				String msg = 'Aborting job after error during Finalizer: ' + error;
-				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-			}
+			String msg = 'Aborting job after error during Finalizer: ' + error;
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 		} finally {
 			AsyncActionLogger.save();
 		}
 	}
 
 	// **** PRIVATE **** //
-	@TestVisible
-	private virtual void finalize(System.FinalizerContext context) {
+	private void finalize(System.FinalizerContext context) {
 		// * Check the current job status, and handle any unexpected failures
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			this.handleFinalizerError(context?.getException());
