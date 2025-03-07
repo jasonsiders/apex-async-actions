@@ -9,7 +9,7 @@
         <layoutColumns>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>Processor__c</field>
+                <field>ProcessorName__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>

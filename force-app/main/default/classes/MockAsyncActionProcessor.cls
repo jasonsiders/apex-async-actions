@@ -7,6 +7,10 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	public Path pathType = Path.SUCCESS;
 	public AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
 
+	public MockAsyncActionProcessor(AsyncActionProcessor__mdt settings) {
+		super(settings);
+	}
+
 	public virtual override void process(List<AsyncAction__c> actions) {
 		System.debug('@jason: MockAsyncActionProcessor: ' + JSON.serialize(this));
 		List<Case> cases = new List<Case>();

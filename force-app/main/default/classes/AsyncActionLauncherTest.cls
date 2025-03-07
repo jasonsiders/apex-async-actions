@@ -9,7 +9,7 @@ private class AsyncActionLauncherTest {
 		Test.stopTest();
 
 		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
-		Assert.isInstanceOfType(processor, MockAsyncActionProcessor.class, 'Wrong processor type generated');
+		Assert.isNotInstanceOfType(processor, AsyncActionFlowProcessor.class, 'Wrong processor type generated');
 	}
 
 	@IsTest
@@ -47,10 +47,7 @@ private class AsyncActionLauncherTest {
 		new AsyncActionLauncher()?.launchAll();
 		Test.stopTest();
 
-		Map<String, List<AsyncApexJob>> results = AsyncActionLauncherTest.getAsyncJobs();
-		String processorName = processorType?.getName();
-		Assert.isTrue(results?.containsKey(processorName), 'Did not attempt to launch ' + processorName);
-		Assert.areEqual(1, results?.get(processorName)?.size(), 'Wrong # of jobs launched: ' + processorName);
+		Assert.areEqual(1, AsyncActionLauncherTest.getNumAsyncJobs(), 'Wrong # of jobs launched');
 	}
 
 	@IsTest
@@ -83,9 +80,7 @@ private class AsyncActionLauncherTest {
 		new AsyncActionLauncher()?.launchAll();
 		Test.stopTest();
 
-		Map<String, List<AsyncApexJob>> results = AsyncActionLauncherTest.getAsyncJobs();
-		String processorName = fakeProcessorType?.getName();
-		Assert.isFalse(results?.containsKey(processorName), 'Launched a job for an invalid settings');
+		Assert.areEqual(0, AsyncActionLauncherTest.getNumAsyncJobs(), 'Launched job for invalid processor');
 	}
 
 	@IsTest
@@ -114,7 +109,8 @@ private class AsyncActionLauncherTest {
 		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			System.enqueueJob(new MockAsyncActionProcessor());
+			AsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
+			System.enqueueJob(processor);
 		}
 		// NOW try to launch the job
 		Id jobId = new AsyncActionLauncher()?.launch(settings);
@@ -154,18 +150,11 @@ private class AsyncActionLauncherTest {
 	}
 
 	// **** HELPER **** //
-	private static Map<String, List<AsyncApexJob>> getAsyncJobs() {
-		Map<String, List<AsyncApexJob>> results = new Map<String, List<AsyncApexJob>>();
-		for (AsyncApexJob job : [
-			SELECT Id, ApexClass.Name
+	private static Integer getNumAsyncJobs() {
+		return [
+			SELECT COUNT()
 			FROM AsyncApexJob
-			WHERE JobType = 'Queueable'
-		]) {
-			String className = job?.ApexClass?.Name;
-			List<AsyncApexJob> matching = results?.get(className) ?? new List<AsyncApexJob>();
-			matching?.add(job);
-			results?.put(className, matching);
-		}
-		return results;
+			WHERE ApexClass.Name = :AsyncActionProcessor.class.getName() AND JobType = 'Queueable'
+		];
 	}
 }

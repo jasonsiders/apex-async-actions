@@ -213,7 +213,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 		this.isLoading = false;
 	}
 
-	async handleViewAll(event) {
+	async handleViewAll() {
 		// Navigate to the supplied viewAllComponent.
 		// The navigation method depends on if the current app is a console
 		if (this.isConsole) {

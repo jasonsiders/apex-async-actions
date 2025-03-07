@@ -37,9 +37,7 @@ public without sharing class AsyncActionLauncher {
 	@TestVisible
 	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt settings) {
 		try {
-			return (settings?.ProcessorType__c == 'Apex')
-				? (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance()
-				: new AsyncActionFlowProcessor(settings);
+			return (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance();
 		} catch (Exception error) {
 			AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
 			return null;

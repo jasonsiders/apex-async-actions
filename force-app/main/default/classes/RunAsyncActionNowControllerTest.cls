@@ -56,7 +56,7 @@ private class RunAsyncActionNowControllerTest {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.Retries__c = 0;
 		settings.RunOnInsert__c = false;
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
+		AsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
 		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings, account?.Id, data);
 		action.Status__c = AsyncActionProcessor.Status.CANCELED.name();

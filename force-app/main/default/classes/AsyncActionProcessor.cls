@@ -1,19 +1,24 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
-global abstract inherited sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
+global virtual without sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	protected Set<Id> actionIds;
 	protected AsyncActionProcessor__mdt settings;
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
-	public AsyncActionProcessor() {
-		String processorName = this.getType()?.getName();
-		this.settings = AsyncActionProcessorService.get(processorName);
+	global AsyncActionProcessor(AsyncActionProcessor__mdt settings) {
+		this.settings = settings;
 	}
 
 	// **** ABSTRACT **** //
-	global abstract Type getType();
-	global abstract void process(List<AsyncAction__c> actions);
+	global virtual Type getType() {
+		// Temporary -- eventually this will be removed
+		return null;
+	}
+
+	global virtual void process(List<AsyncAction__c> actions) {
+		// Temporary -- eventually this will get moved to the interface
+	}
 
 	// **** QUEUEABLE **** //
 	global void execute(System.QueueableContext context) {
@@ -48,7 +53,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 				// Re-launch the job via a platform event, this resets the stack depth to 0
 				String msg = 'Could not re-launch during finalizer. Re-launching via platform event.\n' + error;
 				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-				String actionName = this.getType()?.getName();
+				String actionName = this.settings?.DeveloperName;
 				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actionName);
 				EventBus.publish(event);
 			} else {
