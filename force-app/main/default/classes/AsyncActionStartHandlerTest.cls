@@ -30,17 +30,19 @@ private class AsyncActionStartHandlerTest {
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionStart__e event = new AsyncActionStart__e();
-		event.Actions__c = MockAsyncActionProcessor.Logic.class?.getName() + ',OtherProcessor,etc';
+		event.Actions__c = settings?.DeveloperName + ',Other_Processor,etc';
 
+		Test.startTest();
 		EventBus.publish(event);
 		Test.getEventBus().deliver();
+		Test.stopTest();
 
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionProcessor.class.getName()
 		];
-		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched');
+		Assert.areEqual(1, jobs?.size(), 'Job was not launched');
 	}
 
 	@IsTest

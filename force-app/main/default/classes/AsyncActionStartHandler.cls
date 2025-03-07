@@ -12,13 +12,13 @@ public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
 	}
 
 	private List<AsyncActionProcessor__mdt> getActionsToLaunch(List<AsyncActionStart__e> events) {
-		Set<AsyncActionProcessor__mdt> actions = new Set<AsyncActionProcessor__mdt>();
+		Map<String, AsyncActionProcessor__mdt> actions = new Map<String, AsyncActionProcessor__mdt>();
 		for (String actionName : this.extractActionNames(events)) {
 			AsyncActionProcessor__mdt action = AsyncActionProcessorService.get(actionName);
-			actions?.add(action);
+			actions?.put(actionName, action);
 		}
 		actions?.remove(null);
-		return new List<AsyncActionProcessor__mdt>(actions);
+		return actions?.values();
 	}
 
 	private Set<String> extractActionNames(List<AsyncActionStart__e> events) {
