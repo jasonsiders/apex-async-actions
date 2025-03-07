@@ -3,7 +3,7 @@ private class RunAsyncActionNowControllerTest {
 	@IsTest
 	static void shouldLaunchAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 
 		Test.startTest();
@@ -18,7 +18,7 @@ private class RunAsyncActionNowControllerTest {
 	@IsTest
 	static void shouldHandleFutureScheduledAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 		// The action should process this action now, regardless of its Next Eligible At value
 		action.NextEligibleAt__c = DateTime.now().addDays(10);
@@ -53,7 +53,7 @@ private class RunAsyncActionNowControllerTest {
 	static void setup() {
 		Account account = new Account(Name = 'Test Account');
 		insert account;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.Retries__c = 0;
 		settings.RunOnInsert__c = false;
 		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });

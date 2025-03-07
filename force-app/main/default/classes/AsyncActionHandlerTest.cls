@@ -2,7 +2,7 @@
 private class AsyncActionHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsIfTriggerEnabled() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.RunOnInsert__c = true;
 		AsyncAction__c action = AsyncActionJob.initAction(settings);
 
@@ -20,7 +20,7 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldNotLaunchJobsIfTriggerDisabled() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.RunOnInsert__c = false;
 		AsyncAction__c action = AsyncActionJob.initAction(settings);
 
@@ -41,13 +41,18 @@ private class AsyncActionHandlerTest {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActionJob.initAction(settings);
 
 		insert action;
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'AsyncActionSchedulable' LIMIT 1];
+		List<AsyncApexJob> jobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionSchedulable.class.getName()
+			LIMIT 1
+		];
 		Assert.isFalse(jobs?.isEmpty(), 'Enabled Scheduled Job was not created');
 	}
 
@@ -55,19 +60,24 @@ private class AsyncActionHandlerTest {
 	static void shouldScheduleIfDisabled() {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = false;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActionJob.initAction(settings);
 
 		insert action;
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'AsyncActionSchedulable' LIMIT 1];
+		List<AsyncApexJob> jobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionSchedulable.class.getName()
+			LIMIT 1
+		];
 		Assert.isTrue(jobs?.isEmpty(), 'Disabled Scheduled Job was created');
 	}
 
 	@IsTest
 	static void shouldDefaultRetriesToConfigIfExists() {
-		Type processorType = MockAsyncActionJob.Logic.class;
+		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Retries__c = 5;
 		AsyncAction__c action = AsyncActionJob.initAction(settings);
@@ -95,7 +105,7 @@ private class AsyncActionHandlerTest {
 
 	@IsTest
 	static void shouldNotOverwriteSetRetriesAmount() {
-		Type processorType = MockAsyncActionJob.Logic.class;
+		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Retries__c = 5;
 		AsyncAction__c action = AsyncActionJob.initAction(settings);
