@@ -3,22 +3,37 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
-	public Exception error = new System.DmlException();
-	public Path pathType = Path.SUCCESS;
-	public AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
+	public static Exception error = new System.DmlException();
+	public static Path pathType = Path.SUCCESS;
+	public static AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
 
 	public MockAsyncActionProcessor(AsyncActionProcessor__mdt settings) {
 		super(settings);
 	}
 
-	public virtual override void process(List<AsyncAction__c> actions) {
-		System.debug('@jason: MockAsyncActionProcessor: ' + JSON.serialize(this));
-		List<Case> cases = new List<Case>();
-		if (this.pathType == Path.JOB_ERROR) {
-			throw this.error;
-		} else if (this.pathType == Path.FAIL) {
-			new FailureLogic(this.settings, this.retryBehavior)?.fail(actions, 'This is a test error');
+	public override void finalize(System.FinalizerContext context) {
+		if (MockAsyncActionProcessor.pathType == Path.FINALIZER_ERROR) {
+			throw MockAsyncActionProcessor.error;
 		} else {
+			super.finalize(context);
+		}
+	}
+
+	// **** INNER **** //
+	public class Logic implements AsyncActionProcessor.Logic {
+		public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
+			if (MockAsyncActionProcessor.pathType == Path.JOB_ERROR) {
+				throw MockAsyncActionProcessor.error;
+			} else if (MockAsyncActionProcessor.pathType == Path.FAIL) {
+				new AsyncActionProcessor.FailureLogic(settings, MockAsyncActionProcessor.retryBehavior)
+					?.fail(actions, 'This is a test error');
+			} else {
+				this.createCases(actions);
+			}
+		}
+
+		private void createCases(List<AsyncAction__c> actions) {
+			List<Case> cases = new List<Case>();
 			for (AsyncAction__c action : actions) {
 				// Create cases for the action's related account
 				Map<String, Object> params = this.getData(action);
@@ -30,29 +45,15 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 				// Mark the action as completed - this naive implementation doesn't handle failures!
 				action.Status__c = AsyncActionProcessor.Status.COMPLETED.name();
 			}
+			insert cases;
 		}
-		insert cases;
-		update actions;
-	}
 
-	public override void finalize(System.FinalizerContext context) {
-		if (this.pathType == Path.FINALIZER_ERROR) {
-			throw this.error;
-		} else {
-			super.finalize(context);
+		private Map<String, Object> getData(AsyncAction__c action) {
+			String data = action?.Data__c;
+			return data != null ? (Map<String, Object>) JSON.deserializeUntyped(action?.Data__c) : null;
 		}
 	}
 
-	public virtual override Type getType() {
-		return MockAsyncActionProcessor.class;
-	}
-
-	private Map<String, Object> getData(AsyncAction__c action) {
-		String data = action?.Data__c;
-		return data != null ? (Map<String, Object>) JSON.deserializeUntyped(action?.Data__c) : null;
-	}
-
-	// **** INNER **** //
 	public enum Path {
 		FAIL,
 		JOB_ERROR,

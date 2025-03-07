@@ -3,7 +3,9 @@ private class AsyncActionStartHandlerTest {
 	@IsTest
 	static void shouldLaunchAllJobsIfNoneListed() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionStart__e event = new AsyncActionStart__e();
@@ -18,11 +20,13 @@ private class AsyncActionStartHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsListedInActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionStart__e event = new AsyncActionStart__e();
-		event.Actions__c = MockAsyncActionProcessor.class?.getName() + ',OtherProcessor,etc';
+		event.Actions__c = MockAsyncActionProcessor.Logic.class?.getName() + ',OtherProcessor,etc';
 
 		EventBus.publish(event);
 		Test.getEventBus().deliver();
@@ -34,7 +38,9 @@ private class AsyncActionStartHandlerTest {
 	@IsTest
 	static void shouldNotLaunchJobsIfNotListed() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionStart__e event = new AsyncActionStart__e();

@@ -3,7 +3,7 @@ private class RunAsyncActionNowControllerTest {
 	@IsTest
 	static void shouldLaunchAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.Logic.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 
 		Test.startTest();
@@ -18,7 +18,7 @@ private class RunAsyncActionNowControllerTest {
 	@IsTest
 	static void shouldHandleFutureScheduledAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.Logic.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 		// The action should process this action now, regardless of its scheduled value
 		action.Scheduled__c = DateTime.now().addDays(10);
@@ -53,7 +53,9 @@ private class RunAsyncActionNowControllerTest {
 	static void setup() {
 		Account account = new Account(Name = 'Test Account');
 		insert account;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		settings.Retries__c = 0;
 		settings.RunOnInsert__c = false;
 		AsyncActionProcessor processor = new MockAsyncActionProcessor(settings);

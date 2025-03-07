@@ -3,7 +3,7 @@ private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldLaunchCustomCronIfEnabled() {
 		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
+			MockAsyncActionProcessor.Logic.class
 		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.CronExpression__c = '0 0 0 * * ?'; // Nightly at midnight
@@ -33,7 +33,7 @@ private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldLaunchHourlyIfEnabled() {
 		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
+			MockAsyncActionProcessor.Logic.class
 		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
@@ -62,7 +62,7 @@ private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldLaunchSemiHourlyIfEnabled() {
 		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
+			MockAsyncActionProcessor.Logic.class
 		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
@@ -93,7 +93,7 @@ private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldNotLaunchIfJobIsDisabled() {
 		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
+			MockAsyncActionProcessor.Logic.class
 		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = false; // The scheduled job should do nothing
@@ -117,7 +117,7 @@ private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldNotLaunchIfJobItemIsDisabled() {
 		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
+			MockAsyncActionProcessor.Logic.class
 		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
@@ -144,7 +144,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfNoJobItems() {
-		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.Logic.class);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
@@ -172,7 +172,9 @@ private class AsyncActionSchedulableTest {
 	static void insertAction() {
 		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
 		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 	}

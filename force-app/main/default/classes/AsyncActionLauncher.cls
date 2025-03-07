@@ -4,7 +4,6 @@ public without sharing class AsyncActionLauncher {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
 		for (PendingAction result : this.queryPendingActions(configs)) {
-			System.debug('@jason: Result: ' + result);
 			String processorName = result?.processorName;
 			Id jobId = this.launchJobForProcessor(processorName);
 			results?.put(processorName, jobId);
@@ -34,24 +33,12 @@ public without sharing class AsyncActionLauncher {
 		return results;
 	}
 
-	@TestVisible
-	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt settings) {
-		try {
-			return (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance();
-		} catch (Exception error) {
-			AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
-			return null;
-		}
-	}
-
 	private Id launchJobForProcessor(String processorName) {
 		try {
 			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
-			System.debug('@jason: launchJobForProcessorName: ' + processorName + ' -> ' + settings);
-			System.debug('@jason: All settings: ' + JSON.serializePretty(AsyncActionProcessorService.getAll()));
 			this.validateJob(settings);
 			this.validateQueueableLimits();
-			AsyncActionProcessor processor = this.initProcessor(settings);
+			AsyncActionProcessor processor = new AsyncActionProcessor(settings);
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
 			options.DuplicateSignature = new System.QueueableDuplicateSignature.Builder()
@@ -84,10 +71,6 @@ public without sharing class AsyncActionLauncher {
 			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
 		];
 		// Convert & return the query results in a common format
-		System.debug('@jason: queryPendingActions: ' + JSON.serialize(results));
-		System.debug(
-			'@jason: all async actions: ' + JSON.serialize([SELECT Id, ProcessorName__c, Status__c FROM AsyncAction__c])
-		);
 		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
 	}
 

@@ -1,43 +1,8 @@
 @IsTest
 private class AsyncActionLauncherTest {
 	@IsTest
-	static void shouldCreateAValidApexProcessor() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-
-		Test.startTest();
-		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(settings);
-		Test.stopTest();
-
-		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
-		Assert.isNotInstanceOfType(processor, AsyncActionFlowProcessor.class, 'Wrong processor type generated');
-	}
-
-	@IsTest
-	static void shouldCreateAValidFlowProcessor() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor('My_Test_Flow');
-
-		Test.startTest();
-		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(settings);
-		Test.stopTest();
-
-		Assert.isNotNull(processor, 'Did not initialize a AsyncActionProcessor');
-		Assert.isInstanceOfType(processor, AsyncActionFlowProcessor.class, 'Wrong processor type generated');
-	}
-
-	@IsTest
-	static void shouldReturnNullIfInvalidProcessor() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(null);
-
-		Test.startTest();
-		AsyncActionProcessor processor = new AsyncActionLauncher()?.initProcessor(settings);
-		Test.stopTest();
-
-		Assert.isNull(processor, 'Invalid processorName generated a AsyncActionProcessor anyways');
-	}
-
-	@IsTest
 	static void shouldLaunchAllJobs() {
-		Type processorType = MockAsyncActionProcessor.class;
+		Type processorType = MockAsyncActionProcessor.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
@@ -52,7 +17,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldLaunchSpecifiedJobs() {
-		Type processorType = MockAsyncActionProcessor.class;
+		Type processorType = MockAsyncActionProcessor.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
@@ -85,7 +50,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
-		Type processorType = MockAsyncActionProcessor.class;
+		Type processorType = MockAsyncActionProcessor.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Enabled__c = false;
@@ -102,7 +67,9 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 
@@ -122,7 +89,9 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchWithoutPendingActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		settings.Enabled__c = false;
 		// No actions inserted!
 
@@ -136,7 +105,9 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionProcessor.Logic.class
+		);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 

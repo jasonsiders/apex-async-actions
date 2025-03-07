@@ -1,23 +1,15 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
 global virtual without sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	protected Set<Id> actionIds;
+	protected AsyncActionProcessor.Logic logic;
 	protected AsyncActionProcessor__mdt settings;
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	global AsyncActionProcessor(AsyncActionProcessor__mdt settings) {
+		this.logic = (AsyncActionProcessor.Logic) Type.forName(settings?.Processor__c)?.newInstance();
 		this.settings = settings;
-	}
-
-	// **** ABSTRACT **** //
-	global virtual Type getType() {
-		// Temporary -- eventually this will be removed
-		return null;
-	}
-
-	global virtual void process(List<AsyncAction__c> actions) {
-		// Temporary -- eventually this will get moved to the interface
 	}
 
 	// **** QUEUEABLE **** //
@@ -27,7 +19,7 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 			try {
 				List<AsyncAction__c> actions = this.getPendingActions();
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-				this.process(actions);
+				this.logic?.process(this.settings, actions);
 				Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
 			} catch (Exception error) {
 				AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
