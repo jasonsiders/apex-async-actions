@@ -64,7 +64,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 			ProcessorName__c = settings?.DeveloperName,
 			RelatedRecordId__c = relatedRecordId,
 			Retries__c = settings?.Retries__c ?? 0,
-			Scheduled__c = DateTime.now(),
+			NextEligibleAt__c = DateTime.now(),
 			Status__c = Status.PENDING.name()
 		);
 	}
@@ -106,14 +106,14 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	private List<AsyncAction__c> getPendingActions() {
 		String processorName = this.settings?.DeveloperName;
 		List<AsyncAction__c> actions = [
-			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			WHERE
 				ProcessorName__c = :processorName
-				AND Scheduled__c <= :DateTime.now()
+				AND NextEligibleAt__c <= :DateTime.now()
 				AND Status__c = :Status.PENDING.name()
 			WITH SYSTEM_MODE
-			ORDER BY Scheduled__c ASC
+			ORDER BY NextEligibleAt__c ASC
 			LIMIT :this.getBatchSize()
 		];
 		this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
@@ -130,7 +130,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		// Note: SObject lists persist from Queueable to Finalizer, but in a truncated form (only Ids retained)
 		// Necessary to re-query to avoid "SObject row retrieved via SOQL" errors
 		return [
-			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :this.actionIds
 			WITH SYSTEM_MODE
@@ -158,10 +158,10 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 				if (behavior == RetryBehavior.ALLOW_RETRY && this.hasRetries(action)) {
 					// Retry the action at some point in the future. Decrement the number of retries.
 					action.Retries__c--;
-					this.reschedule(action);
+					this.deferProcessing(action);
 				} else if (behavior == RetryBehavior.KEEP_ALIVE) {
 					// Retry the action at some point in the future. Do not decrement the number of retries.
-					this.reschedule(action);
+					this.deferProcessing(action);
 				} else {
 					// If no retries remain, or if SUDDEN_DEATH, mark the record as failed
 					action.Status__c = Status.FAILED.name();
@@ -183,9 +183,12 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 			return numRetries > 0;
 		}
 
-		private void reschedule(AsyncAction__c action) {
+		private void deferProcessing(AsyncAction__c action) {
+			// Push out the current action so that it won't be eligible
+			// for processing until N minutes in the future,
+			// as defined by the current settings' Retry Interval
 			Integer interval = this.settings?.RetryInterval__c?.intValue() ?? 5;
-			action.Scheduled__c = DateTime.now()?.addMinutes(interval);
+			action.NextEligibleAt__c = DateTime.now()?.addMinutes(interval);
 		}
 	}
 

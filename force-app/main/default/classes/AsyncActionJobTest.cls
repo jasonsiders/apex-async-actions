@@ -56,8 +56,11 @@ private class AsyncActionJobTest {
 			Assert.areEqual(AsyncActionJob.Status.PENDING.name(), action?.Status__c, 'Action is no longer pending');
 			Assert.areEqual(settings?.Retries__c - 1, action?.Retries__c, 'Wrong Num Retries');
 			DateTime now = DateTime.now();
-			DateTime scheduled = action?.Scheduled__c;
-			Assert.isTrue(scheduled > now, 'Scheduled Date is not in the future: ' + scheduled + '. Expected: ' + now);
+			DateTime nextEligibleAt = action?.NextEligibleAt__c;
+			Assert.isTrue(
+				nextEligibleAt > now,
+				'Next Eligible At is not in the future: ' + nextEligibleAt + '. Expected: ' + now
+			);
 		}
 	}
 
@@ -110,7 +113,7 @@ private class AsyncActionJobTest {
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActionJob.Status.PENDING.name(), action?.Status__c, 'Action is not longer pending');
 			Assert.areEqual(settings?.Retries__c, action?.Retries__c, 'Retries was altered');
-			Assert.isTrue(action?.Scheduled__c > DateTime.now(), 'Action was not rescheduled');
+			Assert.isTrue(action?.NextEligibleAt__c > DateTime.now(), 'Action was not rescheduled');
 		}
 	}
 
@@ -178,7 +181,7 @@ private class AsyncActionJobTest {
 		Assert.areEqual(settings?.Retries__c, action?.Retries__c, 'Wrong # of retries');
 		Assert.areEqual(settings?.DeveloperName, action?.ProcessorName__c, 'Unexpected Processor Class');
 		Assert.areEqual(recordId, action?.RelatedRecordId__c, 'Unexpected Related Record Id');
-		Assert.isNotNull(action?.Scheduled__c, 'Invalid Scheduled value');
+		Assert.isNotNull(action?.NextEligibleAt__c, 'Invalid Next Eligible At value');
 		Assert.areEqual(AsyncActionJob.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
 	}
 
@@ -338,7 +341,7 @@ private class AsyncActionJobTest {
 
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
-			SELECT Id, Data__c, Error__c, Retries__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Error__c, Retries__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :originalActions
 		];

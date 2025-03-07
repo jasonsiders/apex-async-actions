@@ -151,7 +151,7 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Scheduled__c</fieldItem>
+                <fieldItem>Record.NextEligibleAt__c</fieldItem>
                 <identifier>RecordScheduled_cField2</identifier>
             </fieldInstance>
         </itemInstances>

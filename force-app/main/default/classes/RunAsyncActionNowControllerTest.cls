@@ -20,8 +20,8 @@ private class RunAsyncActionNowControllerTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
-		// The action should process this action now, regardless of its scheduled value
-		action.Scheduled__c = DateTime.now().addDays(10);
+		// The action should process this action now, regardless of its Next Eligible At value
+		action.NextEligibleAt__c = DateTime.now().addDays(10);
 		update action;
 
 		Test.startTest();
@@ -64,7 +64,7 @@ private class RunAsyncActionNowControllerTest {
 
 	static AsyncAction__c getAction() {
 		List<AsyncAction__c> actions = [
-			SELECT Id, Scheduled__c, Status__c
+			SELECT Id, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			ORDER BY CreatedDate DESC
 			LIMIT 1

@@ -72,12 +72,12 @@ public without sharing class AsyncActionLauncher {
 			FROM AsyncAction__c
 			WHERE
 				ProcessorName__c IN :processorNames
-				AND Scheduled__c <= :DateTime.now()
+				AND NextEligibleAt__c <= :DateTime.now()
 				AND Status__c = :AsyncActionJob.Status.PENDING.name()
 			WITH SYSTEM_MODE
 			GROUP BY ProcessorName__c
 			HAVING COUNT(Id) > 0
-			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
+			ORDER BY MAX(NextEligibleAt__c) ASC // first in, first out!
 		];
 		// Convert & return the query results in a common format
 		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
