@@ -282,10 +282,10 @@ private class AsyncActionProcessorTest {
 			Test.startTest();
 			System.enqueueJob(processor);
 			Test.stopTest();
+			Test.getEventBus().deliver();
 		} catch (Exception error) {
 			// Try/Catch needed to prevent the test from aborting
 		}
-		Test.getEventBus().deliver();
 
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
 			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
@@ -299,18 +299,19 @@ private class AsyncActionProcessorTest {
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.BypassFinalizerRetryLimit__c = true;
-		MockProcessor processor = new MockProcessor(settings);
-		MockProcessor.error = new System.AsyncException();
-		MockProcessor.pathType = MockProcessor.Path.FINALIZER_ERROR;
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
+		MockProcessor.error = new System.AsyncException();
+		MockProcessor.pathType = MockProcessor.Path.FINALIZER_ERROR;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
 		// Because of @IsTest stack depth issues, we can't actuallly test the the 5x behavior,
-		// but we can check that a job was still enqueued by calling the finzlier directly
+		// but we can check that a job was still enqueued by calling the finalizer directly
+		Test.startTest();
 		System.FinalizerContext context;
-		processor?.execute(context);
+		new MockProcessor(settings)?.execute(context);
 		Test.getEventBus().deliver();
+		Test.stopTest();
 
 		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE JobType = 'Queueable'];
 		Assert.areEqual(false, jobs?.isEmpty(), 'Job was not relaunched');

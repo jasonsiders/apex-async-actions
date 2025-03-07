@@ -156,13 +156,11 @@ private class AsyncActionSchedulableTest {
 
 	// **** HELPER **** //
 	static List<AsyncApexJob> getAsyncJobs() {
-		List<AsyncApexJob> jobs = [
+		return [
 			SELECT ApexClass.Name, JobType, CronTrigger.NextFireTime
 			FROM AsyncApexJob
 			LIMIT 50000
 		];
-		System.debug('@jason: getAsyncJobs():\n' + JSON.serializePretty(jobs));
-		return jobs;
 	}
 
 	static void insertAction() {
