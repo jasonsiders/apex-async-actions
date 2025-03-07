@@ -1,11 +1,11 @@
 @SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionLauncher {
-	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> configs) {
+	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> settings) {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
-		for (PendingAction result : this.queryPendingActions(configs)) {
+		for (PendingAction result : this.queryPendingActions(settings)) {
 			String processorName = result?.processorName;
-			Id jobId = this.launchJobForProcessor(processorName);
+			Id jobId = this.launchJobToProcess(processorName);
 			results?.put(processorName, jobId);
 		}
 		return results;
@@ -46,18 +46,16 @@ public without sharing class AsyncActionLauncher {
 		return hashHex?.substring(0, 32);
 	}
 
-	private Id launchJobForProcessor(String processorName) {
+	private Id launchJobToProcess(String processorName) {
 		try {
 			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
 			this.validateJob(settings);
 			this.validateQueueableLimits();
-			AsyncActionProcessor processor = new AsyncActionProcessor(settings);
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
 			options.DuplicateSignature = this.buildDuplicateSignature(settings);
-			Id jobId = System.enqueueJob(processor, options);
-			String msg = processorName + ': launch() -> ' + jobId;
-			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+			Id jobId = System.enqueueJob(new AsyncActionProcessor(settings), options);
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
 			return jobId;
 		} catch (Exception error) {
 			String msg = processorName + ' failed to launch: ' + error + '\n' + error?.getStackTraceString();
