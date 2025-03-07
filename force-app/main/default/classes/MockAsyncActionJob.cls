@@ -25,7 +25,7 @@ public class MockAsyncActionJob extends AsyncActionJob {
 			if (MockAsyncActionJob.pathType == Path.JOB_ERROR) {
 				throw MockAsyncActionJob.error;
 			} else if (MockAsyncActionJob.pathType == Path.FAIL) {
-				new AsyncActionJob.FailureLogic(settings, MockAsyncActionJob.retryBehavior)
+				new AsyncActionJob.ErrorHandler(settings, MockAsyncActionJob.retryBehavior)
 					?.fail(actions, 'This is a test error');
 			} else {
 				this.createCases(actions);

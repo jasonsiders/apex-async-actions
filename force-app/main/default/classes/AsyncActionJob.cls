@@ -1,14 +1,14 @@
 @SuppressWarnings('PMD.ApexDoc')
 public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
-	protected Set<Id> actionIds;
-	protected AsyncActionProcessor logic;
-	protected AsyncActionProcessor__mdt settings;
+	private Set<Id> actionIds;
+	private AsyncActionProcessor processor;
+	private AsyncActionProcessor__mdt settings;
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	public AsyncActionJob(AsyncActionProcessor__mdt settings) {
-		this.logic = (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance();
+		this.processor = (AsyncActionProcessor) Type.forName(settings?.Processor__c)?.newInstance();
 		this.settings = settings;
 	}
 
@@ -18,8 +18,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		if (this.settings?.Enabled__c == true) {
 			try {
 				List<AsyncAction__c> actions = this.getPendingActions();
-				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-				this.logic?.process(this.settings, actions);
+				this.processor?.process(this.settings, actions);
 				Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
 			} catch (Exception error) {
 				AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
@@ -104,9 +103,9 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		return this.settings?.BatchSize__c?.intValue() ?? 200;
 	}
 
-	protected List<AsyncAction__c> getPendingActions() {
+	private List<AsyncAction__c> getPendingActions() {
 		String processorName = this.settings?.DeveloperName;
-		return [
+		List<AsyncAction__c> actions = [
 			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE
@@ -117,11 +116,13 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
 		];
+		this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+		return actions;
 	}
 
 	private void handleFinalizerError(Exception error) {
 		List<AsyncAction__c> actions = this.requeryActions();
-		new FailureLogic(this.settings)?.fail(actions, error);
+		new ErrorHandler(this.settings)?.fail(actions, error);
 		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 	}
 
@@ -137,16 +138,16 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	}
 
 	// **** INNER **** //
-	public class FailureLogic {
+	public class ErrorHandler {
 		private AsyncActionJob.RetryBehavior behavior;
 		private AsyncActionProcessor__mdt settings;
 
-		public FailureLogic(AsyncActionProcessor__mdt settings, AsyncActionJob.RetryBehavior behavior) {
+		public ErrorHandler(AsyncActionProcessor__mdt settings, AsyncActionJob.RetryBehavior behavior) {
 			this.behavior = behavior;
 			this.settings = settings;
 		}
 
-		public FailureLogic(AsyncActionProcessor__mdt settings) {
+		public ErrorHandler(AsyncActionProcessor__mdt settings) {
 			this(settings, AsyncActionJob.RetryBehavior.ALLOW_RETRY);
 		}
 
