@@ -279,8 +279,14 @@ private class AsyncActionProcessorTest {
 		}
 
 		// Should keep re-enqueueing until the retries are exhausted
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		List<AsyncApexJob> jobs = [SELECT Id, Status FROM AsyncApexJob WHERE JobType = 'Queueable'];
 		Assert.areEqual(settings?.Retries__c, jobs?.size(), 'Wrong # of jobs');
+		// Test.stopTest() will only process the first job -- unless aborted, they'll continue to run now, and throw an error
+		for (AsyncApexJob job : jobs) {
+			if (job?.Status == 'Queued') {
+				System.abortJob(job?.Id);
+			}
+		}
 	}
 
 	@IsTest
@@ -330,7 +336,7 @@ private class AsyncActionProcessorTest {
 		processor?.execute(context);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE ApexClass.Name = 'MockAsyncActionProcessor'];
+		List<AsyncApexJob> jobs = [SELECT Id FROM AsyncApexJob WHERE JobType = 'Queueable'];
 		Assert.areEqual(false, jobs?.isEmpty(), 'Job was not relaunched');
 	}
 
