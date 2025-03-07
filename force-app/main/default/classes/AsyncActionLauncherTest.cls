@@ -35,11 +35,8 @@ private class AsyncActionLauncherTest {
 		Type fakeProcessorType = Account.class; // Obv not a real processor!
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(fakeProcessorType);
-		insert new AsyncAction__c(
-			ProcessorName__c = settings?.DeveloperName,
-			Scheduled__c = DateTime.now().addMinutes(-1),
-			Status__c = 'Pending'
-		);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		insert action;
 
 		Test.startTest();
 		new AsyncActionLauncher()?.launchAll();

@@ -78,7 +78,8 @@ private class AsyncActionHandlerTest {
 		Type processorType = MockAsyncActionProcessor.Logic.class;
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(ProcessorName__c = settings?.DeveloperName, Retries__c = null);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		action.Retries__c = null;
 
 		Test.startTest();
 		insert action;
@@ -105,7 +106,8 @@ private class AsyncActionHandlerTest {
 		Type processorType = MockAsyncActionProcessor.Logic.class;
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Retries__c = 5;
-		AsyncAction__c action = new AsyncAction__c(ProcessorName__c = settings?.DeveloperName, Retries__c = 3);
+		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		action.Retries__c = 3;
 
 		Test.startTest();
 		insert action;
