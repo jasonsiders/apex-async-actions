@@ -1,5 +1,5 @@
 @IsTest
-private class AsyncActionHandlerTest {
+private class AsyncActionTriggerHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsIfTriggerEnabled() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);

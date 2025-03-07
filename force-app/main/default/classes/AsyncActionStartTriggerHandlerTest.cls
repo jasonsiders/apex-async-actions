@@ -1,5 +1,5 @@
 @IsTest
-private class AsyncActionStartHandlerTest {
+private class AsyncActionStartTriggerHandlerTest {
 	@IsTest
 	static void shouldLaunchAllJobsIfNoneListed() {
 		AsyncActionTestUtils.initScheduledJobSettings();

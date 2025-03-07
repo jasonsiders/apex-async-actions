@@ -175,7 +175,7 @@ private class AsyncActionSchedulableTest {
 
 	static void insertAction() {
 		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
-		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
+		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;

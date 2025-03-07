@@ -1,5 +1,5 @@
 @SuppressWarnings('PMD.ApexDoc')
-public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
+public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework {
 	public override void afterInsert() {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
@@ -8,7 +8,7 @@ public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
 	}
 
 	public override Type getType() {
-		return AsyncActionStartHandler.class;
+		return AsyncActionStartTriggerHandler.class;
 	}
 
 	private List<AsyncActionProcessor__mdt> getActionsToLaunch(List<AsyncActionStart__e> events) {
