@@ -73,7 +73,7 @@ public without sharing class AsyncActionLauncher {
 			WHERE
 				ProcessorName__c IN :processorNames
 				AND NextEligibleAt__c <= :DateTime.now()
-				AND Status__c = :AsyncActionJob.Status.PENDING.name()
+				AND Status__c = :AsyncActions.Status.PENDING.name()
 			WITH SYSTEM_MODE
 			GROUP BY ProcessorName__c
 			HAVING COUNT(Id) > 0

@@ -78,7 +78,7 @@ private class AsyncActionRelatedListControllerTest {
 		);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {
-			AsyncAction__c action = AsyncActionJob.initAction(settings, account?.Id);
+			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
 			actions?.add(action);
 		}
 		insert actions;

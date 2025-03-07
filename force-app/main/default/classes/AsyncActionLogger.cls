@@ -1,14 +1,14 @@
 @SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.AvoidGlobalModifier, PMD.EmptyStatementBlock')
-global abstract class AsyncActionLogger {
+public abstract class AsyncActionLogger {
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
 
-	global static void log(System.LoggingLevel level, Object logMessage) {
+	public static void log(System.LoggingLevel level, Object logMessage) {
 		// Call the singleton instance's log method
 		INSTANCE?.log(level, logMessage);
 	}
 
-	global static void save() {
+	public static void save() {
 		// Call the singleton instance's save method
 		INSTANCE?.save();
 	}
@@ -28,7 +28,7 @@ global abstract class AsyncActionLogger {
 	}
 
 	// **** INNER **** //
-	global interface Adapter {
+	public interface Adapter {
 		/**
 		 * The main logging interface for callers to implement
 		 * Once implemented, specify the fully qualified api name of your class

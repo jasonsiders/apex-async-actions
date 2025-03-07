@@ -12,7 +12,7 @@ private class RunAsyncActionNowControllerTest {
 		Test.stopTest();
 
 		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActionJob.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
 	}
 
 	@IsTest
@@ -30,7 +30,7 @@ private class RunAsyncActionNowControllerTest {
 		Test.stopTest();
 
 		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActionJob.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
 	}
 
 	@IsTest
@@ -57,8 +57,8 @@ private class RunAsyncActionNowControllerTest {
 		settings.Retries__c = 0;
 		settings.RunOnInsert__c = false;
 		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
-		AsyncAction__c action = AsyncActionJob.initAction(settings, account?.Id, data);
-		action.Status__c = AsyncActionJob.Status.CANCELED.name();
+		AsyncAction__c action = AsyncActions.initAction(settings, account?.Id, data);
+		action.Status__c = AsyncActions.Status.CANCELED.name();
 		insert action;
 	}
 

@@ -5,7 +5,7 @@ private class AsyncActionLauncherTest {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -20,7 +20,7 @@ private class AsyncActionLauncherTest {
 		Type processorType = MockAsyncActionProcessor.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -35,7 +35,7 @@ private class AsyncActionLauncherTest {
 		Type fakeProcessorType = Account.class; // Obv not a real processor!
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(fakeProcessorType);
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -51,7 +51,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Enabled__c = false;
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -66,7 +66,7 @@ private class AsyncActionLauncherTest {
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -100,7 +100,7 @@ private class AsyncActionLauncherTest {
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 
 		Test.startTest();

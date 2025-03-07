@@ -9,6 +9,14 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	global static AsyncActionProcessor__mdt initApexProcessor(Type processorType) {
+		// Instantiates & returns an Apex processor settings object with default values for testing
+		String className = processorType?.getName();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(className);
+		settings.ProcessorType__c = 'Apex';
+		return settings;
+	}
+
 	global static AsyncActionProcessor__mdt initFlowProcessor(String flowName) {
 		// Instantiates & returns a Flow processor settings object with default values for testing
 		AsyncActionProcessor__mdt settings = new AsyncActionProcessor__mdt(
@@ -23,14 +31,6 @@ global class AsyncActionTestUtils {
 			RunOnInsert__c = false
 		);
 		AsyncActionTestUtils.mockProcessorSettings(settings);
-		return settings;
-	}
-
-	global static AsyncActionProcessor__mdt initApexProcessor(Type processorType) {
-		// Instantiates & returns an Apex processor settings object with default values for testing
-		String className = processorType?.getName();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(className);
-		settings.ProcessorType__c = 'Apex';
 		return settings;
 	}
 

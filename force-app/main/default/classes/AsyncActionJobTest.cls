@@ -26,7 +26,7 @@ private class AsyncActionJobTest {
 			Map<String, Object> params = (Map<String, Object>) JSON.deserializeUntyped(action?.Data__c);
 			Integer numCases = (Integer) params?.get('numCases');
 			Assert.areEqual(numCases, account?.Cases?.size(), 'Wrong # of Cases created');
-			Assert.areEqual(AsyncActionJob.Status.COMPLETED.name(), action?.Status__c, 'Action was not completed');
+			Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not completed');
 		}
 	}
 
@@ -53,7 +53,7 @@ private class AsyncActionJobTest {
 
 		Assert.isNotNull(jobId, 'The job was not launched');
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			Assert.areEqual(AsyncActionJob.Status.PENDING.name(), action?.Status__c, 'Action is no longer pending');
+			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Action is no longer pending');
 			Assert.areEqual(settings?.Retries__c - 1, action?.Retries__c, 'Wrong Num Retries');
 			DateTime now = DateTime.now();
 			DateTime nextEligibleAt = action?.NextEligibleAt__c;
@@ -86,7 +86,7 @@ private class AsyncActionJobTest {
 
 		Assert.isNotNull(jobId, 'The job was not launched');
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			Assert.areEqual(AsyncActionJob.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 		}
 	}
@@ -100,7 +100,7 @@ private class AsyncActionJobTest {
 		settings.RetryInterval__c = 3;
 		AsyncActionJob job = new AsyncActionJob(settings);
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FAIL;
-		MockAsyncActionProcessor.retryBehavior = AsyncActionJob.RetryBehavior.KEEP_ALIVE;
+		MockAsyncActionProcessor.retryBehavior = AsyncActionErrorHandler.RetryBehavior.KEEP_ALIVE;
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
 		insert actions;
 
@@ -111,7 +111,7 @@ private class AsyncActionJobTest {
 
 		Assert.isNotNull(jobId, 'The job was not launched');
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			Assert.areEqual(AsyncActionJob.Status.PENDING.name(), action?.Status__c, 'Action is not longer pending');
+			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Action is not longer pending');
 			Assert.areEqual(settings?.Retries__c, action?.Retries__c, 'Retries was altered');
 			Assert.isTrue(action?.NextEligibleAt__c > DateTime.now(), 'Action was not rescheduled');
 		}
@@ -125,7 +125,7 @@ private class AsyncActionJobTest {
 		settings.Retries__c = 3;
 		AsyncActionJob job = new AsyncActionJob(settings);
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FAIL;
-		MockAsyncActionProcessor.retryBehavior = AsyncActionJob.RetryBehavior.SUDDEN_DEATH;
+		MockAsyncActionProcessor.retryBehavior = AsyncActionErrorHandler.RetryBehavior.SUDDEN_DEATH;
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
 		insert actions;
 
@@ -136,7 +136,7 @@ private class AsyncActionJobTest {
 
 		Assert.isNotNull(jobId, 'The job was not launched');
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			Assert.areEqual(AsyncActionJob.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
 		}
 	}
@@ -164,7 +164,7 @@ private class AsyncActionJobTest {
 		];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			String expectedStatus = AsyncActionJob.Status.COMPLETED?.name();
+			String expectedStatus = AsyncActions.Status.COMPLETED?.name();
 			Assert.areEqual(expectedStatus, action?.Status__c, 'Action progress was overridden by Finalizer error');
 		}
 	}
@@ -175,14 +175,14 @@ private class AsyncActionJobTest {
 		Id recordId = UserInfo.getUserId();
 
 		Test.startTest();
-		AsyncAction__c action = AsyncActionJob.initAction(settings, recordId);
+		AsyncAction__c action = AsyncActions.initAction(settings, recordId);
 		Test.stopTest();
 
 		Assert.areEqual(settings?.Retries__c, action?.Retries__c, 'Wrong # of retries');
 		Assert.areEqual(settings?.DeveloperName, action?.ProcessorName__c, 'Unexpected Processor Class');
 		Assert.areEqual(recordId, action?.RelatedRecordId__c, 'Unexpected Related Record Id');
 		Assert.isNotNull(action?.NextEligibleAt__c, 'Invalid Next Eligible At value');
-		Assert.areEqual(AsyncActionJob.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
+		Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
 	}
 
 	@IsTest
@@ -192,12 +192,12 @@ private class AsyncActionJobTest {
 		String data = '{}';
 
 		// Should work w/SObjects & data
-		AsyncAction__c action1 = AsyncActionJob.initAction(settings, user, data);
+		AsyncAction__c action1 = AsyncActions.initAction(settings, user, data);
 		Assert.areEqual(user?.Id, action1?.RelatedRecordId__c, 'Wrong Related Record Id');
 		Assert.areEqual(data, action1?.Data__c, 'Wrong Data');
 
 		// Should work w/SObjects only
-		AsyncAction__c action2 = AsyncActionJob.initAction(settings, user);
+		AsyncAction__c action2 = AsyncActions.initAction(settings, user);
 		Assert.areEqual(user?.Id, action2?.RelatedRecordId__c, 'Wrong Related Record Id');
 		Assert.areEqual(null, action2?.Data__c, 'Wrong Data');
 	}
@@ -229,7 +229,7 @@ private class AsyncActionJobTest {
 		settings.RetryInterval__c = 0;
 		AsyncActionJob job = new AsyncActionJob(settings);
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -282,7 +282,7 @@ private class AsyncActionJobTest {
 		// The AsyncActionJob should catch this error and launch again, this time via platform event
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.BypassFinalizerRetryLimit__c = true;
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 		MockAsyncActionProcessor.error = new System.AsyncException();
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
@@ -310,7 +310,7 @@ private class AsyncActionJobTest {
 		AsyncActionJob job = new AsyncActionJob(settings);
 		MockAsyncActionProcessor.error = new System.AsyncException();
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
-		AsyncAction__c action = AsyncActionJob.initAction(settings);
+		AsyncAction__c action = AsyncActions.initAction(settings);
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
 
@@ -352,7 +352,7 @@ private class AsyncActionJobTest {
 		for (Account account : [SELECT Id FROM Account LIMIT :TEST_SIZE]) {
 			Integer numCases = Integer.valueOf(Math.random() * 3);
 			Map<String, Object> params = new Map<String, Object>{ 'numCases' => numCases };
-			AsyncAction__c action = AsyncActionJob.initAction(settings, account?.Id);
+			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
 			action.Data__c = JSON.serialize(params);
 			actions?.add(action);
 		}

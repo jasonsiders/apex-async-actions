@@ -1,19 +1,19 @@
 @SuppressWarnings('PMD.ApexDoc')
 @IsTest
-public class MockAsyncActionProcessor implements AsyncActionProcessor {
+public class MockAsyncActionProcessor implements AsyncActions.Processor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
 	public static Exception error = new System.DmlException();
-	public static Path pathType = Path.SUCCESS;
-	public static AsyncActionJob.RetryBehavior retryBehavior = AsyncActionJob.RetryBehavior.ALLOW_RETRY;
+	public static MockAsyncActionProcessor.Path pathType = MockAsyncActionProcessor.Path.SUCCESS;
+	public static AsyncActionErrorHandler.RetryBehavior retryBehavior = AsyncActionErrorHandler.RetryBehavior.ALLOW_RETRY;
 
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-		if (MockAsyncActionProcessor.pathType == Path.JOB_ERROR) {
+		if (MockAsyncActionProcessor.pathType == MockAsyncActionProcessor.Path.JOB_ERROR) {
 			throw MockAsyncActionProcessor.error;
-		} else if (MockAsyncActionProcessor.pathType == Path.FAIL) {
-			new AsyncActionJob.ErrorHandler(settings, MockAsyncActionProcessor.retryBehavior)
-				?.fail(actions, 'This is a test error');
+		} else if (MockAsyncActionProcessor.pathType == MockAsyncActionProcessor.Path.FAIL) {
+			new AsyncActionErrorHandler(settings, MockAsyncActionProcessor.retryBehavior)
+				?.handleError(actions, 'This is a test error');
 		} else {
 			this.createCases(actions);
 		}
@@ -30,7 +30,7 @@ public class MockAsyncActionProcessor implements AsyncActionProcessor {
 				cases.add(myCase);
 			}
 			// Mark the action as completed - this naive implementation doesn't handle failures!
-			action.Status__c = AsyncActionJob.Status.COMPLETED.name();
+			action.Status__c = AsyncActions.Status.COMPLETED.name();
 		}
 		insert cases;
 	}
