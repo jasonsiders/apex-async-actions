@@ -44,8 +44,8 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	}
 
 	// **** PRIVATE **** //
-	public virtual void finalize(System.FinalizerContext context) {
-		System.debug('@jason: in parent finalizer?');
+	@TestVisible
+	protected virtual void finalize(System.FinalizerContext context) {
 		// * Check the current job status, and handle any unexpected failures
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			this.handleFinalizerError(context?.getException());

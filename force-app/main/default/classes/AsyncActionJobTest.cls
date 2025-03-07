@@ -279,7 +279,6 @@ private class AsyncActionJobTest {
 		}
 
 		public override void finalize(System.FinalizerContext context) {
-			System.debug('@jason: in child finalizer');
 			throw new System.DmlException('This is a test exception');
 		}
 	}
