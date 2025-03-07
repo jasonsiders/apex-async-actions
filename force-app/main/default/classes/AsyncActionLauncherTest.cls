@@ -2,10 +2,10 @@
 private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldLaunchAllJobs() {
-		Type processorType = MockProcessor.Logic.class;
+		Type processorType = MockAsyncActionJob.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -17,10 +17,10 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldLaunchSpecifiedJobs() {
-		Type processorType = MockProcessor.Logic.class;
+		Type processorType = MockAsyncActionJob.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -35,7 +35,7 @@ private class AsyncActionLauncherTest {
 		Type fakeProcessorType = Account.class; // Obv not a real processor!
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(fakeProcessorType);
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -47,11 +47,11 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
-		Type processorType = MockProcessor.Logic.class;
+		Type processorType = MockAsyncActionJob.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Enabled__c = false;
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -64,15 +64,15 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 
 		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			AsyncActionProcessor processor = new MockProcessor(settings);
-			System.enqueueJob(processor);
+			AsyncActionJob job = new MockAsyncActionJob(settings);
+			System.enqueueJob(job);
 		}
 		// NOW try to launch the job
 		Id jobId = new AsyncActionLauncher()?.launch(settings);
@@ -84,7 +84,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchWithoutPendingActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
 		settings.Enabled__c = false;
 		// No actions inserted!
 
@@ -98,8 +98,8 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 
 		Test.startTest();
@@ -116,7 +116,7 @@ private class AsyncActionLauncherTest {
 		return [
 			SELECT COUNT()
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionProcessor.class.getName() AND JobType = 'Queueable'
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName() AND JobType = 'Queueable'
 		];
 	}
 }

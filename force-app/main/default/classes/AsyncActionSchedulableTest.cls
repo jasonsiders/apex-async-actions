@@ -2,7 +2,9 @@
 private class AsyncActionSchedulableTest {
 	@IsTest
 	static void shouldLaunchCustomCronIfEnabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionJob.Logic.class
+		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.CronExpression__c = '0 0 0 * * ?'; // Nightly at midnight
 		jobSettings.Enabled__c = true;
@@ -20,7 +22,7 @@ private class AsyncActionSchedulableTest {
 		// Should create 1 Queueable, and a future instance of the schedulable job
 		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
 		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
-		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionProcessor.class.getName());
+		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNotNull(processorJob, 'Processor job was not launched');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
 		Assert.isNotNull(scheduledJob, 'Job was not rescheduled');
@@ -30,7 +32,9 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldLaunchHourlyIfEnabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionJob.Logic.class
+		);
 		AsyncActionSchedulableTest.insertAction();
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
@@ -48,7 +52,7 @@ private class AsyncActionSchedulableTest {
 		// Should create 1 Queueable, and a future instance of the schedulable job
 		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
 		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
-		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionProcessor.class.getName());
+		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNotNull(processorJob, 'Processor job was not launched');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
 		Assert.isNotNull(scheduledJob, 'Job was not rescheduled');
@@ -58,7 +62,9 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldLaunchSemiHourlyIfEnabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionJob.Logic.class
+		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
@@ -76,7 +82,7 @@ private class AsyncActionSchedulableTest {
 		// Should create 1 Queueable, and a future instance of the schedulable job
 		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
 		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
-		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionProcessor.class.getName());
+		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNotNull(processorJob, 'Processor job was not launched');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
 		Assert.isNotNull(scheduledJob, 'Job was not rescheduled');
@@ -87,7 +93,9 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfJobIsDisabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionJob.Logic.class
+		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = false; // The scheduled job should do nothing
 		jobSettings.Interval__c = 15;
@@ -109,7 +117,9 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfJobItemIsDisabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
+			MockAsyncActionJob.Logic.class
+		);
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
 		jobSettings.Interval__c = 15;
@@ -127,7 +137,7 @@ private class AsyncActionSchedulableTest {
 		// Should create a new schedulable instance, but not a queueable one
 		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
 		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
-		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionProcessor.class.getName());
+		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNull(processorJob, 'Processor job');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
 		Assert.isNotNull(scheduledJob, 'Job was not rescheduled');
@@ -148,7 +158,7 @@ private class AsyncActionSchedulableTest {
 		// Should create a new schedulable instance, but not a queueable one
 		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
 		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
-		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionProcessor.class.getName());
+		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNull(processorJob, 'Processor job');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
 		Assert.isNotNull(scheduledJob, 'Job was not rescheduled');
@@ -166,8 +176,8 @@ private class AsyncActionSchedulableTest {
 	static void insertAction() {
 		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
 		AsyncActionTriggerFramework.disable(AsyncActionHandler.class);
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
+		AsyncAction__c action = AsyncActionJob.initAction(settings);
 		insert action;
 	}
 

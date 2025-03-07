@@ -13,7 +13,7 @@ public with sharing class RunAsyncActionNowController {
 			AsyncAction__c action = actions?.isEmpty() == false ? actions[0] : null;
 			Boolean scheduledForPast = action?.Scheduled__c != null && action?.Scheduled__c < DateTime.now();
 			action.Scheduled__c = (scheduledForPast) ? action?.Scheduled__c : DateTime.now();
-			action.Status__c = AsyncActionProcessor.Status.PENDING.name();
+			action.Status__c = AsyncActionJob.Status.PENDING.name();
 			Database.update(action, true, System.AccessLevel.USER_MODE);
 			AsyncActionStart__e startEvent = new AsyncActionStart__e(Actions__c = action?.ProcessorName__c);
 			EventBus.publish(startEvent);

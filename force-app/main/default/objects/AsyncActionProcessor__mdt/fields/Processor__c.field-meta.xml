@@ -5,7 +5,7 @@
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <inlineHelpText>The fully qualified API name of a Flow, or an Apex Class which extends the
-        AsyncActionProcessor abstract type. This should include its namespace prefix if applicable.
+        AsyncActionJob abstract type. This should include its namespace prefix if applicable.
         Ex., &quot;FooProcessor&quot;, &quot;some_namespace.BarProcessor&quot;,
         &quot;My_Processor_Flow&quot;</inlineHelpText>
     <label>Processor</label>

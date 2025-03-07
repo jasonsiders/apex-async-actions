@@ -1,31 +1,31 @@
 @IsTest
-public class MockProcessor extends AsyncActionProcessor {
+public class MockAsyncActionJob extends AsyncActionJob {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
 	public static Exception error = new System.DmlException();
 	public static Path pathType = Path.SUCCESS;
-	public static AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
+	public static AsyncActionJob.RetryBehavior retryBehavior = AsyncActionJob.RetryBehavior.ALLOW_RETRY;
 
-	public MockProcessor(AsyncActionProcessor__mdt settings) {
+	public MockAsyncActionJob(AsyncActionProcessor__mdt settings) {
 		super(settings);
 	}
 
 	public override void finalize(System.FinalizerContext context) {
-		if (MockProcessor.pathType == Path.FINALIZER_ERROR) {
-			throw MockProcessor.error;
+		if (MockAsyncActionJob.pathType == Path.FINALIZER_ERROR) {
+			throw MockAsyncActionJob.error;
 		} else {
 			super.finalize(context);
 		}
 	}
 
 	// **** INNER **** //
-	public class Logic implements AsyncActionProcessor.Logic {
+	public class Logic implements AsyncActionProcessor {
 		public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-			if (MockProcessor.pathType == Path.JOB_ERROR) {
-				throw MockProcessor.error;
-			} else if (MockProcessor.pathType == Path.FAIL) {
-				new AsyncActionProcessor.FailureLogic(settings, MockProcessor.retryBehavior)
+			if (MockAsyncActionJob.pathType == Path.JOB_ERROR) {
+				throw MockAsyncActionJob.error;
+			} else if (MockAsyncActionJob.pathType == Path.FAIL) {
+				new AsyncActionJob.FailureLogic(settings, MockAsyncActionJob.retryBehavior)
 					?.fail(actions, 'This is a test error');
 			} else {
 				this.createCases(actions);
@@ -43,7 +43,7 @@ public class MockProcessor extends AsyncActionProcessor {
 					cases.add(myCase);
 				}
 				// Mark the action as completed - this naive implementation doesn't handle failures!
-				action.Status__c = AsyncActionProcessor.Status.COMPLETED.name();
+				action.Status__c = AsyncActionJob.Status.COMPLETED.name();
 			}
 			insert cases;
 		}

@@ -12,13 +12,13 @@ public without sharing class AsyncActionLauncher {
 	}
 
 	public Id launch(AsyncActionProcessor__mdt settings) {
-		// Overload launches a single AsyncActionProcessor job
+		// Overload launches a single AsyncActionJob job
 		String processorName = settings?.DeveloperName;
 		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
 
 	public Map<String, Id> launchAll() {
-		// Create & launch an AsyncActionProcessor job for every AsyncActionConfig__mdt
+		// Create & launch an AsyncActionJob job for every AsyncActionConfig__mdt
 		List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
 		return this.launch(processors);
 	}
@@ -54,7 +54,7 @@ public without sharing class AsyncActionLauncher {
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
 			options.DuplicateSignature = this.buildDuplicateSignature(settings);
-			Id jobId = System.enqueueJob(new AsyncActionProcessor(settings), options);
+			Id jobId = System.enqueueJob(new AsyncActionJob(settings), options);
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
 			return jobId;
 		} catch (Exception error) {
@@ -73,7 +73,7 @@ public without sharing class AsyncActionLauncher {
 			WHERE
 				ProcessorName__c IN :processorNames
 				AND Scheduled__c <= :DateTime.now()
-				AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
+				AND Status__c = :AsyncActionJob.Status.PENDING.name()
 			WITH SYSTEM_MODE
 			GROUP BY ProcessorName__c
 			HAVING COUNT(Id) > 0

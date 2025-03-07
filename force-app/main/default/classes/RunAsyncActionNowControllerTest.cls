@@ -3,7 +3,7 @@ private class RunAsyncActionNowControllerTest {
 	@IsTest
 	static void shouldLaunchAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 
 		Test.startTest();
@@ -12,13 +12,13 @@ private class RunAsyncActionNowControllerTest {
 		Test.stopTest();
 
 		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActionProcessor.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
+		Assert.areEqual(AsyncActionJob.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
 	}
 
 	@IsTest
 	static void shouldHandleFutureScheduledAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 		// The action should process this action now, regardless of its scheduled value
 		action.Scheduled__c = DateTime.now().addDays(10);
@@ -30,7 +30,7 @@ private class RunAsyncActionNowControllerTest {
 		Test.stopTest();
 
 		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActionProcessor.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
+		Assert.areEqual(AsyncActionJob.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
 	}
 
 	@IsTest
@@ -53,13 +53,12 @@ private class RunAsyncActionNowControllerTest {
 	static void setup() {
 		Account account = new Account(Name = 'Test Account');
 		insert account;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionJob.Logic.class);
 		settings.Retries__c = 0;
 		settings.RunOnInsert__c = false;
-		AsyncActionProcessor processor = new MockProcessor(settings);
 		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
-		AsyncAction__c action = AsyncActionProcessor.initAction(settings, account?.Id, data);
-		action.Status__c = AsyncActionProcessor.Status.CANCELED.name();
+		AsyncAction__c action = AsyncActionJob.initAction(settings, account?.Id, data);
+		action.Status__c = AsyncActionJob.Status.CANCELED.name();
 		insert action;
 	}
 
