@@ -2,7 +2,7 @@
 private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldLaunchAllJobs() {
-		Type processorType = MockAsyncActionProcessor.Logic.class;
+		Type processorType = MockProcessor.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
@@ -17,7 +17,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldLaunchSpecifiedJobs() {
-		Type processorType = MockAsyncActionProcessor.Logic.class;
+		Type processorType = MockProcessor.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
@@ -47,7 +47,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchIfDisabled() {
-		Type processorType = MockAsyncActionProcessor.Logic.class;
+		Type processorType = MockProcessor.Logic.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Enabled__c = false;
@@ -64,16 +64,14 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 
 		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			AsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
+			AsyncActionProcessor processor = new MockProcessor(settings);
 			System.enqueueJob(processor);
 		}
 		// NOW try to launch the job
@@ -86,9 +84,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchWithoutPendingActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Enabled__c = false;
 		// No actions inserted!
 
@@ -102,9 +98,7 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldNotLaunchDuplicateJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 

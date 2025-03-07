@@ -1,5 +1,5 @@
 @IsTest
-public class MockAsyncActionProcessor extends AsyncActionProcessor {
+public class MockProcessor extends AsyncActionProcessor {
 	// This sample processor creates X number of Cases
 	// for the related account represented in RelatedRecordId__c
 	// The number of cases is taken from a property stored in Data__c
@@ -7,13 +7,13 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	public static Path pathType = Path.SUCCESS;
 	public static AsyncActionProcessor.RetryBehavior retryBehavior = AsyncActionProcessor.RetryBehavior.ALLOW_RETRY;
 
-	public MockAsyncActionProcessor(AsyncActionProcessor__mdt settings) {
+	public MockProcessor(AsyncActionProcessor__mdt settings) {
 		super(settings);
 	}
 
 	public override void finalize(System.FinalizerContext context) {
-		if (MockAsyncActionProcessor.pathType == Path.FINALIZER_ERROR) {
-			throw MockAsyncActionProcessor.error;
+		if (MockProcessor.pathType == Path.FINALIZER_ERROR) {
+			throw MockProcessor.error;
 		} else {
 			super.finalize(context);
 		}
@@ -22,10 +22,10 @@ public class MockAsyncActionProcessor extends AsyncActionProcessor {
 	// **** INNER **** //
 	public class Logic implements AsyncActionProcessor.Logic {
 		public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-			if (MockAsyncActionProcessor.pathType == Path.JOB_ERROR) {
-				throw MockAsyncActionProcessor.error;
-			} else if (MockAsyncActionProcessor.pathType == Path.FAIL) {
-				new AsyncActionProcessor.FailureLogic(settings, MockAsyncActionProcessor.retryBehavior)
+			if (MockProcessor.pathType == Path.JOB_ERROR) {
+				throw MockProcessor.error;
+			} else if (MockProcessor.pathType == Path.FAIL) {
+				new AsyncActionProcessor.FailureLogic(settings, MockProcessor.retryBehavior)
 					?.fail(actions, 'This is a test error');
 			} else {
 				this.createCases(actions);

@@ -65,8 +65,8 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
 		Set<String> actionSet = new Set<String>();
 		for (AsyncActionScheduledJobItem__mdt item : items) {
-			String processorClass = item?.AsyncActionProcessor__r?.Processor__c;
-			actionSet?.add(processorClass);
+			String actionName = item?.AsyncActionProcessor__r?.DeveloperName;
+			actionSet?.add(actionName);
 		}
 		return String.join(actionSet, ',');
 	}

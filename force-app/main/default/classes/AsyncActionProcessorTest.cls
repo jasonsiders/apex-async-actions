@@ -7,10 +7,8 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldProcessActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor processor = new MockProcessor(settings);
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 
@@ -39,13 +37,11 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldTryAgainIfHasRetries() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Retries__c = 3;
 		settings.RetryInterval__c = 3;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.JOB_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 		Id jobId;
@@ -76,12 +72,10 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldNotTryAgainIfNoRetries() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Retries__c = 0;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.JOB_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 		Id jobId;
@@ -110,14 +104,12 @@ private class AsyncActionProcessorTest {
 	static void shouldKeepAliveIfErrors() {
 		// If KEEP_ALIVE retry behavior is employed, an action will remain in "Pending", and its retries will not be decremented.
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Retries__c = 3;
 		settings.RetryInterval__c = 3;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FAIL;
-		MockAsyncActionProcessor.retryBehavior = AsyncActionProcessor.RetryBehavior.KEEP_ALIVE;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.FAIL;
+		MockProcessor.retryBehavior = AsyncActionProcessor.RetryBehavior.KEEP_ALIVE;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 
@@ -142,13 +134,11 @@ private class AsyncActionProcessorTest {
 	static void shouldNotTryAgainIfSuddenDeath() {
 		// If SUDDEN_DEATH retry behavior is employed, an action will be marked as "Failed", even if it has retries
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Retries__c = 3;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FAIL;
-		MockAsyncActionProcessor.retryBehavior = AsyncActionProcessor.RetryBehavior.SUDDEN_DEATH;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.FAIL;
+		MockProcessor.retryBehavior = AsyncActionProcessor.RetryBehavior.SUDDEN_DEATH;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 
@@ -172,12 +162,10 @@ private class AsyncActionProcessorTest {
 	static void shouldHandleFinalizerErrors() {
 		// If an exception is thrown during the finalizer, the job will be aborted, but the actions will not be affected
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Retries__c = 0;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.FINALIZER_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 
@@ -189,7 +177,7 @@ private class AsyncActionProcessorTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id, CronTriggerId
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = :MockAsyncActionProcessor.class.getName() AND Id != :jobId
+			WHERE ApexClass.Name = :MockProcessor.class.getName() AND Id != :jobId
 		];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 		for (AsyncAction__c action : AsyncActionProcessorTest.getUpdatedActions(actions)) {
@@ -200,9 +188,7 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldInitializeAnAction() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		Id recordId = UserInfo.getUserId();
 
 		Test.startTest();
@@ -218,9 +204,7 @@ private class AsyncActionProcessorTest {
 
 	@IsTest
 	static void shouldInitializeActionsFromSObjects() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		User user = new User(Id = UserInfo.getUserId());
 		String data = '{}';
 
@@ -238,10 +222,8 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldLaunchJob() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
-		AsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		AsyncActionProcessor processor = new MockProcessor(settings);
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 
@@ -259,13 +241,11 @@ private class AsyncActionProcessorTest {
 		// In a real scenario, the job WOULD keep re-enqueueing on an error
 		// Callers should mitigate this by using the fail() and reschedule() methods accordingly
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.Retries__c = 2;
 		settings.RetryInterval__c = 0;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.JOB_ERROR;
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
@@ -292,11 +272,9 @@ private class AsyncActionProcessorTest {
 	@IsTest
 	static void shouldHandleFatalErrors() {
 		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.pathType = MockProcessor.Path.JOB_ERROR;
 		List<AsyncAction__c> actions = AsyncActionProcessorTest.initTestActions(settings);
 		insert actions;
 
@@ -319,13 +297,11 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.BypassFinalizerRetryLimit__c = true;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.error = new System.AsyncException();
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.error = new System.AsyncException();
+		MockProcessor.pathType = MockProcessor.Path.FINALIZER_ERROR;
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
@@ -345,13 +321,11 @@ private class AsyncActionProcessorTest {
 		// Finalizers can re-enqueue failed jobs a limit of 5 times.
 		// Re-enqueueing a failed job for the 6th time will produce a System.AsyncException
 		// The AsyncActionProcessor should catch this error and launch again, this time via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.Logic.class
-		);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockProcessor.Logic.class);
 		settings.BypassFinalizerRetryLimit__c = false;
-		MockAsyncActionProcessor processor = new MockAsyncActionProcessor(settings);
-		MockAsyncActionProcessor.error = new System.AsyncException();
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		MockProcessor processor = new MockProcessor(settings);
+		MockProcessor.error = new System.AsyncException();
+		MockProcessor.pathType = MockProcessor.Path.FINALIZER_ERROR;
 		AsyncAction__c action = AsyncActionProcessor.initAction(settings);
 		insert action;
 		AsyncActionTestUtils.setAllowRecursion(true);
@@ -365,7 +339,7 @@ private class AsyncActionProcessorTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = :MockAsyncActionProcessor.class.getName()
+			WHERE ApexClass.Name = :MockProcessor.class.getName()
 		];
 		Assert.areEqual(true, jobs?.isEmpty(), 'Job was relaunched');
 	}
