@@ -14,10 +14,10 @@ public without sharing class AsyncActionRelatedListController {
 				CreatedBy.Name,
 				CreatedDate,
 				Name,
-				Processor__c,
+				ProcessorName__c,
 				RelatedRecordId__c,
 				Retries__c,
-				Scheduled__c,
+				NextEligibleAt__c,
 				Status__c
 			FROM AsyncAction__c
 			WHERE RelatedRecordId__c = :recordId

@@ -1,26 +1,24 @@
 @SuppressWarnings('PMD.ApexDoc')
-public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
-	static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-
+public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework {
 	public override void afterInsert() {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
 		new AsyncActionLauncher()?.launch(actions);
-		LOGGER?.save(false);
+		AsyncActionLogger.save();
 	}
 
 	public override Type getType() {
-		return AsyncActionStartHandler.class;
+		return AsyncActionStartTriggerHandler.class;
 	}
 
 	private List<AsyncActionProcessor__mdt> getActionsToLaunch(List<AsyncActionStart__e> events) {
-		Set<AsyncActionProcessor__mdt> actions = new Set<AsyncActionProcessor__mdt>();
+		Map<String, AsyncActionProcessor__mdt> actions = new Map<String, AsyncActionProcessor__mdt>();
 		for (String actionName : this.extractActionNames(events)) {
 			AsyncActionProcessor__mdt action = AsyncActionProcessorService.get(actionName);
-			actions?.add(action);
+			actions?.put(actionName, action);
 		}
 		actions?.remove(null);
-		return new List<AsyncActionProcessor__mdt>(actions);
+		return actions?.values();
 	}
 
 	private Set<String> extractActionNames(List<AsyncActionStart__e> events) {

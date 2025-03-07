@@ -44,12 +44,12 @@ To use this framework, developers should first create their own "actions" as log
 
 Developers can define a new action in
 
-#### 1. Create an Apex Class that extends `AsyncActionProcessor`
+#### 1. Create an Apex Class that extends `AsyncActionJob`
 
 This defines what the Action will do when it runs. Here's an example:
 
 ```java
-global class FooCreator extends AsyncActionProcessor {
+global class FooCreator extends AsyncActionJob {
     global override void process(List<AsyncAction__c> actions) {
         List<Foo__c> myFoos = new List<Foo__c>();
         for (AsyncAction__c action : actions) {
@@ -68,7 +68,7 @@ global class FooCreator extends AsyncActionProcessor {
 }
 ```
 
-Read more about the `AsyncActionProcessor` class [here](/docs/ASYNCACTIONPROCESSOR.md).
+Read more about the `AsyncActionJob` class [here](/docs/ASYNCACTIONPROCESSOR.md).
 
 #### 2. Create a Corresponding `AsyncActionProcessor__mdt` Record
 

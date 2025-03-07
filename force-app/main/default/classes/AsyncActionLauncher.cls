@@ -1,70 +1,72 @@
 @SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionLauncher {
-	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
-
-	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> configs) {
+	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> settings) {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
-		for (PendingAction result : this.queryPendingActions(configs)) {
+		for (PendingAction result : this.queryPendingActions(settings)) {
 			String processorName = result?.processorName;
-			Id jobId = this.launchJobForProcessor(processorName);
+			Id jobId = this.launchJobToProcess(processorName);
 			results?.put(processorName, jobId);
 		}
 		return results;
 	}
 
-	public Id launch(AsyncActionProcessor__mdt config) {
-		// Overload launches a single AsyncActionProcessor job
-		String processorName = config?.Processor__c;
-		return this.launch(new List<AsyncActionProcessor__mdt>{ config })?.get(processorName);
+	public Id launch(AsyncActionProcessor__mdt settings) {
+		// Overload launches a single AsyncActionJob job
+		String processorName = settings?.DeveloperName;
+		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
 
 	public Map<String, Id> launchAll() {
-		// Create & launch an AsyncActionProcessor job for every AsyncActionConfig__mdt
+		// Create & launch an AsyncActionJob job for every AsyncActionConfig__mdt
 		List<AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll()?.values();
 		return this.launch(processors);
 	}
 
 	// **** PRIVATE **** //
+	private System.QueueableDuplicateSignature buildDuplicateSignature(AsyncActionProcessor__mdt settings) {
+		// Build a QueueableDuplicateSigntuare to prevent launching duplicate Queueable jobs
+		String hashedSignature = this.hashProcessorName(settings);
+		return new System.QueueableDuplicateSignature.Builder()?.addString(hashedSignature)?.build();
+	}
+
 	private Set<String> extractProcessorNames(List<AsyncActionProcessor__mdt> configs) {
 		Set<String> results = new Set<String>();
-		for (AsyncActionProcessor__mdt config : configs) {
-			String processorName = config?.Processor__c;
+		for (AsyncActionProcessor__mdt settings : configs) {
+			String processorName = settings?.DeveloperName;
 			results?.add(processorName);
 		}
 		return results;
 	}
 
-	@TestVisible
-	private AsyncActionProcessor initProcessor(AsyncActionProcessor__mdt config) {
-		try {
-			return (config?.ProcessorType__c == 'Apex')
-				? (AsyncActionProcessor) Type.forName(config?.Processor__c)?.newInstance()
-				: new AsyncActionFlowProcessor(config);
-		} catch (Exception error) {
-			LOGGER?.log(System.LoggingLevel.ERROR, error);
-			return null;
-		}
+	private Integer getMaxStackDepth(AsyncActionProcessor__mdt settings) {
+		// Returns the maximum stack depth value defined in the settings
+		// Defaults to 5 if none found; this matches the current Queueable defaults
+		return (settings?.MaxStackDepth__c)?.intValue() ?? 5;
 	}
 
-	private Id launchJobForProcessor(String processorName) {
+	private String hashProcessorName(AsyncActionProcessor__mdt settings) {
+		// Note: Max size of QueueableDuplicateSignature is 32 bytes; hash the processor value to prevent exceeding this value
+		Blob hashBlob = Crypto.generateDigest('SHA-256', Blob.valueOf(settings?.DeveloperName));
+		String hashHex = EncodingUtil.convertToHex(hashBlob);
+		return hashHex?.substring(0, 32);
+	}
+
+	private Id launchJobToProcess(String processorName) {
 		try {
-			AsyncActionProcessor__mdt config = AsyncActionProcessorService.get(processorName);
-			this.validateJob(config);
+			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
+			this.validateJob(settings);
 			this.validateQueueableLimits();
-			AsyncActionProcessor processor = this.initProcessor(config);
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
-			options.DuplicateSignature = new System.QueueableDuplicateSignature.Builder()
-				?.addString(config?.DeveloperName)
-				?.build();
-			Id jobId = System.enqueueJob(processor, options);
-			String msg = processorName + ': launch() -> ' + jobId;
-			LOGGER?.log(System.LoggingLevel.FINEST, msg);
+			options.DuplicateSignature = this.buildDuplicateSignature(settings);
+			options.MaximumQueueableStackDepth = this.getMaxStackDepth(settings);
+			Id jobId = System.enqueueJob(new AsyncActionJob(settings), options);
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
 			return jobId;
 		} catch (Exception error) {
 			String msg = processorName + ' failed to launch: ' + error + '\n' + error?.getStackTraceString();
-			LOGGER?.log(System.LoggingLevel.WARN, msg);
+			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
 			return null;
 		}
 	}
@@ -73,25 +75,25 @@ public without sharing class AsyncActionLauncher {
 		// Retrieves a list of processors w/open actions, in FIFO order
 		Set<String> processorNames = this.extractProcessorNames(configs);
 		List<AggregateResult> results = [
-			SELECT Processor__c processorName
+			SELECT ProcessorName__c processorName
 			FROM AsyncAction__c
 			WHERE
-				Processor__c IN :processorNames
-				AND Scheduled__c <= :DateTime.now()
-				AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
+				ProcessorName__c IN :processorNames
+				AND NextEligibleAt__c <= :DateTime.now()
+				AND Status__c = :AsyncActions.Status.PENDING.name()
 			WITH SYSTEM_MODE
-			GROUP BY Processor__c
+			GROUP BY ProcessorName__c
 			HAVING COUNT(Id) > 0
-			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
+			ORDER BY MAX(NextEligibleAt__c) ASC // first in, first out!
 		];
 		// Convert & return the query results in a common format
 		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
 	}
 
-	private void validateJob(AsyncActionProcessor__mdt config) {
+	private void validateJob(AsyncActionProcessor__mdt settings) {
 		// Throws an exception if the current job is disabled
-		if (config?.Enabled__c != true) {
-			throw new System.AsyncException(config?.DeveloperName + ' is disabled');
+		if (settings?.Enabled__c != true) {
+			throw new System.AsyncException(settings?.DeveloperName + ' is disabled');
 		}
 	}
 
@@ -102,6 +104,7 @@ public without sharing class AsyncActionLauncher {
 		}
 	}
 
+	// **** INNER **** //
 	private class PendingAction {
 		// This class is used to store aggregate query results
 		// Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions

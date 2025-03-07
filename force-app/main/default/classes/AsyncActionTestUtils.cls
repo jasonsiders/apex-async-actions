@@ -9,9 +9,17 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	global static AsyncActionProcessor__mdt initApexProcessor(Type processorType) {
+		// Instantiates & returns an Apex processor settings object with default values for testing
+		String className = processorType?.getName();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(className);
+		settings.ProcessorType__c = 'Apex';
+		return settings;
+	}
+
 	global static AsyncActionProcessor__mdt initFlowProcessor(String flowName) {
 		// Instantiates & returns a Flow processor settings object with default values for testing
-		AsyncActionProcessor__mdt processor = new AsyncActionProcessor__mdt(
+		AsyncActionProcessor__mdt settings = new AsyncActionProcessor__mdt(
 			BatchSize__c = 200,
 			DeveloperName = 'Test_' + flowName,
 			Enabled__c = true,
@@ -22,17 +30,8 @@ global class AsyncActionTestUtils {
 			RetryInterval__c = 3,
 			RunOnInsert__c = false
 		);
-		AsyncActionTestUtils.mockProcessorSettings(processor);
-		return processor;
-	}
-
-	global static AsyncActionProcessor__mdt initApexProcessor(Type processorType) {
-		// Instantiates & returns an Apex processor settings object with default values for testing
-		String className = processorType?.getName();
-		AsyncActionProcessor__mdt processor = AsyncActionTestUtils.initFlowProcessor(className);
-		processor.ProcessorType__c = 'Apex';
-		AsyncActionTestUtils.mockProcessorSettings(processor);
-		return processor;
+		AsyncActionTestUtils.mockProcessorSettings(settings);
+		return settings;
 	}
 
 	global static AsyncActionScheduledJob__mdt initScheduledJobSettings() {
@@ -68,13 +67,13 @@ global class AsyncActionTestUtils {
 		AsyncActionGlobalSettingService.settings = settings;
 	}
 
-	global static void mockProcessorSettings(AsyncActionProcessor__mdt processor) {
+	global static void mockProcessorSettings(AsyncActionProcessor__mdt settings) {
 		// Gives @IsTest access to inject settings records to external callers
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
 			? AsyncActionProcessorService.processors
 			: new Map<String, AsyncActionProcessor__mdt>();
-		String processorName = processor?.Processor__c;
-		AsyncActionProcessorService.processors?.put(processorName, processor);
+		String processorName = settings?.DeveloperName;
+		AsyncActionProcessorService.processors?.put(processorName, settings);
 	}
 
 	global static void mockScheduledJobItem(AsyncActionScheduledJobItem__mdt item) {
@@ -101,6 +100,6 @@ global class AsyncActionTestUtils {
 	global static void setAllowRecursion(Boolean allowRecursion) {
 		// Enables external callers to manipulate the @TestVisible allowRecursion flag
 		// This is disabled in @IsTest context by default, to simplify testing and prevent runaways
-		AsyncActionProcessor.allowRecursion = allowRecursion;
+		AsyncActionJob.allowRecursion = allowRecursion;
 	}
 }

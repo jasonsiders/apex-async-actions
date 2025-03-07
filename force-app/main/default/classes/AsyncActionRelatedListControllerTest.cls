@@ -73,11 +73,12 @@ private class AsyncActionRelatedListControllerTest {
 		Account account = new Account(Name = 'Test Account');
 		insert account;
 		// Create actions related to the Account
-		AsyncActionTestUtils.initApexProcessor(FakeProcessor.class);
-		AsyncActionProcessor processor = new FakeProcessor();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
+			AsyncActionRelatedListControllerTest.class
+		);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {
-			AsyncAction__c action = processor?.initAction(account?.Id);
+			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
 			actions?.add(action);
 		}
 		insert actions;
@@ -113,20 +114,5 @@ private class AsyncActionRelatedListControllerTest {
 	static Account getAccount() {
 		List<Account> accounts = [SELECT Id FROM Account ORDER BY CreatedDate DESC LIMIT 1];
 		return accounts?.isEmpty() ? null : accounts[0];
-	}
-
-	// **** INNER **** //
-	private class FakeProcessor extends AsyncActionProcessor {
-		public override void process(List<AsyncAction__c> actions) {
-			// Do nothing, just mark actions as complete
-			for (AsyncAction__c action : actions) {
-				action.Status__c = 'Completed';
-			}
-			update actions;
-		}
-
-		public override Type getType() {
-			return FakeProcessor.class;
-		}
 	}
 }

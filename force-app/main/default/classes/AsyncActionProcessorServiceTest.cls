@@ -14,8 +14,8 @@ private class AsyncActionProcessorServiceTest {
 
 		Assert.areEqual(expected?.size(), actual?.size(), 'Wrong # of results returned');
 		for (String processorName : actual?.keySet()) {
-			AsyncActionProcessor__mdt processor = actual?.get(processorName);
-			Assert.areEqual(processorName, processor?.Processor__c, 'Not mapped by processor');
+			AsyncActionProcessor__mdt settings = actual?.get(processorName);
+			Assert.areEqual(processorName, settings?.DeveloperName, 'Not mapped by DeveloperName');
 		}
 	}
 
@@ -32,58 +32,57 @@ private class AsyncActionProcessorServiceTest {
 
 	@IsTest
 	static void shouldAllowDependencyInjection() {
-		String processorName = AsyncActionProcessorServiceTest.class.getName();
-		AsyncActionProcessor__mdt testProcessor = new AsyncActionProcessor__mdt(
+		AsyncActionProcessor__mdt testSettings = new AsyncActionProcessor__mdt(
 			DeveloperName = 'Test_Config',
-			Processor__c = processorName
+			Processor__c = AsyncActionProcessorServiceTest.class.getName()
 		);
 		AsyncActionProcessorService.processors = new Map<String, AsyncActionProcessor__mdt>{
-			processorName => testProcessor
+			testSettings?.DeveloperName => testSettings
 		};
 
 		Test.startTest();
-		Map<String, AsyncActionProcessor__mdt> processors = AsyncActionProcessorService.getAll();
+		Map<String, AsyncActionProcessor__mdt> results = AsyncActionProcessorService.getAll();
 		Test.stopTest();
 
-		Assert.areEqual(1, processors?.size(), 'Wrong # of results returned');
-		Assert.isTrue(processors?.containsKey(processorName), 'Wrong processor mapped');
+		Assert.areEqual(1, results?.size(), 'Wrong # of results returned');
+		Assert.isTrue(results?.containsKey(testSettings?.DeveloperName), 'Wrong processor mapped');
 	}
 
 	@IsTest
 	static void shouldReturnASpecificConfigByItsProcessorClass() {
-		String processorName = AsyncActionProcessorServiceTest.class.getName();
-		AsyncActionProcessor__mdt testProcessor = new AsyncActionProcessor__mdt(
+		AsyncActionProcessor__mdt testSettings = new AsyncActionProcessor__mdt(
 			DeveloperName = 'Test_Config',
-			Processor__c = processorName
+			Processor__c = AsyncActionProcessorServiceTest.class.getName()
 		);
 		AsyncActionProcessorService.processors = new Map<String, AsyncActionProcessor__mdt>{
-			processorName => testProcessor
+			testSettings?.DeveloperName => testSettings
 		};
 
 		Test.startTest();
-		AsyncActionProcessor__mdt processor = AsyncActionProcessorService.get(processorName);
+		AsyncActionProcessor__mdt result = AsyncActionProcessorService.get(testSettings?.DeveloperName);
 		Test.stopTest();
 
-		Assert.isNotNull(processor, 'A processor was not returned');
-		Assert.areEqual(processorName, processor?.Processor__c, 'Wrong processor returned');
+		Assert.isNotNull(result, 'A processor was not returned');
+		Assert.areEqual(testSettings?.DeveloperName, result?.DeveloperName, 'Wrong processor returned');
+		Assert.areEqual(testSettings?.Processor__c, result?.Processor__c, 'Wrong Processor class');
 	}
 
 	@IsTest
-	static void shouldMapByProcessorClass() {
-		Set<String> classNames = new Set<String>{ 'processor_1', 'processor_2', 'processor_3' };
-		List<AsyncActionProcessor__mdt> configs = new List<AsyncActionProcessor__mdt>();
-		for (String className : classNames) {
-			AsyncActionProcessor__mdt config = new AsyncActionProcessor__mdt(Processor__c = className);
-			configs?.add(config);
+	static void shouldMapByDeveloperName() {
+		Set<String> processorNames = new Set<String>{ 'processor_1', 'processor_2', 'processor_3' };
+		List<AsyncActionProcessor__mdt> testSettings = new List<AsyncActionProcessor__mdt>();
+		for (String processorName : processorNames) {
+			AsyncActionProcessor__mdt testSetting = new AsyncActionProcessor__mdt(DeveloperName = processorName);
+			testSettings?.add(testSetting);
 		}
 
 		Test.startTest();
-		Map<String, AsyncActionProcessor__mdt> results = AsyncActionProcessorService.mapByProcessorClass(configs);
+		Map<String, AsyncActionProcessor__mdt> results = AsyncActionProcessorService.mapByDeveloperName(testSettings);
 		Test.stopTest();
 
-		Assert.areEqual(classNames?.size(), results?.size(), 'Wrong # of AsyncActionProcessor__mdt records mapped');
-		for (String className : classNames) {
-			Assert.isNotNull(results?.get(className), className + ' was not mapped');
+		Assert.areEqual(processorNames?.size(), results?.size(), 'Wrong # of AsyncActionProcessor__mdt records mapped');
+		for (String processorName : processorNames) {
+			Assert.isNotNull(results?.get(processorName), 'Did not map ' + processorName);
 		}
 	}
 }

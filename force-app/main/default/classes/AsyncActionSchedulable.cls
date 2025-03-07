@@ -4,7 +4,6 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	public static final String HOURLY = '0 0 * * * ?';
 	public static final String JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 	private static final Integer DEFAULT_INTERVAL = 60;
-	private static final AsyncActionLogger.Adapter LOGGER = AsyncActionLogger.init();
 
 	// **** MEMBER **** //
 	private AsyncActionScheduledJob__mdt jobSettings;
@@ -21,7 +20,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		}
 		// Once completed, ensure other scheduled jobs match the configuration
 		new AsyncActionScheduleEnforcer().enforce();
-		LOGGER.save(false);
+		AsyncActionLogger.save();
 	}
 
 	public String getJobName() {
@@ -35,11 +34,11 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 			String cronExp = this.getCronExpression();
 			Id jobId = System.schedule(jobName, cronExp, this);
 			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
-			LOGGER?.log(System.LoggingLevel.FINEST, msg);
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 			return jobId;
 		} else {
 			String msg = this.jobSettings?.DeveloperName + ' is not enabled';
-			LOGGER?.log(System.LoggingLevel.FINEST, msg);
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 			return null;
 		}
 	}
@@ -66,8 +65,8 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
 		Set<String> actionSet = new Set<String>();
 		for (AsyncActionScheduledJobItem__mdt item : items) {
-			String processorClass = item?.AsyncActionProcessor__r?.Processor__c;
-			actionSet?.add(processorClass);
+			String actionName = item?.AsyncActionProcessor__r?.DeveloperName;
+			actionSet?.add(actionName);
 		}
 		return String.join(actionSet, ',');
 	}

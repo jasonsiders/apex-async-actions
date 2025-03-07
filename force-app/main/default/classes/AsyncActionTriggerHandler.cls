@@ -1,5 +1,5 @@
 @SuppressWarnings('PMD.ApexDoc')
-public class AsyncActionHandler extends AsyncActionTriggerFramework {
+public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
 
 	public override void beforeInsert() {
@@ -7,8 +7,8 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 		for (AsyncAction__c action : this.actions) {
 			// Do not overwrite non-null values
 			if (action?.Retries__c == null) {
-				String className = action?.Processor__c;
-				action.Retries__c = AsyncActionProcessorService.get(className)?.Retries__c ?? 0;
+				String processorName = action?.ProcessorName__c;
+				action.Retries__c = AsyncActionProcessorService.get(processorName)?.Retries__c ?? 0;
 			}
 		}
 	}
@@ -23,23 +23,23 @@ public class AsyncActionHandler extends AsyncActionTriggerFramework {
 		}
 		// Ensure the scheduled job aligns with current configuration
 		new AsyncActionScheduleEnforcer()?.enforce();
-		AsyncActionLogger.init()?.save(false);
+		AsyncActionLogger.save();
 	}
 
 	public override Type getType() {
-		return AsyncActionHandler.class;
+		return AsyncActionTriggerHandler.class;
 	}
 
 	private Set<String> getTriggeredActions() {
-		// Returns a collection of ProcessorClass names of current Action(s) that are configured to run on insert
+		// Returns a collection of Processor names of current Action(s) that are configured to run on insert
 		Set<String> results = new Set<String>();
 		for (AsyncAction__c action : this.actions) {
-			String actionName = action?.Processor__c;
+			String processorName = action?.ProcessorName__c;
 			if (
-				results?.contains(actionName) == false &&
-				AsyncActionProcessorService.get(actionName)?.RunOnInsert__c == true
+				results?.contains(processorName) == false &&
+				AsyncActionProcessorService.get(processorName)?.RunOnInsert__c == true
 			) {
-				results?.add(actionName);
+				results?.add(processorName);
 			}
 		}
 		return results;
