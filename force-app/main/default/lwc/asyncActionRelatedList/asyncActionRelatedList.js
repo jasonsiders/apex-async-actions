@@ -10,7 +10,7 @@ import CREATED_DATE_FIELD from "@salesforce/schema/AsyncAction__c.CreatedDate";
 import ERROR_FIELD from "@salesforce/schema/AsyncAction__c.Error__c";
 import ID_FIELD from "@salesforce/schema/AsyncAction__c.Id";
 import NAME_FIELD from "@salesforce/schema/AsyncAction__c.Name";
-import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.Processor__c";
+import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.ProcessorName__c";
 import RETRIES_FIELD from "@salesforce/schema/AsyncAction__c.Retries__c";
 import SCHEDULED_FIELD from "@salesforce/schema/AsyncAction__c.Scheduled__c";
 import STATUS_FIELD from "@salesforce/schema/AsyncAction__c.Status__c";

@@ -73,7 +73,7 @@ global class AsyncActionTestUtils {
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
 			? AsyncActionProcessorService.processors
 			: new Map<String, AsyncActionProcessor__mdt>();
-		String processorName = processor?.Processor__c;
+		String processorName = processor?.DeveloperName;
 		AsyncActionProcessorService.processors?.put(processorName, processor);
 	}
 

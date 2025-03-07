@@ -53,7 +53,7 @@ private class AsyncActionLoggerTest {
 		Test.startTest();
 		try {
 			logger?.log(System.LoggingLevel.FINEST, 'Hello world!');
-			logger?.save(false);
+			logger?.save();
 		} catch (Exception error) {
 			Assert.fail('An error was thrown while performing default logging logic: ' + error);
 		}
@@ -66,7 +66,7 @@ private class AsyncActionLoggerTest {
 			// Doesn't matter
 		}
 
-		public void save(Boolean publishImmediate) {
+		public void save() {
 			// Doesn't matter
 		}
 	}

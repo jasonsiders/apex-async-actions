@@ -4,7 +4,7 @@ public class AsyncActionStartHandler extends AsyncActionTriggerFramework {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
 		new AsyncActionLauncher()?.launch(actions);
-		AsyncActionLogger.save(false);
+		AsyncActionLogger.save();
 	}
 
 	public override Type getType() {

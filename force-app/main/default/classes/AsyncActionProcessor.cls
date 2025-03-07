@@ -1,10 +1,15 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
 global abstract inherited sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
-	global Set<Id> actionIds;
-	global AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(this.getType()?.getName());
+	protected Set<Id> actionIds;
+	protected AsyncActionProcessor__mdt settings;
 	@TestVisible
-	static Boolean allowRecursion = !Test.isRunningTest();
-	static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
+	private static Boolean allowRecursion = !Test.isRunningTest();
+	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
+
+	public AsyncActionProcessor() {
+		String processorName = this.getType()?.getName();
+		this.settings = AsyncActionProcessorService.get(processorName);
+	}
 
 	// **** ABSTRACT **** //
 	global abstract Type getType();
@@ -18,13 +23,12 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 				List<AsyncAction__c> actions = this.getPendingActions();
 				this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
 				this.process(actions);
-				AsyncActionLogger.save(false);
+				Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
 			} catch (Exception error) {
-				// Publish the logs immediately, via platform event,
-				// then allow the error to terminate the current transaction
 				AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
-				AsyncActionLogger.save(true);
 				throw error;
+			} finally {
+				AsyncActionLogger.save();
 			}
 		}
 	}
@@ -52,7 +56,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 			}
 		} finally {
-			AsyncActionLogger.save(false);
+			AsyncActionLogger.save();
 		}
 	}
 
@@ -61,7 +65,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// Returns a new action related to the current processor type
 		return new AsyncAction__c(
 			Data__c = data,
-			Processor__c = settings?.Processor__c,
+			ProcessorName__c = settings?.DeveloperName,
 			RelatedRecordId__c = relatedRecordId,
 			Retries__c = settings?.Retries__c ?? 0,
 			Scheduled__c = DateTime.now(),
@@ -95,7 +99,6 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		}
 		// * Re-launch this job if there are still pending records
 		if (this.settings?.Enabled__c == true && AsyncActionProcessor.allowRecursion == true) {
-			Id currentJobId = context?.getAsyncApexJobId();
 			new AsyncActionLauncher()?.launch(this.settings);
 		}
 	}
@@ -105,11 +108,14 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 	}
 
 	protected List<AsyncAction__c> getPendingActions() {
-		String typeName = this.getType()?.getName();
+		String processorName = this.settings?.DeveloperName;
 		return [
-			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
-			WHERE Processor__c = :typeName AND Scheduled__c <= :DateTime.now() AND Status__c = :Status.PENDING.name()
+			WHERE
+				ProcessorName__c = :processorName
+				AND Scheduled__c <= :DateTime.now()
+				AND Status__c = :Status.PENDING.name()
 			WITH SYSTEM_MODE
 			ORDER BY Scheduled__c ASC
 			LIMIT :this.getBatchSize()
@@ -126,7 +132,7 @@ global abstract inherited sharing class AsyncActionProcessor implements System.Q
 		// Note: SObject lists persist from Queueable to Finalizer, but in a truncated form (only Ids retained)
 		// Necessary to re-query to avoid "SObject row retrieved via SOQL" errors
 		return [
-			SELECT Id, Data__c, Retries__c, Processor__c, RelatedRecordId__c, Scheduled__c, Status__c
+			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, Scheduled__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :this.actionIds
 			WITH SYSTEM_MODE

@@ -4,6 +4,7 @@ public without sharing class AsyncActionLauncher {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
 		for (PendingAction result : this.queryPendingActions(configs)) {
+			System.debug('@jason: Result: ' + result);
 			String processorName = result?.processorName;
 			Id jobId = this.launchJobForProcessor(processorName);
 			results?.put(processorName, jobId);
@@ -13,7 +14,7 @@ public without sharing class AsyncActionLauncher {
 
 	public Id launch(AsyncActionProcessor__mdt settings) {
 		// Overload launches a single AsyncActionProcessor job
-		String processorName = settings?.Processor__c;
+		String processorName = settings?.DeveloperName;
 		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
 
@@ -27,7 +28,7 @@ public without sharing class AsyncActionLauncher {
 	private Set<String> extractProcessorNames(List<AsyncActionProcessor__mdt> configs) {
 		Set<String> results = new Set<String>();
 		for (AsyncActionProcessor__mdt settings : configs) {
-			String processorName = settings?.Processor__c;
+			String processorName = settings?.DeveloperName;
 			results?.add(processorName);
 		}
 		return results;
@@ -48,6 +49,8 @@ public without sharing class AsyncActionLauncher {
 	private Id launchJobForProcessor(String processorName) {
 		try {
 			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
+			System.debug('@jason: launchJobForProcessorName: ' + processorName + ' -> ' + settings);
+			System.debug('@jason: All settings: ' + JSON.serializePretty(AsyncActionProcessorService.getAll()));
 			this.validateJob(settings);
 			this.validateQueueableLimits();
 			AsyncActionProcessor processor = this.initProcessor(settings);
@@ -71,18 +74,22 @@ public without sharing class AsyncActionLauncher {
 		// Retrieves a list of processors w/open actions, in FIFO order
 		Set<String> processorNames = this.extractProcessorNames(configs);
 		List<AggregateResult> results = [
-			SELECT Processor__c processorName
+			SELECT ProcessorName__c processorName
 			FROM AsyncAction__c
 			WHERE
-				Processor__c IN :processorNames
+				ProcessorName__c IN :processorNames
 				AND Scheduled__c <= :DateTime.now()
 				AND Status__c = :AsyncActionProcessor.Status.PENDING.name()
 			WITH SYSTEM_MODE
-			GROUP BY Processor__c
+			GROUP BY ProcessorName__c
 			HAVING COUNT(Id) > 0
 			ORDER BY MAX(Scheduled__c) ASC // first in, first out!
 		];
 		// Convert & return the query results in a common format
+		System.debug('@jason: queryPendingActions: ' + JSON.serialize(results));
+		System.debug(
+			'@jason: all async actions: ' + JSON.serialize([SELECT Id, ProcessorName__c, Status__c FROM AsyncAction__c])
+		);
 		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
 	}
 

@@ -7,8 +7,8 @@ global abstract class AsyncActionLogger {
 		INSTANCE?.log(level, logMessage);
 	}
 
-	global static void save(Boolean publishImmediate) {
-		INSTANCE?.save(publishImmediate);
+	global static void save() {
+		INSTANCE?.save();
 	}
 
 	private static AsyncActionLogger.Adapter getInstance() {
@@ -28,7 +28,7 @@ global abstract class AsyncActionLogger {
 	// **** INNER **** //
 	global interface Adapter {
 		void log(System.LoggingLevel level, Object logMessage);
-		void save(Boolean publishImmediate);
+		void save();
 	}
 
 	public class DefaultLogger implements AsyncActionLogger.Adapter {
@@ -43,7 +43,7 @@ global abstract class AsyncActionLogger {
 			System.debug(level, logMessage);
 		}
 
-		public void save(Boolean publishImmediately) {
+		public void save() {
 			// Many custom logging tools require a method like this, to commit logs to the database.
 			// However, traditional salesforce debug logs do not require this, so this method will no-op.
 		}

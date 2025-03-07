@@ -20,7 +20,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		}
 		// Once completed, ensure other scheduled jobs match the configuration
 		new AsyncActionScheduleEnforcer().enforce();
-		AsyncActionLogger.save(false);
+		AsyncActionLogger.save();
 	}
 
 	public String getJobName() {

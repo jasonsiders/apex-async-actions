@@ -196,7 +196,7 @@ private class AsyncActionProcessorTest {
 		Test.stopTest();
 
 		Assert.areEqual(settings?.Retries__c, action?.Retries__c, 'Wrong # of retries');
-		Assert.areEqual(MockAsyncActionProcessor.class?.getName(), action?.Processor__c, 'Unexpected Processor Class');
+		Assert.areEqual(settings?.DeveloperName, action?.ProcessorName__c, 'Unexpected Processor Class');
 		Assert.areEqual(recordId, action?.RelatedRecordId__c, 'Unexpected Related Record Id');
 		Assert.isNotNull(action?.Scheduled__c, 'Invalid Scheduled value');
 		Assert.areEqual(AsyncActionProcessor.Status.PENDING.name(), action?.Status__c, 'Unexpected Status');
@@ -266,6 +266,7 @@ private class AsyncActionProcessorTest {
 			System.enqueueJob(processor);
 			Test.stopTest();
 		} catch (Exception error) {
+			System.debug('@jason: caught error: ' + error + '\n' + error?.getStackTraceString());
 			// Try/Catch needed to prevent aborting the test, and to trigger the finalizer
 		}
 
