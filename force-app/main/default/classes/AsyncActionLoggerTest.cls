@@ -2,6 +2,22 @@
 @IsTest
 private class AsyncActionLoggerTest {
 	@IsTest
+	static void shouldLog() {
+		Type adapterType = MockAdapter.class;
+		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		settings.LoggerPlugin__c = adapterType?.getName();
+
+		try {
+			Test.startTest();
+			AsyncActionLogger.log(System.LoggingLevel.DEBUG, 'Test Log');
+			AsyncActionLogger.save();
+			Test.stopTest();
+		} catch (Exception error) {
+			Assert.fail('Failed to log: ' + error);
+		}
+	}
+
+	@IsTest
 	static void shouldInitializeCustomLogAdapter() {
 		Type adapterType = MockAdapter.class;
 		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
