@@ -1,5 +1,5 @@
-@SuppressWarnings('PMD.AvoidGlobalModifier, PMD.ApexDoc')
-global virtual without sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
+@SuppressWarnings('PMD.ApexDoc')
+public virtual without sharing class AsyncActionProcessor implements System.Queueable, System.Finalizer {
 	protected Set<Id> actionIds;
 	protected AsyncActionProcessor.Logic logic;
 	protected AsyncActionProcessor__mdt settings;
@@ -7,13 +7,13 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 	private static Boolean allowRecursion = !Test.isRunningTest();
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
-	global AsyncActionProcessor(AsyncActionProcessor__mdt settings) {
+	public AsyncActionProcessor(AsyncActionProcessor__mdt settings) {
 		this.logic = (AsyncActionProcessor.Logic) Type.forName(settings?.Processor__c)?.newInstance();
 		this.settings = settings;
 	}
 
 	// **** QUEUEABLE **** //
-	global void execute(System.QueueableContext context) {
+	public void execute(System.QueueableContext context) {
 		System.attachFinalizer(this);
 		if (this.settings?.Enabled__c == true) {
 			try {
@@ -31,7 +31,7 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 	}
 
 	// **** FINALIZER **** //
-	global void execute(System.FinalizerContext context) {
+	public void execute(System.FinalizerContext context) {
 		// Note: Finalizers run in their own execution context, after the Queueable job finishes.
 		// Its execution does not count towards the async method limit.
 		// Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_transaction_finalizers.htm
@@ -58,7 +58,7 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 	}
 
 	// **** STATIC **** //
-	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId, String data) {
+	public static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId, String data) {
 		// Returns a new action related to the current processor type
 		return new AsyncAction__c(
 			Data__c = data,
@@ -70,19 +70,19 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 		);
 	}
 
-	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record, String data) {
+	public static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record, String data) {
 		return AsyncActionProcessor.initAction(settings, record?.Id, data);
 	}
 
-	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId) {
+	public static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId) {
 		return AsyncActionProcessor.initAction(settings, relatedRecordId, null);
 	}
 
-	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record) {
+	public static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record) {
 		return AsyncActionProcessor.initAction(settings, record?.Id);
 	}
 
-	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings) {
+	public static AsyncAction__c initAction(AsyncActionProcessor__mdt settings) {
 		Id nullRecordId = null;
 		return AsyncActionProcessor.initAction(settings, nullRecordId);
 	}
@@ -137,20 +137,20 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 	}
 
 	// **** INNER **** //
-	global class FailureLogic {
+	public class FailureLogic {
 		private AsyncActionProcessor.RetryBehavior behavior;
 		private AsyncActionProcessor__mdt settings;
 
-		global FailureLogic(AsyncActionProcessor__mdt settings, AsyncActionProcessor.RetryBehavior behavior) {
+		public FailureLogic(AsyncActionProcessor__mdt settings, AsyncActionProcessor.RetryBehavior behavior) {
 			this.behavior = behavior;
 			this.settings = settings;
 		}
 
-		global FailureLogic(AsyncActionProcessor__mdt settings) {
+		public FailureLogic(AsyncActionProcessor__mdt settings) {
 			this(settings, AsyncActionProcessor.RetryBehavior.ALLOW_RETRY);
 		}
 
-		global void fail(List<AsyncAction__c> actions, Object errorObj) {
+		public void fail(List<AsyncAction__c> actions, Object errorObj) {
 			for (AsyncAction__c action : actions) {
 				// Callers can use this method to handle a failed action
 				action.Error__c = String.valueOf(errorObj)?.abbreviate(ERROR_FIELD_LENGTH);
@@ -173,7 +173,7 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 			}
 		}
 
-		global void fail(AsyncAction__c action, Object errorObj) {
+		public void fail(AsyncAction__c action, Object errorObj) {
 			this.fail(new List<AsyncAction__c>{ action }, errorObj);
 		}
 
@@ -188,18 +188,18 @@ global virtual without sharing class AsyncActionProcessor implements System.Queu
 		}
 	}
 
-	global interface Logic {
+	public interface Logic {
 		void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions);
 	}
 
-	global enum RetryBehavior {
+	public enum RetryBehavior {
 		ALLOW_RETRY,
 		KEEP_ALIVE,
 		SUDDEN_DEATH
 	}
 
 	@SuppressWarnings('PMD.FieldNamingConventions')
-	global enum Status {
+	public enum Status {
 		// Represents the AsyncAction__c.Status__c picklist, offers some type-safety
 		// Note: Since picklists are case-sensitive, casing differs from typical enum values
 		Pending,
