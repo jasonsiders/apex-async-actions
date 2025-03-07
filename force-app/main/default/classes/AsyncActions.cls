@@ -1,5 +1,25 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier')
 global abstract class AsyncActions {
+	// **** INNER **** //
+	global interface Processor {
+		/**
+		 * This interface defines the logic to be performed in an Async Action
+		 * Create a class that implements this interface,
+		 * and list the fully qualified api name of that class in AsyncActionProcessor__mdt.Processor__c
+		 **/
+		void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions);
+	}
+
+	@SuppressWarnings('PMD.FieldNamingConventions')
+	global enum Status {
+		// Represents the AsyncAction__c.Status__c picklist, offers some type-safety
+		// Note: Since picklists are case-sensitive, casing differs from typical enum values
+		Pending,
+		Completed,
+		Failed,
+		Canceled
+	}
+
 	// **** STATIC **** //
 	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId, String data) {
 		// Returns a new action related to the current processor type
@@ -28,25 +48,5 @@ global abstract class AsyncActions {
 	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings) {
 		Id nullRecordId = null;
 		return AsyncActions.initAction(settings, nullRecordId);
-	}
-
-	// **** INNER **** //
-	global interface Processor {
-		/**
-		 * This interface defines the logic to be performed in an Async Action
-		 * Create a class that implements this interface,
-		 * and list the fully qualified api name of that class in AsyncActionProcessor__mdt.Processor__c
-		 **/
-		void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions);
-	}
-
-	@SuppressWarnings('PMD.FieldNamingConventions')
-	global enum Status {
-		// Represents the AsyncAction__c.Status__c picklist, offers some type-safety
-		// Note: Since picklists are case-sensitive, casing differs from typical enum values
-		Pending,
-		Completed,
-		Failed,
-		Canceled
 	}
 }
