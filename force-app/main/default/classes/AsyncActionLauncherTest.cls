@@ -61,6 +61,7 @@ private class AsyncActionLauncherTest {
 		Assert.isNull(jobId, 'Launched disabled job');
 	}
 
+	@SuppressWarnings('PMD.OperationWithLimitsInLoop')
 	@IsTest
 	static void shouldNotLaunchIfQueueableLimitsExceeded() {
 		AsyncActionTestUtils.initScheduledJobSettings();

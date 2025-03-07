@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.AvoidGlobalModifier')
+@SuppressWarnings('PMD.ApexDoc, PMD.AvoidGlobalModifier')
 global interface AsyncActionProcessor {
 	/**
 	 * This interface defines the logic to be performed in an Async Action

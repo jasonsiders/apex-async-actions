@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexDoc')
 @IsTest
 public class MockAsyncActionJob extends AsyncActionJob {
 	// This sample processor creates X number of Cases

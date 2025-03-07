@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.EmptyStatementBlock')
+@SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.AvoidGlobalModifier, PMD.EmptyStatementBlock')
 global abstract class AsyncActionLogger {
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
