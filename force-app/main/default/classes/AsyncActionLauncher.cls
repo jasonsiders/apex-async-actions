@@ -24,6 +24,12 @@ public without sharing class AsyncActionLauncher {
 	}
 
 	// **** PRIVATE **** //
+	private System.QueueableDuplicateSignature buildDuplicateSignature(AsyncActionProcessor__mdt settings) {
+		// Build a QueueableDuplicateSigntuare to prevent launching duplicate Queueable jobs
+		String hashedSignature = this.hashProcessorName(settings);
+		return new System.QueueableDuplicateSignature.Builder()?.addString(hashedSignature)?.build();
+	}
+
 	private Set<String> extractProcessorNames(List<AsyncActionProcessor__mdt> configs) {
 		Set<String> results = new Set<String>();
 		for (AsyncActionProcessor__mdt settings : configs) {
@@ -31,6 +37,13 @@ public without sharing class AsyncActionLauncher {
 			results?.add(processorName);
 		}
 		return results;
+	}
+
+	private String hashProcessorName(AsyncActionProcessor__mdt settings) {
+		// Note: Max size of QueueableDuplicateSignature is32 bytes; hash the processor value to prevent exceeding this value
+		Blob hashBlob = Crypto.generateDigest('SHA-256', Blob.valueOf(settings?.DeveloperName));
+		String hashHex = EncodingUtil.convertToHex(hashBlob);
+		return hashHex?.substring(0, 32);
 	}
 
 	private Id launchJobForProcessor(String processorName) {
@@ -41,9 +54,7 @@ public without sharing class AsyncActionLauncher {
 			AsyncActionProcessor processor = new AsyncActionProcessor(settings);
 			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
-			options.DuplicateSignature = new System.QueueableDuplicateSignature.Builder()
-				?.addString(settings?.DeveloperName)
-				?.build();
+			options.DuplicateSignature = this.buildDuplicateSignature(settings);
 			Id jobId = System.enqueueJob(processor, options);
 			String msg = processorName + ': launch() -> ' + jobId;
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
