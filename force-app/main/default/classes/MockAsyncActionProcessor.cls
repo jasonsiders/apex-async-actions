@@ -43,7 +43,6 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 	public enum Path {
 		FAIL,
 		JOB_ERROR,
-		FINALIZER_ERROR,
 		SUCCESS
 	}
 }

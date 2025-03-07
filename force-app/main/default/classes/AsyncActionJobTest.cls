@@ -147,8 +147,7 @@ private class AsyncActionJobTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.Retries__c = 0;
-		AsyncActionJob job = new AsyncActionJob(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FINALIZER_ERROR;
+		AsyncActionJob job = new JobWithErrorInFinalizer(settings);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
 		insert actions;
 
@@ -271,5 +270,17 @@ private class AsyncActionJobTest {
 			actions?.add(action);
 		}
 		return actions;
+	}
+
+	// **** INNER **** //
+	private class JobWithErrorInFinalizer extends AsyncActionJob {
+		public JobWithErrorInFinalizer(AsyncActionProcessor__mdt settings) {
+			super(settings);
+		}
+
+		public override void finalize(System.FinalizerContext context) {
+			System.debug('@jason: in child finalizer');
+			throw new System.DmlException('This is a test exception');
+		}
 	}
 }

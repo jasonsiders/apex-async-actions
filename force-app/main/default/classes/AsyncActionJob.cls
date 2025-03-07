@@ -1,5 +1,5 @@
 @SuppressWarnings('PMD.ApexDoc')
-public without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
+public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
 	private Set<Id> actionIds;
 	private AsyncActions.Processor processor;
 	private AsyncActionProcessor__mdt settings;
@@ -44,7 +44,8 @@ public without sharing class AsyncActionJob implements System.Queueable, System.
 	}
 
 	// **** PRIVATE **** //
-	private void finalize(System.FinalizerContext context) {
+	public virtual void finalize(System.FinalizerContext context) {
+		System.debug('@jason: in parent finalizer?');
 		// * Check the current job status, and handle any unexpected failures
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			this.handleFinalizerError(context?.getException());
