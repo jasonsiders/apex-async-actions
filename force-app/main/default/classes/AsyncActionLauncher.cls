@@ -97,6 +97,7 @@ public without sharing class AsyncActionLauncher {
 		}
 	}
 
+	// **** INNER **** //
 	private class PendingAction {
 		// This class is used to store aggregate query results
 		// Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions

@@ -4,10 +4,12 @@ global abstract class AsyncActionLogger {
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
 
 	global static void log(System.LoggingLevel level, Object logMessage) {
+		// Call the singleton instance's log method
 		INSTANCE?.log(level, logMessage);
 	}
 
 	global static void save() {
+		// Call the singleton instance's save method
 		INSTANCE?.save();
 	}
 
@@ -27,6 +29,11 @@ global abstract class AsyncActionLogger {
 
 	// **** INNER **** //
 	global interface Adapter {
+		/**
+		 * The main logging interface for callers to implement
+		 * Once implemented, specify the fully qualified api name of your class
+		 * in AsyncActionGlobalSetting__mdt.LoggerPlugin__c
+		 **/
 		void log(System.LoggingLevel level, Object logMessage);
 		void save();
 	}
