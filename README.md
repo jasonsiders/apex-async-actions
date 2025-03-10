@@ -116,7 +116,7 @@ You can also create a Flow to handle your processing logic. This flow should hav
 
 Alternatively, you can clone the included [Template Flow](/force-app/main/default/flows/Template_Async_Action_Flow.flow-meta.xml), which conforms to this spec.
 
-Just as with their apex counterparts, each processor flow should result in one of the following outcomes:
+Same as w/apex, each processor flow should result in one of the following outcomes:
 
 1. If the action succeeds, update the `asyncAction` record's `Status__c` to "Completed"
 2. If the action fails, call the included `Handle Async Action Failures` invocable. This runs the same logic as the `AsyncActions.Failure` class.
