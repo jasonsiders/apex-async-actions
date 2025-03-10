@@ -14,7 +14,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	public AsyncActionJob(AsyncActionLauncher.Factory factory) {
 		// This class can't be manually instantiated; instead use the AsyncActionLauncher class to launch a job
 		this.settings = factory?.getSettings();
-		this.initializeProcessor();
+		this.initializeProcessor(settings);
 	}
 
 	// **** QUEUEABLE **** //
@@ -70,20 +70,19 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		return this.settings?.BatchSize__c?.intValue() ?? 200;
 	}
 
-	private void initializeProcessor() {
-		this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
-		/* if (this.settings?.ProcessorType__c == 'Flow') {
-			this.processor = new AsyncActionsFlowProcessor(this.settings);
+	private void initializeProcessor(AsyncActionProcessor__mdt settings) {
+		if (settings?.ProcessorType__c == 'Flow') {
+			this.processor = new AsyncActionFlowProcessor(settings);
 		} else {
 			this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
-		} */
+		}
 	}
 
 	private List<AsyncAction__c> queryPendingActions() {
 		// Retrieve pending Async Action records for the current processor
 		String processorName = this.settings?.DeveloperName;
 		List<AsyncAction__c> actions = [
-			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
+			SELECT Id, Data__c, Error__c, NextEligibleAt__c, ProcessorName__c, RelatedRecordId__c, Retries__c, Status__c
 			FROM AsyncAction__c
 			WHERE
 				ProcessorName__c = :processorName
