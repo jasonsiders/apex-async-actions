@@ -1,9 +1,11 @@
 @SuppressWarnings('PMD.ApexDoc')
 @IsTest
 public class MockAsyncActionProcessor implements AsyncActions.Processor {
-	// This sample processor creates X number of Cases
-	// for the related account represented in RelatedRecordId__c
-	// The number of cases is taken from a property stored in Data__c
+	/**
+	 * This sample processor provides a mechanism to test various paths in the AsyncActionJob
+	 * By itself, it does nothing -- it simply marks the provided actions as completed
+	 * Test consumers can modify any of its public static properties to determine its behavior
+	 **/
 	public static Exception error = new System.DmlException();
 	public static MockAsyncActionProcessor.Path pathType = MockAsyncActionProcessor.Path.SUCCESS;
 	public static AsyncActions.RetryBehavior retryBehavior = AsyncActions.RetryBehavior.ALLOW_RETRY;
@@ -29,7 +31,7 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 
 	public enum Path {
 		FAIL,
-		THROW_ERROR,
-		SUCCESS
+		SUCCESS,
+		THROW_ERROR
 	}
 }

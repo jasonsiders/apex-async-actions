@@ -1,5 +1,9 @@
 @SuppressWarnings('PMD.ApexDoc')
 public with sharing class RunAsyncActionNowController {
+	/**
+	 * This class exposes a method which allows LWC consumers to run an `AsyncAction__c` record on-demand,
+	 * regardless of its current `NextEligibleAt__c` or `Status__c` values
+	 **/
 	@AuraEnabled
 	public static void runAction(String recordId) {
 		try {

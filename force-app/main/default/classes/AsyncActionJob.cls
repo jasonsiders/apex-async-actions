@@ -4,7 +4,6 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	 * This class is responsible for processing Async Actions via a Queueable job
 	 * The actual logic of each action is handled by the `AsyncActions.Processor` interface
 	 **/
-
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 

@@ -1,5 +1,11 @@
 @SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
+	/**
+	 * This class handles inserted `AsyncAction__c` records:
+	 * - When these records are inserted, they should inherit certain values from their `AsyncActionProcessor__mdt` settings.
+	 * - If defined, these records may trigger the corresponding job to be launched.
+	 * - Whenever an async action is inserted, we will run the `AsyncActionScheduleEnforcer` logic
+	 **/
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
 
 	public override void beforeInsert() {
