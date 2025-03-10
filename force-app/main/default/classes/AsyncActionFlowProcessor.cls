@@ -1,4 +1,11 @@
 public class AsyncActionFlowProcessor implements AsyncActions.Processor {
+	/**
+	 * This built-in processor class handles `AsyncActionProcessor__mdt`s with a `ProcessorType__c` of "Flow"
+	 * Each flow expects the following parameters:
+	 * 	- `AsyncAction__c asyncAction` [input & output]
+	 *  - `AsyncActionProcessor__mdt settings` [input]
+	 * This enables subscribers to define simple async action logic in flow, without using apex.
+	 **/
 	@TestVisible
 	private static String actionParameter = 'asyncAction';
 	private static String settingsParameter = 'settings';
