@@ -14,7 +14,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	public AsyncActionJob(AsyncActionLauncher.Factory factory) {
 		// This class can't be manually instantiated; instead use the AsyncActionLauncher class to launch a job
 		this.settings = factory?.getSettings();
-		this.initializeProcessor();
+		this.initializeProcessor(settings);
 	}
 
 	// **** QUEUEABLE **** //
@@ -70,13 +70,12 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		return this.settings?.BatchSize__c?.intValue() ?? 200;
 	}
 
-	private void initializeProcessor() {
-		this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
-		/* if (this.settings?.ProcessorType__c == 'Flow') {
-			this.processor = new AsyncActionsFlowProcessor(this.settings);
+	private void initializeProcessor(AsyncActionProcessor__mdt settings) {
+		if (settings?.ProcessorType__c == 'Flow') {
+			this.processor = new AsyncActionFlowProcessor(settings);
 		} else {
 			this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
-		} */
+		}
 	}
 
 	private List<AsyncAction__c> queryPendingActions() {
