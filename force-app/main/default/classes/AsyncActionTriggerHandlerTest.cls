@@ -6,7 +6,7 @@ private class AsyncActionTriggerHandlerTest {
 		settings.RunOnInsert__c = true;
 		AsyncAction__c action = AsyncActions.initAction(settings);
 
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = [
@@ -24,7 +24,7 @@ private class AsyncActionTriggerHandlerTest {
 		settings.RunOnInsert__c = false;
 		AsyncAction__c action = AsyncActions.initAction(settings);
 
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = [
@@ -44,7 +44,7 @@ private class AsyncActionTriggerHandlerTest {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
 
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = [
@@ -63,7 +63,7 @@ private class AsyncActionTriggerHandlerTest {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
 
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
 		List<AsyncApexJob> jobs = [
@@ -84,7 +84,7 @@ private class AsyncActionTriggerHandlerTest {
 		action.Retries__c = null;
 
 		Test.startTest();
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.stopTest();
 
 		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];
@@ -96,7 +96,7 @@ private class AsyncActionTriggerHandlerTest {
 		AsyncAction__c action = new AsyncAction__c(ProcessorName__c = 'Some_Processor', Retries__c = null);
 
 		Test.startTest();
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.stopTest();
 
 		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];
@@ -112,7 +112,7 @@ private class AsyncActionTriggerHandlerTest {
 		action.Retries__c = 3;
 
 		Test.startTest();
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.stopTest();
 
 		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];

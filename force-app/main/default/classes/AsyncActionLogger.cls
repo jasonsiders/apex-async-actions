@@ -1,14 +1,14 @@
 @SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.AvoidGlobalModifier, PMD.EmptyStatementBlock')
-public abstract class AsyncActionLogger {
+global abstract class AsyncActionLogger {
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
 
-	public static void log(System.LoggingLevel level, Object logMessage) {
+	global static void log(System.LoggingLevel level, Object logMessage) {
 		// Call the singleton instance's log method
 		INSTANCE?.log(level, logMessage);
 	}
 
-	public static void save() {
+	global static void save() {
 		// Call the singleton instance's save method
 		INSTANCE?.save();
 	}
@@ -28,7 +28,7 @@ public abstract class AsyncActionLogger {
 	}
 
 	// **** INNER **** //
-	public interface Adapter {
+	global interface Adapter {
 		/**
 		 * The main logging interface for callers to implement
 		 * Once implemented, specify the fully qualified api name of your class
@@ -38,19 +38,19 @@ public abstract class AsyncActionLogger {
 		void save();
 	}
 
-	public class DefaultLogger implements AsyncActionLogger.Adapter {
+	global class DefaultLogger implements AsyncActionLogger.Adapter {
 		// The default log implementation will post logs to traditional Salesforce debug logs
 
 		private DefaultLogger() {
 			// Adapters should not be constructed manually
 		}
 
-		public void log(System.LoggingLevel level, Object logMessage) {
+		global void log(System.LoggingLevel level, Object logMessage) {
 			// Print to traditional salesforce debug logs
 			System.debug(level, logMessage);
 		}
 
-		public void save() {
+		global void save() {
 			// Many custom logging tools require a method like this, to commit logs to the database.
 			// However, traditional salesforce debug logs do not require this, so this method will no-op.
 		}

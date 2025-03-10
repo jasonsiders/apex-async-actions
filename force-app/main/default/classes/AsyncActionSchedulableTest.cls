@@ -178,7 +178,7 @@ private class AsyncActionSchedulableTest {
 		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	static Map<String, AsyncApexJob> mapAsyncJobsByClassName(List<AsyncApexJob> jobs) {

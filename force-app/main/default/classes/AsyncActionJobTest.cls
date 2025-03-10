@@ -10,7 +10,7 @@ private class AsyncActionJobTest {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncActionJob job = new AsyncActionJob(settings);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		Id jobId = System.enqueueJob(job);
@@ -38,7 +38,7 @@ private class AsyncActionJobTest {
 		settings.Retries__c = 0;
 		AsyncActionJob job = new JobWithErrorInFinalizer(settings);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		Id jobId = System.enqueueJob(job);
@@ -70,8 +70,8 @@ private class AsyncActionJobTest {
 		AsyncActionJob job = new AsyncActionJob(settings);
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
-		AsyncActionTestUtils.setAllowRecursion(true);
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
+		AsyncActionJob.allowRecursion = true;
 
 		try {
 			Test.startTest();
@@ -99,7 +99,7 @@ private class AsyncActionJobTest {
 		AsyncActionJob job = new AsyncActionJob(settings);
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 
 		try {
 			Test.startTest();
@@ -123,7 +123,7 @@ private class AsyncActionJobTest {
 			Account account = new Account(Name = 'Test Account #' + i);
 			accounts.add(account);
 		}
-		insert accounts;
+		Database.insert(accounts, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {

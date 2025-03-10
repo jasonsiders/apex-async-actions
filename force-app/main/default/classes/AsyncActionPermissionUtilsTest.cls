@@ -13,7 +13,8 @@ private class AsyncActionPermissionUtilsTest {
 	static void shouldAssignPermissionSet() {
 		User me = new User(Id = UserInfo.getUserId());
 		// Avoid creating duplicate assignments - just for testing
-		delete AsyncActionPermissionUtilsTest.getMyAssignments();
+		List<PermissionSetAssignment> myAssignments = AsyncActionPermissionUtilsTest.getMyAssignments();
+		Database.delete(myAssignments, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		AsyncActionPermissionUtils.assignPermissionSet(me);

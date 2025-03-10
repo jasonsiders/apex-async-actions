@@ -71,7 +71,7 @@ private class AsyncActionRelatedListControllerTest {
 		AsyncActionRelatedListControllerTest.createTestUser();
 		// Create an Account
 		Account account = new Account(Name = 'Test Account');
-		insert account;
+		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
 		// Create actions related to the Account
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
 			AsyncActionRelatedListControllerTest.class
@@ -81,7 +81,7 @@ private class AsyncActionRelatedListControllerTest {
 			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
 			actions?.add(action);
 		}
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	static User createTestUser() {
@@ -102,7 +102,7 @@ private class AsyncActionRelatedListControllerTest {
 		// Can't mix DML ops - this is a workaround
 		User me = new User(Id = UserInfo.getUserId());
 		System.runAs(me) {
-			insert user;
+			Database.insert(user, System.AccessLevel.SYSTEM_MODE);
 		}
 		return user;
 	}

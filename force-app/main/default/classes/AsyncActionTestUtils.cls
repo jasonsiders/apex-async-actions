@@ -96,10 +96,4 @@ global class AsyncActionTestUtils {
 		String jobName = jobSettings?.DeveloperName;
 		AsyncActionScheduledJobService.settings?.put(jobName, jobSettings);
 	}
-
-	global static void setAllowRecursion(Boolean allowRecursion) {
-		// Enables external callers to manipulate the @TestVisible allowRecursion flag
-		// This is disabled in @IsTest context by default, to simplify testing and prevent runaways
-		AsyncActionJob.allowRecursion = allowRecursion;
-	}
 }

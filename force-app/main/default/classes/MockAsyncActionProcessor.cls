@@ -32,7 +32,7 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 			// Mark the action as completed - this naive implementation doesn't handle failures!
 			action.Status__c = AsyncActions.Status.COMPLETED.name();
 		}
-		insert cases;
+		Database.insert(cases, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	private Map<String, Object> getData(AsyncAction__c action) {
