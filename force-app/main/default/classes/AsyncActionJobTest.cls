@@ -1,32 +1,69 @@
 @SuppressWarnings('PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionJobTest {
-	private static final Integer TEST_SIZE = 100;
+	private static final Integer TEST_SIZE = 200;
 
 	// **** TESTS **** //
 	@IsTest
 	static void shouldProcessActions() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionJob job = new AsyncActionJob(settings);
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
 
 		Test.startTest();
-		Id jobId = System.enqueueJob(job);
+		System.enqueueJob(job);
 		Test.stopTest();
 
-		Assert.isNotNull(jobId, 'The job was not launched');
-		Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, (SELECT Id FROM Cases) FROM Account]);
-		actions = AsyncActionJobTest.getUpdatedActions(actions);
-		Assert.areEqual(accounts?.size(), actions?.size(), 'Wrong # of actions created');
-		for (AsyncAction__c action : actions) {
-			Id recordId = action?.RelatedRecordId__c;
-			Account account = accounts?.get(recordId);
-			Map<String, Object> params = (Map<String, Object>) JSON.deserializeUntyped(action?.Data__c);
-			Integer numCases = (Integer) params?.get('numCases');
-			Assert.areEqual(numCases, account?.Cases?.size(), 'Wrong # of Cases created');
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not completed');
+		}
+	}
+
+	@IsTest
+	static void shouldProcessFailedActions() {
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.Retries__c = 0;
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
+		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FAIL;
+
+		Test.startTest();
+		System.enqueueJob(job);
+		Test.stopTest();
+
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Action was not failed');
+		}
+	}
+
+	@IsTest
+	static void shouldHandleFatalErrors() {
+		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
+		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.THROW_ERROR;
+
+		try {
+			Test.startTest();
+			System.enqueueJob(job);
+			Test.stopTest();
+			Test.getEventBus().deliver();
+		} catch (Exception error) {
+			// Try/Catch needed to prevent the test from aborting
+		}
+
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
+			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
 		}
 	}
 
@@ -36,9 +73,11 @@ private class AsyncActionJobTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.Retries__c = 0;
-		AsyncActionJob job = new JobWithErrorInFinalizer(settings);
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new JobWithErrorInFinalizer(factory);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
 
 		Test.startTest();
 		Id jobId = System.enqueueJob(job);
@@ -67,11 +106,12 @@ private class AsyncActionJobTest {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.Retries__c = 2;
 		settings.RetryInterval__c = 0;
-		AsyncActionJob job = new AsyncActionJob(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
-		AsyncActionTestUtils.setAllowRecursion(true);
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
+		AsyncActionJob.allowRecursion = true;
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.THROW_ERROR;
 
 		try {
 			Test.startTest();
@@ -92,43 +132,10 @@ private class AsyncActionJobTest {
 		}
 	}
 
-	@IsTest
-	static void shouldHandleFatalErrors() {
-		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionJob job = new AsyncActionJob(settings);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
-		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		insert actions;
-
-		try {
-			Test.startTest();
-			System.enqueueJob(job);
-			Test.stopTest();
-			Test.getEventBus().deliver();
-		} catch (Exception error) {
-			// Try/Catch needed to prevent the test from aborting
-		}
-
-		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
-		}
-	}
-
 	// **** HELPER **** //
-	@TestSetup
-	static void setup() {
-		List<Account> accounts = new List<Account>();
-		for (Integer i = 0; i < TEST_SIZE; i++) {
-			Account account = new Account(Name = 'Test Account #' + i);
-			accounts.add(account);
-		}
-		insert accounts;
-	}
-
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
-			SELECT Id, Data__c, Error__c, Retries__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
+			SELECT Id, Error__c, Retries__c, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :originalActions
 		];
@@ -136,11 +143,8 @@ private class AsyncActionJobTest {
 
 	static List<AsyncAction__c> initTestActions(AsyncActionProcessor__mdt settings) {
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
-		for (Account account : [SELECT Id FROM Account LIMIT :TEST_SIZE]) {
-			Integer numCases = Integer.valueOf(Math.random() * 3);
-			Map<String, Object> params = new Map<String, Object>{ 'numCases' => numCases };
-			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
-			action.Data__c = JSON.serialize(params);
+		for (Integer i = 0; i < TEST_SIZE; i++) {
+			AsyncAction__c action = AsyncActions.initAction(settings);
 			actions?.add(action);
 		}
 		return actions;
@@ -148,8 +152,8 @@ private class AsyncActionJobTest {
 
 	// **** INNER **** //
 	private class JobWithErrorInFinalizer extends AsyncActionJob {
-		public JobWithErrorInFinalizer(AsyncActionProcessor__mdt settings) {
-			super(settings);
+		public JobWithErrorInFinalizer(AsyncActionLauncher.Factory factory) {
+			super(factory);
 		}
 
 		public override void finalize(System.FinalizerContext context) {

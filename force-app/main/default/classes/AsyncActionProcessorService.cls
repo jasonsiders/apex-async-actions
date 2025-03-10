@@ -1,5 +1,11 @@
 @SuppressWarnings('PMD.ApexDoc')
 public abstract class AsyncActionProcessorService {
+	/**
+	 * This class is used to retrieve AsyncActionProcessor__mdt objects from the database
+	 * Its `processors` property serves as a seam to inject test records in @IsTest context,
+	 * since custom metadata types cannot be manipulated via traditional dml.
+	 * See the `AsyncActionTestUtils` class methods to easily inject settings for your apex tests.
+	 **/
 	@TestVisible
 	static Map<String, AsyncActionProcessor__mdt> processors;
 	@TestVisible

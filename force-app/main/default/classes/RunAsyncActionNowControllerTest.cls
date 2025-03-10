@@ -22,7 +22,7 @@ private class RunAsyncActionNowControllerTest {
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 		// The action should process this action now, regardless of its Next Eligible At value
 		action.NextEligibleAt__c = DateTime.now().addDays(10);
-		update action;
+		Database.update(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		RunAsyncActionNowController.runAction(action?.Id);
@@ -52,14 +52,14 @@ private class RunAsyncActionNowControllerTest {
 	@TestSetup
 	static void setup() {
 		Account account = new Account(Name = 'Test Account');
-		insert account;
+		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.Retries__c = 0;
 		settings.RunOnInsert__c = false;
 		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
 		AsyncAction__c action = AsyncActions.initAction(settings, account?.Id, data);
 		action.Status__c = AsyncActions.Status.CANCELED.name();
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	static AsyncAction__c getAction() {

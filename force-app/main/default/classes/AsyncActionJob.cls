@@ -1,14 +1,20 @@
 @SuppressWarnings('PMD.ApexDoc')
 public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
+	/**
+	 * This class is responsible for processing Async Actions via a Queueable job
+	 * The actual logic of each action is handled by the `AsyncActions.Processor` interface
+	 **/
+	@TestVisible
+	private static Boolean allowRecursion = !Test.isRunningTest();
+
 	private Set<Id> actionIds;
 	private AsyncActions.Processor processor;
 	private AsyncActionProcessor__mdt settings;
-	@TestVisible
-	private static Boolean allowRecursion = (Test.isRunningTest() == false);
 
-	public AsyncActionJob(AsyncActionProcessor__mdt settings) {
-		this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
-		this.settings = settings;
+	public AsyncActionJob(AsyncActionLauncher.Factory factory) {
+		// This class can't be manually instantiated; instead use the AsyncActionLauncher class to launch a job
+		this.settings = factory?.getSettings();
+		this.initializeProcessor();
 	}
 
 	// **** QUEUEABLE **** //
@@ -16,7 +22,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		System.attachFinalizer(this);
 		if (this.settings?.Enabled__c == true) {
 			try {
-				List<AsyncAction__c> actions = this.getPendingActions();
+				List<AsyncAction__c> actions = this.queryPendingActions();
 				this.processor?.process(this.settings, actions);
 				Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
 			} catch (Exception error) {
@@ -46,11 +52,15 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	// **** PRIVATE **** //
 	@TestVisible
 	protected virtual void finalize(System.FinalizerContext context) {
-		// * Check the current job status, and handle any unexpected failures
+		// Check the current job status, and handle any unexpected failures
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
-			this.handleFinalizerError(context?.getException());
+			// The job failed; mark each action record as failed, according to its defined retry behavior
+			Exception error = context?.getException();
+			List<AsyncAction__c> actions = this.requeryActions();
+			new AsyncActions.Failure(this.settings)?.fail(actions, error);
+			Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 		}
-		// * Re-launch this job if there are still pending records
+		// Re-launch this job if there are still pending records
 		if (this.settings?.Enabled__c == true && AsyncActionJob.allowRecursion == true) {
 			new AsyncActionLauncher()?.launch(this.settings);
 		}
@@ -60,7 +70,17 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		return this.settings?.BatchSize__c?.intValue() ?? 200;
 	}
 
-	private List<AsyncAction__c> getPendingActions() {
+	private void initializeProcessor() {
+		this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
+		/* if (this.settings?.ProcessorType__c == 'Flow') {
+			this.processor = new AsyncActionsFlowProcessor(this.settings);
+		} else {
+			this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
+		} */
+	}
+
+	private List<AsyncAction__c> queryPendingActions() {
+		// Retrieve pending Async Action records for the current processor
 		String processorName = this.settings?.DeveloperName;
 		List<AsyncAction__c> actions = [
 			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
@@ -70,17 +90,11 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 				AND NextEligibleAt__c <= :DateTime.now()
 				AND Status__c = :AsyncActions.Status.PENDING.name()
 			WITH SYSTEM_MODE
-			ORDER BY NextEligibleAt__c ASC
+			ORDER BY NextEligibleAt__c ASC // First in, first out!
 			LIMIT :this.getBatchSize()
 		];
 		this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
 		return actions;
-	}
-
-	private void handleFinalizerError(Exception error) {
-		List<AsyncAction__c> actions = this.requeryActions();
-		new AsyncActionErrorHandler(this.settings)?.handleError(actions, error);
-		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 	}
 
 	private List<AsyncAction__c> requeryActions() {

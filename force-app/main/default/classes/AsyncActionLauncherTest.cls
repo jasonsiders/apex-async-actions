@@ -6,7 +6,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		new AsyncActionLauncher()?.launchAll();
@@ -21,7 +21,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		Id jobId = new AsyncActionLauncher()?.launch(settings);
@@ -36,7 +36,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(fakeProcessorType);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		new AsyncActionLauncher()?.launchAll();
@@ -52,7 +52,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(processorType);
 		settings.Enabled__c = false;
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		Id jobId = new AsyncActionLauncher()?.launch(settings);
@@ -67,12 +67,13 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			AsyncActionJob job = new AsyncActionJob(settings);
+			AsyncActionJob job = new AsyncActionJob(factory);
 			System.enqueueJob(job);
 		}
 		// NOW try to launch the job
@@ -101,7 +102,7 @@ private class AsyncActionLauncherTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		Id jobId1 = new AsyncActionLauncher()?.launch(settings);

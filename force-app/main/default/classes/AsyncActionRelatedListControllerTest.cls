@@ -38,7 +38,7 @@ private class AsyncActionRelatedListControllerTest {
 	static void shouldReturnTrueIfHasAccess() {
 		User user = AsyncActionRelatedListControllerTest.getTestUser();
 		// By default, this user does not have access. Assign them a permission set
-		AsyncActionPermissionUtils.assignPermissionSet(user);
+		AsyncActionRelatedListControllerTest.assignPermissionSet(user);
 
 		Test.startTest();
 		Boolean results;
@@ -71,17 +71,25 @@ private class AsyncActionRelatedListControllerTest {
 		AsyncActionRelatedListControllerTest.createTestUser();
 		// Create an Account
 		Account account = new Account(Name = 'Test Account');
-		insert account;
+		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
 		// Create actions related to the Account
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			AsyncActionRelatedListControllerTest.class
-		);
+		Type thisClass = AsyncActionRelatedListControllerTest.class;
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(thisClass);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {
 			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
 			actions?.add(action);
 		}
-		insert actions;
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+	}
+
+	static void assignPermissionSet(User user) {
+		PermissionSet permissionSet = AsyncActionRelatedListControllerTest.getPermissionSet();
+		PermissionSetAssignment assignment = new PermissionSetAssignment(
+			AssigneeId = user?.Id,
+			PermissionSetId = permissionSet?.Id
+		);
+		Database.insert(assignment, true, System.AccessLevel.USER_MODE);
 	}
 
 	static User createTestUser() {
@@ -102,7 +110,7 @@ private class AsyncActionRelatedListControllerTest {
 		// Can't mix DML ops - this is a workaround
 		User me = new User(Id = UserInfo.getUserId());
 		System.runAs(me) {
-			insert user;
+			Database.insert(user, System.AccessLevel.SYSTEM_MODE);
 		}
 		return user;
 	}
@@ -114,5 +122,9 @@ private class AsyncActionRelatedListControllerTest {
 	static Account getAccount() {
 		List<Account> accounts = [SELECT Id FROM Account ORDER BY CreatedDate DESC LIMIT 1];
 		return accounts?.isEmpty() ? null : accounts[0];
+	}
+
+	static PermissionSet getPermissionSet() {
+		return [SELECT Id FROM PermissionSet WHERE Name = 'AsyncActionAdministrator' WITH SYSTEM_MODE LIMIT 1] ?? null;
 	}
 }

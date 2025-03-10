@@ -1,5 +1,10 @@
 @SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework {
+	/**
+	 * This class handles published `AsyncActionStart__e` platform events
+	 * When these events are inserted, they should launch `AsyncActionJob`s
+	 * that correspond with the event's Actions__c field, or all if none specified
+	 **/
 	public override void afterInsert() {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);

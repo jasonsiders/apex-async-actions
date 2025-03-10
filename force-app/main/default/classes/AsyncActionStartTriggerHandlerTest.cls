@@ -5,7 +5,7 @@ private class AsyncActionStartTriggerHandlerTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionStart__e event = new AsyncActionStart__e();
 
 		EventBus.publish(event);
@@ -24,7 +24,7 @@ private class AsyncActionStartTriggerHandlerTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionStart__e event = new AsyncActionStart__e();
 		event.Actions__c = settings?.DeveloperName + ',Other_Processor,etc';
 
@@ -46,7 +46,7 @@ private class AsyncActionStartTriggerHandlerTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = AsyncActions.initAction(settings);
-		insert action;
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionStart__e event = new AsyncActionStart__e();
 		event.Actions__c = 'FakeClass1,FakeClass2,etc';
 

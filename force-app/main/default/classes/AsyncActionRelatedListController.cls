@@ -1,5 +1,8 @@
 @SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionRelatedListController {
+	/**
+	 * This class provides controller methods for LWCs that display AsyncAction records related to a specific SObject record
+	 **/
 	@AuraEnabled(cacheable=true)
 	public static List<AsyncAction__c> getActions(String recordId) {
 		if (String.isBlank(recordId)) {

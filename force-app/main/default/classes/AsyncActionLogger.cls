@@ -1,14 +1,22 @@
 @SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.AvoidGlobalModifier, PMD.EmptyStatementBlock')
-public abstract class AsyncActionLogger {
+global abstract class AsyncActionLogger {
+	/**
+	 * This class is responsible for logging details about the AsyncActionFramework
+	 * By default, it uses standard System.debug logs
+	 * If desired, subscribers can write their own logging plugins, via the `AsyncActionLogger.Adapter` interface
+	 * and register it in the `AsyncActionGlobalSetting__mdt.LoggerPlugin__c` field
+	 * The framework stores the current logging instance in a singleton,
+	 * which is accessed by the static `log` ad `save` methods by the application
+	 **/
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
 
-	public static void log(System.LoggingLevel level, Object logMessage) {
+	global static void log(System.LoggingLevel level, Object logMessage) {
 		// Call the singleton instance's log method
 		INSTANCE?.log(level, logMessage);
 	}
 
-	public static void save() {
+	global static void save() {
 		// Call the singleton instance's save method
 		INSTANCE?.save();
 	}
@@ -16,9 +24,10 @@ public abstract class AsyncActionLogger {
 	private static AsyncActionLogger.Adapter getInstance() {
 		// Initialize a log adapter object based on the provided value in custom metadata
 		// If no metadata records, or if an invalid adapter is defined, will use the DefaultLogger instead
-		AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
-		String adapterName = settings?.LoggerPlugin__c;
+		String adapterName;
 		try {
+			AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
+			adapterName = settings?.LoggerPlugin__c;
 			AsyncActionLogger.Adapter adapter = (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
 			return adapter ?? new AsyncActionLogger.DefaultLogger();
 		} catch (Exception error) {
@@ -28,7 +37,7 @@ public abstract class AsyncActionLogger {
 	}
 
 	// **** INNER **** //
-	public interface Adapter {
+	global interface Adapter {
 		/**
 		 * The main logging interface for callers to implement
 		 * Once implemented, specify the fully qualified api name of your class
@@ -38,11 +47,14 @@ public abstract class AsyncActionLogger {
 		void save();
 	}
 
-	public class DefaultLogger implements AsyncActionLogger.Adapter {
-		// The default log implementation will post logs to traditional Salesforce debug logs
-
+	@TestVisible
+	private class DefaultLogger implements AsyncActionLogger.Adapter {
+		/**
+		 * The default log implementation will post logs to traditional Salesforce debug logs
+		 **/
 		private DefaultLogger() {
-			// Adapters should not be constructed manually
+			// This adapter should not be constructed manually,
+			// or otherwise accessed directly by external consumers
 		}
 
 		public void log(System.LoggingLevel level, Object logMessage) {

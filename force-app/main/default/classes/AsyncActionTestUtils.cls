@@ -1,7 +1,12 @@
 @SuppressWarnings('PMD.ApexDoc, PMD.AvoidGlobalModifier')
 @IsTest
 global class AsyncActionTestUtils {
+	/**
+	 * This class provides global methods to be used to test various parts of the AsyncActions framework
+	 **/
 	global static AsyncActionGlobalSetting__mdt initGlobalSettings() {
+		// Constructs an AsyncActionGlobalSetting__mdt settings object
+		// This is usually not necessary, unless testing logging or other plugin(s) behavior
 		AsyncActionGlobalSetting__mdt settings = new AsyncActionGlobalSetting__mdt(
 			DeveloperName = 'Test_Global_Setting'
 		);
@@ -35,7 +40,7 @@ global class AsyncActionTestUtils {
 	}
 
 	global static AsyncActionScheduledJob__mdt initScheduledJobSettings() {
-		// Instantiates and returns a processor settings object w/default values for testing
+		// Instantiates and returns a scheduled job settings w/default values for testing
 		Set<String> jobNames = AsyncActionScheduledJobService.settings?.keySet();
 		Integer numSettings = jobNames?.size() ?? 0;
 		String jobName = 'TestJob_' + (numSettings + 1);
@@ -53,6 +58,7 @@ global class AsyncActionTestUtils {
 		AsyncActionProcessor__mdt actionSettings,
 		AsyncActionScheduledJob__mdt jobSettings
 	) {
+		// Instantiates and returns a scheduled job item settings w/default values for testing
 		AsyncActionScheduledJobItem__mdt item = new AsyncActionScheduledJobItem__mdt(
 			AsyncActionProcessor__r = actionSettings,
 			DeveloperName = actionSettings?.DeveloperName + '_' + jobSettings?.DeveloperName,
@@ -64,6 +70,7 @@ global class AsyncActionTestUtils {
 	}
 
 	global static void mockGlobalSettings(AsyncActionGlobalSetting__mdt settings) {
+		// Gives @IsTest access to inject global settings record(s) to external callers
 		AsyncActionGlobalSettingService.settings = settings;
 	}
 
@@ -95,11 +102,5 @@ global class AsyncActionTestUtils {
 			: new Map<String, AsyncActionScheduledJob__mdt>();
 		String jobName = jobSettings?.DeveloperName;
 		AsyncActionScheduledJobService.settings?.put(jobName, jobSettings);
-	}
-
-	global static void setAllowRecursion(Boolean allowRecursion) {
-		// Enables external callers to manipulate the @TestVisible allowRecursion flag
-		// This is disabled in @IsTest context by default, to simplify testing and prevent runaways
-		AsyncActionJob.allowRecursion = allowRecursion;
 	}
 }
