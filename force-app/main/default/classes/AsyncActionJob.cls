@@ -79,7 +79,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 
 	private void handleFinalizerError(Exception error) {
 		List<AsyncAction__c> actions = this.requeryActions();
-		new AsyncActionErrorHandler(this.settings)?.handleError(actions, error);
+		new AsyncActions.Failure(this.settings)?.fail(actions, error);
 		Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 	}
 

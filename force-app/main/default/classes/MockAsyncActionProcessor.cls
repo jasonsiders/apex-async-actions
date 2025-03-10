@@ -6,14 +6,14 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 	// The number of cases is taken from a property stored in Data__c
 	public static Exception error = new System.DmlException();
 	public static MockAsyncActionProcessor.Path pathType = MockAsyncActionProcessor.Path.SUCCESS;
-	public static AsyncActionErrorHandler.RetryBehavior retryBehavior = AsyncActionErrorHandler.RetryBehavior.ALLOW_RETRY;
+	public static AsyncActions.RetryBehavior retryBehavior = AsyncActions.RetryBehavior.ALLOW_RETRY;
 
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
 		if (MockAsyncActionProcessor.pathType == MockAsyncActionProcessor.Path.JOB_ERROR) {
 			throw MockAsyncActionProcessor.error;
 		} else if (MockAsyncActionProcessor.pathType == MockAsyncActionProcessor.Path.FAIL) {
-			new AsyncActionErrorHandler(settings, MockAsyncActionProcessor.retryBehavior)
-				?.handleError(actions, 'This is a test error');
+			new AsyncActions.Failure(settings, MockAsyncActionProcessor.retryBehavior)
+				?.fail(actions, 'This is a test error');
 		} else {
 			this.createCases(actions);
 		}
