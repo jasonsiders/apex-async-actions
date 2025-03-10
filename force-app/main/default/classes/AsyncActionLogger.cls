@@ -1,5 +1,13 @@
 @SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.AvoidGlobalModifier, PMD.EmptyStatementBlock')
 global abstract class AsyncActionLogger {
+	/**
+	 * This class is responsible for logging details about the AsyncActionFramework
+	 * By default, it uses standard System.debug logs
+	 * If desired, subscribers can write their own logging plugins, via the `AsyncActionLogger.Adapter` interface
+	 * and register it in the `AsyncActionGlobalSetting__mdt.LoggerPlugin__c` field
+	 * The framework stores the current logging instance in a singleton,
+	 * which is accessed by the static `log` ad `save` methods by the application
+	 **/
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance();
 
@@ -16,9 +24,10 @@ global abstract class AsyncActionLogger {
 	private static AsyncActionLogger.Adapter getInstance() {
 		// Initialize a log adapter object based on the provided value in custom metadata
 		// If no metadata records, or if an invalid adapter is defined, will use the DefaultLogger instead
-		AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
-		String adapterName = settings?.LoggerPlugin__c;
+		String adapterName;
 		try {
+			AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
+			adapterName = settings?.LoggerPlugin__c;
 			AsyncActionLogger.Adapter adapter = (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
 			return adapter ?? new AsyncActionLogger.DefaultLogger();
 		} catch (Exception error) {
@@ -38,19 +47,22 @@ global abstract class AsyncActionLogger {
 		void save();
 	}
 
-	global class DefaultLogger implements AsyncActionLogger.Adapter {
-		// The default log implementation will post logs to traditional Salesforce debug logs
-
+	@TestVisible
+	private class DefaultLogger implements AsyncActionLogger.Adapter {
+		/**
+		 * The default log implementation will post logs to traditional Salesforce debug logs
+		 **/
 		private DefaultLogger() {
-			// Adapters should not be constructed manually
+			// This adapter should not be constructed manually,
+			// or otherwise accessed directly by external consumers
 		}
 
-		global void log(System.LoggingLevel level, Object logMessage) {
+		public void log(System.LoggingLevel level, Object logMessage) {
 			// Print to traditional salesforce debug logs
 			System.debug(level, logMessage);
 		}
 
-		global void save() {
+		public void save() {
 			// Many custom logging tools require a method like this, to commit logs to the database.
 			// However, traditional salesforce debug logs do not require this, so this method will no-op.
 		}

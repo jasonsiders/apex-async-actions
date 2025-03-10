@@ -12,6 +12,7 @@ private class AsyncActionJobTest {
 		AsyncActionJob job = new AsyncActionJob(factory);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
 
 		Test.startTest();
 		System.enqueueJob(job);
@@ -19,6 +20,50 @@ private class AsyncActionJobTest {
 
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
 			Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not completed');
+		}
+	}
+
+	@IsTest
+	static void shouldProcessFailedActions() {
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.Retries__c = 0;
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
+		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.FAIL;
+
+		Test.startTest();
+		System.enqueueJob(job);
+		Test.stopTest();
+
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Action was not failed');
+		}
+	}
+
+	@IsTest
+	static void shouldHandleFatalErrors() {
+		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
+		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.THROW_ERROR;
+
+		try {
+			Test.startTest();
+			System.enqueueJob(job);
+			Test.stopTest();
+			Test.getEventBus().deliver();
+		} catch (Exception error) {
+			// Try/Catch needed to prevent the test from aborting
+		}
+
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
+			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
 		}
 	}
 
@@ -32,6 +77,7 @@ private class AsyncActionJobTest {
 		AsyncActionJob job = new JobWithErrorInFinalizer(factory);
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
 
 		Test.startTest();
 		Id jobId = System.enqueueJob(job);
@@ -62,10 +108,10 @@ private class AsyncActionJobTest {
 		settings.RetryInterval__c = 0;
 		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
 		AsyncActionJob job = new AsyncActionJob(factory);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
 		AsyncAction__c action = AsyncActions.initAction(settings);
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionJob.allowRecursion = true;
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.THROW_ERROR;
 
 		try {
 			Test.startTest();
@@ -83,30 +129,6 @@ private class AsyncActionJobTest {
 			if (asyncJob?.Status == 'Queued') {
 				System.abortJob(asyncJob?.Id);
 			}
-		}
-	}
-
-	@IsTest
-	static void shouldHandleFatalErrors() {
-		// When the job enocunters an unexpected exception, the error will be logged & saved immediately via platform event
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
-		AsyncActionJob job = new AsyncActionJob(factory);
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.JOB_ERROR;
-		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
-		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
-
-		try {
-			Test.startTest();
-			System.enqueueJob(job);
-			Test.stopTest();
-			Test.getEventBus().deliver();
-		} catch (Exception error) {
-			// Try/Catch needed to prevent the test from aborting
-		}
-
-		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
-			Assert.areNotEqual(null, action?.Error__c, 'Did not post error');
 		}
 	}
 

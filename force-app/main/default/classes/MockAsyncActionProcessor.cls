@@ -9,7 +9,7 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 	public static AsyncActions.RetryBehavior retryBehavior = AsyncActions.RetryBehavior.ALLOW_RETRY;
 
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-		if (pathType == MockAsyncActionProcessor.Path.JOB_ERROR) {
+		if (pathType == MockAsyncActionProcessor.Path.THROW_ERROR) {
 			throw error;
 		} else if (pathType == MockAsyncActionProcessor.Path.FAIL) {
 			AsyncActions.Failure failure = new AsyncActions.Failure(settings, retryBehavior);
@@ -29,7 +29,7 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 
 	public enum Path {
 		FAIL,
-		JOB_ERROR,
+		THROW_ERROR,
 		SUCCESS
 	}
 }
