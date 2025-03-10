@@ -64,7 +64,19 @@ private class AsyncActionFlowProcessorTest {
 
 	@IsTest
 	static void shouldHandleMissingInputParameters() {
-		Assert.fail('You still need to build this test');
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
+		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
+		// Simulate a flow with invalid input parameter names
+		AsyncActionFlowProcessor.actionParameter = 'someInvalidParameterName';
+
+		Test.startTest();
+		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
+		Test.stopTest();
+
+		// The processor should update the status records in memory
+		for (AsyncAction__c action : actions) {
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Wrong Status');
+		}
 	}
 
 	// **** HELPER **** //
