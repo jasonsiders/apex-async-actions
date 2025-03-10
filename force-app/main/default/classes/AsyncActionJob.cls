@@ -72,7 +72,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 
 	private void initializeProcessor(AsyncActionProcessor__mdt settings) {
 		if (settings?.ProcessorType__c == 'Flow') {
-			this.processor = new AsyncActionFlowProcessor();
+			this.processor = new AsyncActionFlowProcessor(settings);
 		} else {
 			this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
 		}
@@ -82,7 +82,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 		// Retrieve pending Async Action records for the current processor
 		String processorName = this.settings?.DeveloperName;
 		List<AsyncAction__c> actions = [
-			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
+			SELECT Id, Data__c, Error__c, NextEligibleAt__c, ProcessorName__c, RelatedRecordId__c, Retries__c, Status__c
 			FROM AsyncAction__c
 			WHERE
 				ProcessorName__c = :processorName

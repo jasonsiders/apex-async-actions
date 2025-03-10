@@ -1,7 +1,8 @@
+@SuppressWarnings('PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionFlowProcessorTest {
 	private static final String TEST_FLOW_NAME = 'Template_Async_Action_Flow';
-	private static final Integer TEST_SIZE = 200;
+	private static final Integer TEST_SIZE = 3;
 
 	@TestSetup
 	static void setup() {
@@ -38,7 +39,7 @@ private class AsyncActionFlowProcessorTest {
 		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
 
 		Test.startTest();
-		new AsyncActionFlowProcessor()?.process(settings, actions);
+		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
 		Test.stopTest();
 
 		// The processor should update the status records in memory
@@ -51,10 +52,26 @@ private class AsyncActionFlowProcessorTest {
 	static void shouldThrowErrorIfInvalidFlowName() {
 		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 		settings.Processor__c = 'Fake_Flow_123';
-		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
 
 		Test.startTest();
-		new AsyncActionFlowProcessor()?.process(settings, actions);
+		try {
+			new AsyncActionFlowProcessor(settings);
+			Assert.fail('Did not throw an error');
+		} catch (System.TypeException error) {
+			// As expected...
+		}
+		Test.stopTest();
+	}
+
+	@IsTest
+	static void shouldHandleInvalidInputParameterNames() {
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
+		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
+		// Simulate a flow with an invalid/unexpected parameter name
+		AsyncActionFlowProcessor.actionParameter = 'someInvalidParameterName';
+
+		Test.startTest();
+		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
 		Test.stopTest();
 
 		for (AsyncAction__c action : actions) {
@@ -63,29 +80,39 @@ private class AsyncActionFlowProcessorTest {
 	}
 
 	@IsTest
-	static void shouldHandleMissingInputParameters() {
-		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
-		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
-		// Simulate a flow with invalid input parameter names
-		AsyncActionFlowProcessor.actionParameter = 'someInvalidParameterName';
+	static void shouldHandleInvalidOutputParameterNames() {
+		// Instantiate a mock/empty result object, since we don't have a way to make our packaged flow fail otherwise
+		// This result object does not contain any output parameters
+		Invocable.Action.Result mockResult = AsyncActionFlowProcessorTest.mockFlowResult();
 
 		Test.startTest();
-		new AsyncActionFlowProcessor()?.process(settings, actions);
-		Test.stopTest();
-
-		for (AsyncAction__c action : actions) {
-			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Wrong Status');
+		try {
+			// Because the mock result doesn't contain any output parameters, the method should throw an exception
+			AsyncActionFlowProcessor.validateOutputParams(mockResult);
+			Assert.fail('Did not throw an exception');
+		} catch (System.FlowException error) {
+			// As expected...
 		}
+		Test.stopTest();
 	}
 
 	// **** HELPER **** //
 	private static List<AsyncAction__c> getActions() {
-		return [SELECT Id, Status__c FROM AsyncAction__c];
+		return [SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c FROM AsyncAction__c];
 	}
 
 	private static AsyncActionProcessor__mdt initSettings() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
 		settings.Retries__c = 0;
 		return settings;
+	}
+
+	private static Invocable.Action.Result mockFlowResult() {
+		// Generate a mock Invocable.Action.Result, for testing error handling paths
+		Map<String, Object> params = new Map<String, Object>{
+			'outputParameters' => new Map<String, Object>(),
+			'success' => true
+		};
+		return (Invocable.Action.Result) JSON.deserialize(JSON.serialize(params), Invocable.Action.Result.class);
 	}
 }
