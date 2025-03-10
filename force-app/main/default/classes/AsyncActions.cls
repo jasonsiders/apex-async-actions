@@ -1,5 +1,10 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier')
 global abstract class AsyncActions {
+	/**
+	 * This class acts as a pseudo-namespace,
+	 * providing a central location for all global types and methods,
+	 * with the exception of the built-in logging framework
+	 */
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	// **** STATIC **** //

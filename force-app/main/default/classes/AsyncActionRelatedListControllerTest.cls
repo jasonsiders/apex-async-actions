@@ -73,9 +73,8 @@ private class AsyncActionRelatedListControllerTest {
 		Account account = new Account(Name = 'Test Account');
 		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
 		// Create actions related to the Account
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(
-			AsyncActionRelatedListControllerTest.class
-		);
+		Type thisClass = AsyncActionRelatedListControllerTest.class;
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(thisClass);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {
 			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
