@@ -71,8 +71,9 @@ private class AsyncActionLauncherTest {
 
 		Test.startTest();
 		// Spin up a bunch of queueable jobs, until the limit is met
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
-			AsyncActionJob job = new AsyncActionJob(settings);
+			AsyncActionJob job = new AsyncActionJob(factory);
 			System.enqueueJob(job);
 		}
 		// NOW try to launch the job

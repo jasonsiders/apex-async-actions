@@ -57,11 +57,14 @@ public without sharing class AsyncActionLauncher {
 			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
 			this.validateJob(settings);
 			this.validateQueueableLimits();
-			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			System.AsyncOptions options = new System.AsyncOptions();
+			// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
 			options.DuplicateSignature = this.buildDuplicateSignature(settings);
+			// Set a stack depth using the value defined in the job settings
 			options.MaximumQueueableStackDepth = this.getMaxStackDepth(settings);
-			Id jobId = System.enqueueJob(new AsyncActionJob(settings), options);
+			AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+			AsyncActionJob job = new AsyncActionJob(factory);
+			Id jobId = System.enqueueJob(job, options);
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
 			return jobId;
 		} catch (Exception error) {
@@ -105,6 +108,19 @@ public without sharing class AsyncActionLauncher {
 	}
 
 	// **** INNER **** //
+	public class Factory {
+		private AsyncActionProcessor__mdt settings;
+
+		@TestVisible
+		private Factory(AsyncActionProcessor__mdt settings) {
+			this.settings = settings;
+		}
+
+		public AsyncActionProcessor__mdt getSettings() {
+			return this.settings;
+		}
+	}
+
 	private class PendingAction {
 		// This class is used to store aggregate query results
 		// Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions
