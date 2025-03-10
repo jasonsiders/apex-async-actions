@@ -1,5 +1,19 @@
 @IsTest
 private class RunAsyncActionNowControllerTest {
+	@TestSetup
+	static void setup() {
+		Account account = new Account(Name = 'Test Account');
+		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.Retries__c = 0;
+		settings.RunOnInsert__c = false;
+		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
+		AsyncAction__c action = AsyncActions.initAction(settings, account?.Id, data);
+		action.Status__c = AsyncActions.Status.CANCELED.name();
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
+	}
+
+	// **** TESTS **** //
 	@IsTest
 	static void shouldLaunchAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
@@ -49,19 +63,6 @@ private class RunAsyncActionNowControllerTest {
 	}
 
 	// **** HELPER **** //
-	@TestSetup
-	static void setup() {
-		Account account = new Account(Name = 'Test Account');
-		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		settings.Retries__c = 0;
-		settings.RunOnInsert__c = false;
-		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
-		AsyncAction__c action = AsyncActions.initAction(settings, account?.Id, data);
-		action.Status__c = AsyncActions.Status.CANCELED.name();
-		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
-	}
-
 	static AsyncAction__c getAction() {
 		List<AsyncAction__c> actions = [
 			SELECT Id, NextEligibleAt__c, Status__c
