@@ -26,6 +26,7 @@ private class AsyncActionFlowProcessorTest {
 		new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
+		// Note: The template flow simply marks async action records as "Completed"
 		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
 		Assert.areEqual(TEST_SIZE, actions?.size(), 'Wrong # of actions');
 		for (AsyncAction__c action : actions) {
@@ -42,9 +43,26 @@ private class AsyncActionFlowProcessorTest {
 		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
 		Test.stopTest();
 
+		// Note: The template flow simply marks async action records as "Completed"
 		// The processor should update the status records in memory
 		for (AsyncAction__c action : actions) {
 			Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Wrong Status');
+		}
+	}
+
+	@IsTest
+	static void shouldHandleFlowFailures() {
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
+		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
+		// If the flow has an unexpceted parameter name, the flow will fail:
+		AsyncActionFlowProcessor.actionParameter = 'someInvalidParameterName';
+
+		Test.startTest();
+		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
+		Test.stopTest();
+
+		for (AsyncAction__c action : actions) {
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Wrong Status');
 		}
 	}
 
@@ -61,22 +79,6 @@ private class AsyncActionFlowProcessorTest {
 			// As expected...
 		}
 		Test.stopTest();
-	}
-
-	@IsTest
-	static void shouldHandleInvalidInputParameterNames() {
-		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
-		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
-		// Simulate a flow with an invalid/unexpected parameter name
-		AsyncActionFlowProcessor.actionParameter = 'someInvalidParameterName';
-
-		Test.startTest();
-		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
-		Test.stopTest();
-
-		for (AsyncAction__c action : actions) {
-			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Wrong Status');
-		}
 	}
 
 	@IsTest
