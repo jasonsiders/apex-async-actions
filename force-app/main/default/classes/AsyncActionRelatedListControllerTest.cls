@@ -38,7 +38,7 @@ private class AsyncActionRelatedListControllerTest {
 	static void shouldReturnTrueIfHasAccess() {
 		User user = AsyncActionRelatedListControllerTest.getTestUser();
 		// By default, this user does not have access. Assign them a permission set
-		AsyncActionPermissionUtils.assignPermissionSet(user);
+		AsyncActionRelatedListControllerTest.assignPermissionSet(user);
 
 		Test.startTest();
 		Boolean results;
@@ -84,6 +84,15 @@ private class AsyncActionRelatedListControllerTest {
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 	}
 
+	static void assignPermissionSet(User user) {
+		PermissionSet permissionSet = AsyncActionRelatedListControllerTest.getPermissionSet();
+		PermissionSetAssignment assignment = new PermissionSetAssignment(
+			AssigneeId = user?.Id,
+			PermissionSetId = permissionSet?.Id
+		);
+		Database.insert(assignment, true, System.AccessLevel.USER_MODE);
+	}
+
 	static User createTestUser() {
 		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
 		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
@@ -114,5 +123,9 @@ private class AsyncActionRelatedListControllerTest {
 	static Account getAccount() {
 		List<Account> accounts = [SELECT Id FROM Account ORDER BY CreatedDate DESC LIMIT 1];
 		return accounts?.isEmpty() ? null : accounts[0];
+	}
+
+	static PermissionSet getPermissionSet() {
+		return [SELECT Id FROM PermissionSet WHERE Name = 'AsyncActionAdministrator' WITH SYSTEM_MODE LIMIT 1] ?? null;
 	}
 }
