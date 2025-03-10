@@ -3,7 +3,7 @@ global class InvocableInitAsyncAction {
 	/**
 	 * This class exposes `initAction` logic to flow callers
 	 * This allows flows to generate async actions that respect current `AsyncActionProcessor__mdt` settings
-	 */
+	 **/
 	@InvocableMethod(category='Async Actions' label='Init Async Action')
 	global static List<AsyncAction__c> invoke(List<InvocableInitAsyncAction.Input> inputs) {
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
@@ -26,13 +26,17 @@ global class InvocableInitAsyncAction {
 		global Id relatedRecordId;
 
 		private AsyncAction__c initAction() {
+			AsyncActionProcessor__mdt settings = this.getSettings();
+			return AsyncActions.initAction(settings, this.relatedRecordId, this.data);
+		}
+
+		private AsyncActionProcessor__mdt getSettings() {
 			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(this.developerName);
-			if (settings != null) {
-				return AsyncActions.initAction(settings, this.relatedRecordId, this.data);
-			} else {
+			if (settings == null) {
 				String msg = this.developerName + ' is not a valid AsyncActionProcessor__mdt';
 				throw new System.IllegalArgumentException(msg);
 			}
+			return settings;
 		}
 	}
 }
