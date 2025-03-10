@@ -5,7 +5,7 @@ private class AsyncActionFlowProcessorTest {
 
 	@TestSetup
 	static void setup() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 		// Insert AsyncActions, but do not run the trigger logic
 		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>();
@@ -19,7 +19,7 @@ private class AsyncActionFlowProcessorTest {
 	// **** TESTS **** //
 	@IsTest
 	static void shouldIntegrateWithAsyncActionJob() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 
 		Test.startTest();
 		new AsyncActionLauncher()?.launch(settings);
@@ -34,11 +34,11 @@ private class AsyncActionFlowProcessorTest {
 
 	@IsTest
 	static void shouldRunFlowLogic() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
 
 		Test.startTest();
-		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
+		new AsyncActionFlowProcessor()?.process(settings, actions);
 		Test.stopTest();
 
 		// The processor should update the status records in memory
@@ -49,31 +49,30 @@ private class AsyncActionFlowProcessorTest {
 
 	@IsTest
 	static void shouldThrowErrorIfInvalidFlowName() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor('Fake_Flow_123');
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
+		settings.Processor__c = 'Fake_Flow_123';
 		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
 
 		Test.startTest();
-		// try {
-		new AsyncActionFlowProcessor(settings);
-		Assert.fail('Did not throw an exception');
-		/* } catch (Exception error) {
-            // As expected...
-        } */
+		new AsyncActionFlowProcessor()?.process(settings, actions);
 		Test.stopTest();
+
+		for (AsyncAction__c action : actions) {
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Wrong Status');
+		}
 	}
 
 	@IsTest
 	static void shouldHandleMissingInputParameters() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
+		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 		List<AsyncAction__c> actions = AsyncActionFlowProcessorTest.getActions();
 		// Simulate a flow with invalid input parameter names
 		AsyncActionFlowProcessor.actionParameter = 'someInvalidParameterName';
 
 		Test.startTest();
-		new AsyncActionFlowProcessor(settings)?.process(settings, actions);
+		new AsyncActionFlowProcessor()?.process(settings, actions);
 		Test.stopTest();
 
-		// The processor should update the status records in memory
 		for (AsyncAction__c action : actions) {
 			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Wrong Status');
 		}
@@ -82,5 +81,11 @@ private class AsyncActionFlowProcessorTest {
 	// **** HELPER **** //
 	private static List<AsyncAction__c> getActions() {
 		return [SELECT Id, Status__c FROM AsyncAction__c];
+	}
+
+	private static AsyncActionProcessor__mdt initSettings() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initFlowProcessor(TEST_FLOW_NAME);
+		settings.Retries__c = 0;
+		return settings;
 	}
 }

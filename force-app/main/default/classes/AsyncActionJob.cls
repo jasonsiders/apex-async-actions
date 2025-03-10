@@ -72,7 +72,7 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 
 	private void initializeProcessor(AsyncActionProcessor__mdt settings) {
 		if (settings?.ProcessorType__c == 'Flow') {
-			this.processor = new AsyncActionFlowProcessor(settings);
+			this.processor = new AsyncActionFlowProcessor();
 		} else {
 			this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
 		}
