@@ -1,6 +1,6 @@
 # The `AsyncActionSchedulable` Class
 
-By default, `AsyncActionJob` classes are launched by a scheduled apex class, `AsyncActionSchedulable`. The enablement and frequency of this job are controlled by the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) Custom Metadata Type. The actions launched by each job are controlled by the [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) Custom Metadata Type.
+By default, the `AsyncActionJob` is launched by a scheduled apex class, `AsyncActionSchedulable`. The enablement and frequency of this job are controlled by the [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md) Custom Metadata Type. The actions launched by each job are controlled by the [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md) Custom Metadata Type.
 
 ## Process Overview
 

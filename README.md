@@ -84,7 +84,7 @@ public class FooProcessor implements AsyncActions.Processor {
 }
 ```
 
-Read more about the `AsyncActions.Processor` interface [here](/docs/ASYNCACTIONPROCESSOR.md).
+Read more about the `AsyncActions.Processor` interface [here](/docs/ASYNCACTIONSPROCESSOR.md).
 
 </details>
 
