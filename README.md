@@ -1,14 +1,14 @@
 # `apex-async-actions`
 
-Welcome to `apex-async-actions`, a Salesforce platform tool designed to simplify and enhance asynchronous task management. This tool empowers developers to create and manage custom asynchronous actions using Apex code, enhancing scalability and reliability for complex Salesforce orgs.
+Welcome to `apex-async-actions`, a Salesforce platform tool designed to simplify and enhance asynchronous task management.
 
-### Why?
+This tool empowers developers to create and manage custom asynchronous actions using Apex code, enhancing scalability and reliability for complex Salesforce orgs.
 
-As Salesforce orgs scale in size and complexity, asynchronous processing becomes increasingly crucial. Deferring critical business processes offers significant benefits, but it also introduces challenges such as difficult debugging, unexpected failures, and limited configurability.
+**Why?** As Salesforce orgs scale in size and complexity, asynchronous processing becomes increasingly crucial. Deferring critical business processes offers significant benefits, but it also introduces challenges such as difficult debugging, unexpected failures, and limited configurability.
 
 `apex-async-actions` aims to mitigate these issues and simplify asynchronous processing. By tracking each operation instance as an `AsyncAction__c` record, developers can easily trigger, monitor, and troubleshoot their processes, or enable admins and stakeholders to do so independently.
 
-A range of configuration options allows developers to tailor various aspects of their asynchronous jobs:
+The framework offers a range of configuration options, which allows developers to tailor various aspects of their asynchronous jobs:
 
 -   **How/When Job is Triggered**: Define how your action processor should be initiated, and how often it should run.
 -   **Batch Size**: Specify the number of records to process per invocation.
@@ -42,11 +42,11 @@ The boilerplate details of _when_, _how_, and _how often_ these functions run ar
 
 ### Creating Processors
 
-A "processor" defines the logic that will be performed asynchronously. Creating a processor is a simple, two-step process:
+Creating a processor is a simple, two-step process:
 
 #### 1. Define Your Processor Logic
 
-You can use either an Apex Class, or a Flow to define your processor logic:
+Developers may choose to use an Apex Class, or a Flow to define their _processor_ logic:
 
 <details>
     <summary><h5>Using Apex</h5></summary>
@@ -54,11 +54,6 @@ You can use either an Apex Class, or a Flow to define your processor logic:
 Create an Apex Class that implements the `AsyncActions.Processor` interface.
 
 The framework will dynamically instantiate your processor type using `Type.forName`. For this reason, the class must also have a publicly visible, 0-argument constructor.
-
-Every `process` method should result in one of the following outcomes:
-
-1. If the action succeeds, update each `AsyncAction__c` record's `Status__c` to "Completed"
-2. If the action fails, use the `AsyncActions.Failure` class to handle the errors according to the current configuration.
 
 Example:
 
@@ -71,9 +66,10 @@ public class FooProcessor implements AsyncActions.Processor {
             Id fooId = (Id) action?.RelatedRecordId__c;
             Bar__c bar = new Bar__c(Foo__c = fooId);
             bars?.add(bar);
-            // Mark the action as completed
+            // Mark the action as completed, assuming DML will succeed
             action.Status__c = AsyncActions.Status.COMPLETED.name();
         }
+        // Attempt to insert the Bar__c records
         try {
             Database.insert(bars);
         } catch (Exception error) {
@@ -91,7 +87,7 @@ Read more about the `AsyncActions.Processor` interface [here](/docs/ASYNCACTIONS
 <details>
     <summary><h5>Using Flow</h5></summary>
 
-You can also create a Flow to handle your processing logic. This flow should have the following inputs/outputs defined:
+Create a Flow to handle your processing logic. This flow should have the following inputs/outputs defined:
 
 <table>
     <tr>
@@ -114,12 +110,7 @@ You can also create a Flow to handle your processing logic. This flow should hav
     </tr>
 </table>
 
-Alternatively, you can clone the included [Template Flow](/force-app/main/default/flows/Template_Async_Action_Flow.flow-meta.xml), which conforms to this spec.
-
-Same as w/apex, each processor flow should result in one of the following outcomes:
-
-1. If the action succeeds, update the `asyncAction` record's `Status__c` to "Completed"
-2. If the action fails, call the included `Handle Async Action Failures` invocable. This runs the same logic as the `AsyncActions.Failure` class.
+Alternatively, you can clone the included [**Template Flow**](/force-app/main/default/flows/Template_Async_Action_Flow.flow-meta.xml), which conforms to this spec.
 
 > **Note**: _Your flow can write logic specific to a single `AsyncAction__c` record. The framework uses Salesforce's [`Invocable.Actions`](https://developer.salesforce.com/docs/atlas.en-us.apexref.meta/apexref/apex_class_Invocable_Action.htm#apex_class_Invocable_Action) library to automatically bulkify the flows at runtime. This makes your async action flows safe, even when run against hundreds of `AsyncAction__c` records per batch._
 
@@ -127,6 +118,13 @@ Example:
 ![A Sample Async Actions Flow](/media/sample_flow.png)
 
 </details>
+
+Whether your processor logic resides in an Apex Class or a Flow, each should typically result in one of two outcomes:
+
+-   If the logic was successfully processed, set the `AsyncAction__c` record(s)' _Status_ to "Completed"
+-   Else, use handle any errors using the `AsyncActions.Failure` class, or the `Handle Async Action Failures` invocable method.
+
+For more examples of both apex and flow processors, consult the [`/example-app`](/example-app/) directory.
 
 #### 2. Create a Configuration Record
 
