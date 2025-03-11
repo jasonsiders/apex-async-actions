@@ -69,10 +69,6 @@ Once the object is created, use the `fail` method to mark specific record(s) as 
 -   `List<AsyncAction__c>` or `AsyncAction__c`: The record(s) to be marked as failed
 -   `Object error`: The error message responsible for the failure.
 
-### The `Handle Async Action Failures` Invocable Method
-
-! TODO !
-
 Examples:
 
 ```java
@@ -104,8 +100,18 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 More examples can be found in the [`/example-app`](/example-app/) directory.
 
+### The `Handle Async Action Failures` Invocable Method
+
+This invocable method exposes the same [`AsyncActions.Failure`](#the-asyncactionsfailure-class) class logic to flows.
+
+The invocable accepts the following inputs:
+
+-   `AsyncAction action`: (Required) The Async Action record to process.
+-   `String developerName`: (Required) The DeveloperName of the `AsyncActionsProcessor__mdt` record responsible for processing the action.
+-   `String errorMessage`: (Required) The error message/reason for failure. Ex., `{!$Flow.FaultMessage}`, or your own custom error.
+-   `String retryBehaviorName`: (Optional) An `AsyncActions.RetryBehavior` enum value, and dictates how the method will handle errors. Defaults to "ALLOW_RETRY" if left blank.
+
 ## Best Practices
 
 -   To avoid endless looping, remember to update each `AsyncAction__c` record with the results of the transaction. If the action succeeded, set the `Status__c` field to _"Completed"_. If the action failed, use the `AsyncActions.Failure` class to mark the action as failed. Read more about error handling [here](#error-handling).
--   Do not attempt to launch `AsyncActionJob` classes on your own, via the `System.enqueueJob()` method or by other means. The Async Action Framework handles all of the launching internally. It includes checks against limits, custom metadata configuration, and more. Bypassing these checks can lead to unexpected results and potentially compromise the integrity of the framework. Instead, use the `AsyncActionProcessor__mdt` to dictate when and if a job is launched. If necessary, you can use the `AsyncActionLauncher` class's `launch` method to safely launch a processor on your own.
 -   Be careful when fetching `Id` values from `RelatedRecordId__c`, as well as custom data structures from `Data__c`. Always guard against unexpected inputs to avoid an unhandled exception.
