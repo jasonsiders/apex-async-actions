@@ -98,13 +98,13 @@ Create a Flow to handle your processing logic. This flow should have the followi
     </tr>
     <tr>
         <td><code>asyncAction</code></td>
-        <td>Record (<code>AsyncAction__c</code>)</td>
+        <td><code>AsyncAction__c</code></td>
         <td>Yes</td>
         <td>Yes</td>
     </tr>
     <tr>
         <td><code>settings</code></td>
-        <td>Record (<code>AsyncActionProcessor__mdt</code>)</td>
+        <td><code>AsyncActionProcessor__mdt</code></td>
         <td>Yes</td>
         <td>Optional</td>
     </tr>
@@ -146,9 +146,9 @@ Read more about this custom metadata type [here](/docs/PROCESSORSETTINGS.md).
 
 ### Creating Async Action Records
 
-Once these steps are complete, your processor is ready for use. Create _Async Action_ records linked to your processor, via the _Processor Name_ field. These records can be created through Flows, Apex, or the UI, like any other custom object.
+Once these steps are complete, your processor is ready for use. Create _Async Action_ records linked to your processor, via the _Processor Name_ field. While these records may be inserted like any other custom object, developers may use `AsyncActions.initAction` method(s) or the `Init Async Action` invocable action to automatically generate actions that respect the current configuration for a given settings record.
 
-When a processor runs, it will process any _Pending_ records with a matching _Processor Name_ value. Once the job finishes, the framework updates the record with execution details, including its _Status_, any errors, and retry information.
+When the `AsyncActionJob` runs, it will process any _Pending_ records with a matching _Processor Name_ value. Once the job finishes, the framework updates the record with execution details, including its _Status_, any errors, and retry information.
 
 Read more about the `AsyncAction__c` object [here](/docs/ASYNCACTIONOBJECT.md).
 ![An AsyncAction__c record](/media/sample_async_action.png)
