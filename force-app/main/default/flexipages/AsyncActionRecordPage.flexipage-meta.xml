@@ -55,7 +55,7 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.ProcessorClass__c</fieldItem>
+                <fieldItem>Record.ProcessorName__c</fieldItem>
                 <identifier>RecordProcessorClass_cField</identifier>
             </fieldInstance>
         </itemInstances>
@@ -151,18 +151,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Scheduled__c</fieldItem>
+                <fieldItem>Record.NextEligibleAt__c</fieldItem>
                 <identifier>RecordScheduled_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.LastRun__c</fieldItem>
-                <identifier>RecordLastRun_cField2</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-dc086fc9-2d9e-4ab8-95c3-f815981190a1</name>

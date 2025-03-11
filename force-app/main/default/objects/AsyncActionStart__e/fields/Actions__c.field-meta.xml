@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Actions__c</fullName>
-    <description>A comma-separated list of AsyncActionProcessor class names. 
-Determines the jobs that will be launched by the platform event. 
-If left blank, all jobs will be launched.</description>
+    <description>A comma-separated list of AsyncActionJob class names.
+        Determines the jobs that will be launched by the platform event.
+        If left blank, all jobs will be launched.</description>
     <externalId>false</externalId>
     <isFilteringDisabled>false</isFilteringDisabled>
     <isNameField>false</isNameField>

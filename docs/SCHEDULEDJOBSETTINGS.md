@@ -21,14 +21,14 @@ Each time an Async Action is inserted, or the scheduled job runs, code will run 
 
 ![A "Async Action Scheduled Job" Custom Metadata record](/media/sample_scheduled_job_config.png)
 
--   **Async Action Scheduled Job Name/Label**: (Text) Standard fields which serve as the API Name and friendly Label of the record. These do not impact anything.
--   **Cron Expression**: (Text) Required when `Type` is "Custom". Contains a custom Cron Expression that is used to schedule the job. For example, `0 0 0 * * ?` schedules a job to run nightly at midnight.
--   **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted.
--   **Interval**: (Number) Required when `Type` is "Semi-Hourly". Determines the number of minutes that pass between instances of the scheduled job. Must be a valid number between 1-59. To run a job every 60 minutes, use an "Hourly" type-job instead. To run a custom schedule, use a "Custom" type-job instead.
--   **Type**: (Picklist) Required. Indicates the type of scheduled job. Options include:
-    -   `Custom`: The job runs according to a custom cron expression.
-    -   `Hourly`: The job runs at the top of each hour.
-    -   `Semi-Hourly`: The job runs every X minutes.
+- **Async Action Scheduled Job Name/Label**: (Text) Standard fields which serve as the API Name and friendly Label of the record. These do not impact anything.
+- **Cron Expression**: (Text) Required when `Type` is "Custom". Contains a custom Cron Expression that is used to schedule the job. For example, `0 0 0 * * ?` schedules a job to run nightly at midnight.
+- **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted.
+- **Interval**: (Number) Required when `Type` is "Semi-Hourly". Determines the number of minutes that pass between instances of the scheduled job. Must be a valid number between 1-59. To run a job every 60 minutes, use an "Hourly" type-job instead. To run a custom schedule, use a "Custom" type-job instead.
+- **Type**: (Picklist) Required. Indicates the type of scheduled job. Options include:
+    - `Custom`: The job runs according to a custom cron expression.
+    - `Hourly`: The job runs at the top of each hour.
+    - `Semi-Hourly`: The job runs every X minutes.
 
 > Read more about the `AsyncActionScheduledJobItem__mdt` Custom Metadata Type [here](/docs/SCHEDULEDJOBITEMSETTINGS.md)
 > Read more about the `AsyncActionSchedulable` Job [here](/docs/ASYNCACTIONSCHEDULEDABLE.md)

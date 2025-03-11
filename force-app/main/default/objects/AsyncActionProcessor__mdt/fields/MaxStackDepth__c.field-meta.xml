@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MaxStackDepth__c</fullName>
+    <defaultValue>100</defaultValue>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText
+	>Determines the maximum number of times an instance of the same job can be chained to itself. Adjust this value higher if you anticipate processing large amounts of data, or low batch sizes. Adjust this value lower to prevent runaway jobs.</inlineHelpText>
+    <label>Max Stack Depth</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

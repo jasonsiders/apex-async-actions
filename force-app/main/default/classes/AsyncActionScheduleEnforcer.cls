@@ -1,7 +1,9 @@
 @SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionScheduleEnforcer {
-	// This class can be called at any time to ensure that the Scheduled Jobs queue
-	// is in alignment with the current AsyncActionScheduledJob__mdt records
+	/**
+	 * This class is responsible for ensuring that the Scheduled Jobs queue
+	 * is in alignment with the current AsyncActionScheduledJob__mdt records at all times
+	 **/
 	private Map<String, JobWrapper> jobs;
 
 	public AsyncActionScheduleEnforcer() {
@@ -60,7 +62,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 		for (AsyncActionScheduledJob__mdt jobSetting : AsyncActionScheduledJobService.getAll()?.values()) {
 			if (jobSetting?.Enabled__c == true) {
 				JobWrapper wrapper = new JobWrapper(jobSetting);
-				String jobName = wrapper?.getJobName();
+				String jobName = AsyncActionScheduledJobUtils.getJobName(jobSetting);
 				this.jobs?.put(jobName, wrapper);
 			}
 		}
@@ -71,12 +73,10 @@ public without sharing class AsyncActionScheduleEnforcer {
 		AsyncApexJob asyncJob;
 		Integer interval;
 		AsyncActionScheduledJob__mdt jobSettings;
-		AsyncActionSchedulable scheduler;
 
 		public JobWrapper(AsyncActionScheduledJob__mdt jobSettings) {
 			this.jobSettings = jobSettings;
 			this.interval = jobSettings?.Interval__c?.intValue();
-			this.scheduler = new AsyncActionSchedulable(jobSettings);
 		}
 
 		public JobWrapper addAsyncJob(AsyncApexJob asyncJob) {
@@ -84,15 +84,11 @@ public without sharing class AsyncActionScheduleEnforcer {
 			return this;
 		}
 
-		public String getJobName() {
-			return this.scheduler?.getJobName();
-		}
-
 		public void validate() {
 			try {
 				if (this.asyncJob == null) {
 					// Job doesn't exist. Schedule a new one
-					this.scheduler?.scheduleNewJob();
+					AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
 				} else if (this.jobSettings?.Type__c == 'Custom') {
 					// Job exists; its cron expression should match
 					this.validateCustomJob();
@@ -106,7 +102,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 			} catch (AsyncActionScheduleEnforcer.ValidationException error) {
 				// Abort the current job, and schedule a new one
 				AsyncActionScheduledJobUtils.abortJobs(this.asyncJob);
-				this.scheduler?.scheduleNewJob();
+				AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
 			}
 		}
 
@@ -120,7 +116,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 
 		private void validateHourlyJob() {
 			// Ensure that the current job's cron expression is hourly
-			if (this.asyncJob?.CronTrigger?.CronExpression != AsyncActionSchedulable.HOURLY) {
+			if (this.asyncJob?.CronTrigger?.CronExpression != AsyncActionScheduledJObUtils.HOURLY_CRON_EXP) {
 				throw new AsyncActionScheduleEnforcer.ValidationException();
 			}
 		}

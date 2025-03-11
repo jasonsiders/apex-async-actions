@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>63.0</apiVersion>
+    <assignments>
+        <description>Each flow should result in one of two outcomes:
+1. If the action succeeded, update the Async Action&apos;s Status to &quot;Completed&quot;
+2. If the action failed, use the included invocable to run failure logic for the current Async Action</description>
+        <name>Set_Status_Completed</name>
+        <label>Set Status = &quot;Completed&quot;</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <assignmentItems>
+            <assignToReference>asyncAction.Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Completed</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description>Clone this flow to define your own Async Action logic in flows.
+
+This template includes variables for the current AsyncAction__c and AsyncActionProcessor__mdt records; these variables will be automatically populated by the framework.
+
+Define your flow logic as if a single Async Action record were being processed at a time. Bulkification is handled by the framework, via the Invocable.Action class.</description>
+    <environments>Default</environments>
+    <interviewLabel>Template: Async Action Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <isTemplate>true</isTemplate>
+    <label>Template: Async Action Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <runInMode>DefaultMode</runInMode>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Set_Status_Completed</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>asyncAction</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+        <objectType>AsyncAction__c</objectType>
+    </variables>
+    <variables>
+        <name>settings</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <objectType>AsyncActionProcessor__mdt</objectType>
+    </variables>
+</Flow>

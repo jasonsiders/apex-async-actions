@@ -17,11 +17,11 @@ Follow these steps to create a a `AsyncActionScheduledJobItem__mdt` record:
 
 ![A "Async Action Scheduled Job Item" Custom Metadata record](/media/sample_scheduled_job_item.png)
 
--   **Async Action Scheduled Job Name/Label**: (Text) Standard fields which serve as the API Name and friendly Label of the record. These do not impact anything.
--   **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted.
--   **Async Action**: (Lookup: `AsyncActionProcessor__mdt`) _Required_. Configuration record for the `AsyncActionProcessor` class that should be run.
--   **Enabled**: (Checkbox) Controls the enablement of the Action on the Scheduled Job. Allows for individual Actions to be disabled.
--   **Scheduled Job**: (Lookup: `AsyncActionScheduledJob__mdt`) _Required_. Configuration record for the `AsyncActionSchedulable` job that should host the action.
+- **Async Action Scheduled Job Name/Label**: (Text) Standard fields which serve as the API Name and friendly Label of the record. These do not impact anything.
+- **Enabled**: (Checkbox) Determines whether an `AsyncActionSchedulable` job is enabled. When unchecked, records will not be processed via a scheduled job. This setting is enforced whenever the scheduled job runs, or an `AsyncAction__c` record is inserted.
+- **Async Action**: (Lookup: `AsyncActionProcessor__mdt`) _Required_. Configuration record for the `AsyncActionJob` class that should be run.
+- **Enabled**: (Checkbox) Controls the enablement of the Action on the Scheduled Job. Allows for individual Actions to be disabled.
+- **Scheduled Job**: (Lookup: `AsyncActionScheduledJob__mdt`) _Required_. Configuration record for the `AsyncActionSchedulable` job that should host the action.
 
 > Read more about the `AsyncActionProcessor__mdt` Custom Metadata Type [here](/docs/ASYNCACTIONPROCESSOR.md)
 > Read more about the `AsyncActionScheduledJob__mdt` Custom Metadata Type [here](/docs/SCHEDULEDJOBSETTINGS.md)

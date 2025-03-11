@@ -194,7 +194,7 @@ export default class AsyncActionRelatedPage extends NavigationMixin(LightningEle
 		}
 	}
 
-	async handleNavBack(event) {
+	async handleNavBack() {
 		// Returns the user back to the source record
 		if (this.recordId) {
 			this[NavigationMixin.Navigate]({

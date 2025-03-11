@@ -16,7 +16,8 @@
 		"apex-async-actions@1.8.0-1": "04tDn0000006yecIAA",
 		"apex-async-actions@1.9.0-1": "04tDn0000006yqdIAA",
 		"apex-async-actions@2.0.0-2": "04tDn0000006yrCIAQ",
-		"apex-async-actions@2.1.0-1": "04tDn0000006zJNIAY"
+		"apex-async-actions@2.1.0-1": "04tDn0000006zJNIAY",
+		"apex-async-actions@3.0.0-1": "04tDn0000011O1TIAU"
 	},
 	"packageDirectories": [
 		{
@@ -24,11 +25,11 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 2.1.0",
-			"versionNumber": "2.1.0.NEXT",
+			"versionName": "ver 3.0.0",
+			"versionNumber": "3.0.0.NEXT",
 			"versionDescription": ""
 		}
 	],
 	"sfdcLoginUrl": "https://login.salesforce.com",
-	"sourceApiVersion": "61.0"
+	"sourceApiVersion": "62.0"
 }

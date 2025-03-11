@@ -9,7 +9,7 @@
         <layoutColumns>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>ProcessorClass__c</field>
+                <field>ProcessorName__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -55,11 +55,7 @@
         <layoutColumns>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>Scheduled__c</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Readonly</behavior>
-                <field>LastRun__c</field>
+                <field>NextEligibleAt__c</field>
             </layoutItems>
         </layoutColumns>
         <style>TwoColumnsLeftToRight</style>
