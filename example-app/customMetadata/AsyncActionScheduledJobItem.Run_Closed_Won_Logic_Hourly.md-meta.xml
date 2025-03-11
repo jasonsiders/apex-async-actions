@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomMetadata
+	xmlns="http://soap.sforce.com/2006/04/metadata"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+    <label>Run Closed Won Logic Hourly</label>
+    <protected>false</protected>
+    <values>
+        <field>AsyncActionProcessor__c</field>
+        <value xsi:type="xsd:string">Example_Opportunity_Closed_Won</value>
+    </values>
+    <values>
+        <field>Enabled__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>ScheduledJob__c</field>
+        <value xsi:type="xsd:string">Hourly_Job</value>
+    </values>
+</CustomMetadata>
