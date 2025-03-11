@@ -10,9 +10,9 @@ import CREATED_DATE_FIELD from "@salesforce/schema/AsyncAction__c.CreatedDate";
 import ERROR_FIELD from "@salesforce/schema/AsyncAction__c.Error__c";
 import ID_FIELD from "@salesforce/schema/AsyncAction__c.Id";
 import NAME_FIELD from "@salesforce/schema/AsyncAction__c.Name";
-import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.ProcessorClass__c";
+import PROCESSOR_FIELD from "@salesforce/schema/AsyncAction__c.ProcessorName__c";
 import RETRIES_FIELD from "@salesforce/schema/AsyncAction__c.Retries__c";
-import SCHEDULED_FIELD from "@salesforce/schema/AsyncAction__c.Scheduled__c";
+import SCHEDULED_FIELD from "@salesforce/schema/AsyncAction__c.NextEligibleAt__c";
 import STATUS_FIELD from "@salesforce/schema/AsyncAction__c.Status__c";
 const DEFAULT_TITLE = "Async Actions";
 const MAX_ROWS = 6;
@@ -59,7 +59,7 @@ const COLUMNS = [
 		hideDefaultActions: true,
 		includeInRelatedList: true,
 		isDefaultSort: false,
-		label: "Scheduled",
+		label: "Next Eligible At",
 		type: "date",
 		typeAttributes: {
 			day: "2-digit",
@@ -213,7 +213,7 @@ export default class AsyncActionRelatedList extends NavigationMixin(LightningEle
 		this.isLoading = false;
 	}
 
-	async handleViewAll(event) {
+	async handleViewAll() {
 		// Navigate to the supplied viewAllComponent.
 		// The navigation method depends on if the current app is a console
 		if (this.isConsole) {

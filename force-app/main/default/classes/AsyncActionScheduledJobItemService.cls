@@ -1,5 +1,11 @@
 @SuppressWarnings('PMD.ApexDoc')
 public abstract without sharing class AsyncActionScheduledJobItemService {
+	/**
+	 * This class is used to retrieve AsyncActionScheduledJobItem__mdt objects from the database
+	 * Its `jobItems` property serves as a seam to inject test records in @IsTest context,
+	 * since custom metadata types cannot be manipulated via traditional dml.
+	 * See the `AsyncActionTestUtils` class methods to easily inject settings for your apex tests.
+	 **/
 	@TestVisible
 	static Map<String, List<AsyncActionScheduledJobItem__mdt>> jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>();
 	@TestVisible
@@ -13,7 +19,7 @@ public abstract without sharing class AsyncActionScheduledJobItemService {
 			List<AsyncActionScheduledJobItem__mdt> matching = [
 				SELECT
 					AsyncActionProcessor__r.DeveloperName,
-					AsyncActionProcessor__r.ProcessorClass__c,
+					AsyncActionProcessor__r.Processor__c,
 					Enabled__c,
 					ScheduledJob__r.DeveloperName
 				FROM AsyncActionScheduledJobItem__mdt

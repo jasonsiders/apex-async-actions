@@ -27,7 +27,11 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(AsyncActionSchedulable.HOURLY, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
+		Assert.areEqual(
+			AsyncActionScheduledJobUtils.HOURLY_CRON_EXP,
+			job?.CronTrigger?.CronExpression,
+			'Wrong CronExpression'
+		);
 	}
 
 	@IsTest
@@ -79,7 +83,11 @@ private class AsyncActionScheduleEnforcerTest {
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
 		Assert.areNotEqual(jobId, job?.CronTriggerId, 'Did not abort pre-existing jobId');
-		Assert.areEqual(AsyncActionSchedulable.HOURLY, job?.CronTrigger?.CronExpression, 'Wrong CronExpression');
+		Assert.areEqual(
+			AsyncActionScheduledJobUtils.HOURLY_CRON_EXP,
+			job?.CronTrigger?.CronExpression,
+			'Wrong CronExpression'
+		);
 	}
 
 	@IsTest
@@ -136,7 +144,10 @@ private class AsyncActionScheduleEnforcerTest {
 	static void shouldDoNothingIfValidHourlyJobExists() {
 		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Type__c = 'Hourly';
-		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, AsyncActionSchedulable.HOURLY);
+		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(
+			jobSetting,
+			AsyncActionScheduledJobUtils.HOURLY_CRON_EXP
+		);
 
 		new AsyncActionScheduleEnforcer().enforce();
 
@@ -191,7 +202,7 @@ private class AsyncActionScheduleEnforcerTest {
 	}
 
 	static Id scheduleExistingJob(AsyncActionScheduledJob__mdt jobSetting, String cron) {
-		String jobName = AsyncActionSchedulable.JOB_PREFIX + jobSetting?.DeveloperName;
+		String jobName = AsyncActionScheduledJobUtils.SCHEDULED_JOB_PREFIX + jobSetting?.DeveloperName;
 		return System.schedule(jobName, cron, new AsyncActionSchedulable(jobSetting));
 	}
 }

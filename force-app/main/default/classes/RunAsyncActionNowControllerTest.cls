@@ -1,9 +1,23 @@
 @IsTest
 private class RunAsyncActionNowControllerTest {
+	@TestSetup
+	static void setup() {
+		Account account = new Account(Name = 'Test Account');
+		Database.insert(account, System.AccessLevel.SYSTEM_MODE);
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.Retries__c = 0;
+		settings.RunOnInsert__c = false;
+		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
+		AsyncAction__c action = AsyncActions.initAction(settings, account?.Id, data);
+		action.Status__c = AsyncActions.Status.CANCELED.name();
+		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
+	}
+
+	// **** TESTS **** //
 	@IsTest
 	static void shouldLaunchAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
 
 		Test.startTest();
@@ -12,17 +26,17 @@ private class RunAsyncActionNowControllerTest {
 		Test.stopTest();
 
 		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActionProcessor.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
 	}
 
 	@IsTest
 	static void shouldHandleFutureScheduledAction() {
 		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
-		// The action should process this action now, regardless of its scheduled value
-		action.Scheduled__c = DateTime.now().addDays(10);
-		update action;
+		// The action should process this action now, regardless of its Next Eligible At value
+		action.NextEligibleAt__c = DateTime.now().addDays(10);
+		Database.update(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
 		RunAsyncActionNowController.runAction(action?.Id);
@@ -30,7 +44,7 @@ private class RunAsyncActionNowControllerTest {
 		Test.stopTest();
 
 		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActionProcessor.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
 	}
 
 	@IsTest
@@ -49,23 +63,9 @@ private class RunAsyncActionNowControllerTest {
 	}
 
 	// **** HELPER **** //
-	@TestSetup
-	static void setup() {
-		Account account = new Account(Name = 'Test Account');
-		insert account;
-		AsyncActionProcessor__mdt config = AsyncActionTestUtils.initProcessorSettings(MockAsyncActionProcessor.class);
-		config.Retries__c = 0;
-		config.RunOnInsert__c = false;
-		AsyncActionProcessor processor = new MockAsyncActionProcessor();
-		String data = JSON.serialize(new Map<String, Object>{ 'numCases' => 1 });
-		AsyncAction__c action = processor?.initAction(account?.Id, data);
-		action.Status__c = AsyncActionProcessor.Status.CANCELED.name();
-		insert action;
-	}
-
 	static AsyncAction__c getAction() {
 		List<AsyncAction__c> actions = [
-			SELECT Id, Scheduled__c, Status__c
+			SELECT Id, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			ORDER BY CreatedDate DESC
 			LIMIT 1

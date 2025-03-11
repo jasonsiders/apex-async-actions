@@ -1,7 +1,9 @@
 @SuppressWarnings('PMD.ApexDoc, PMD.EmptyStatementBlock')
 public abstract class AsyncActionTriggerFramework {
-	// Simple TriggerHandler framework utilized by triggers in this package.
-	// Includes methods to disable triggers, if desired by callers
+	/**
+	 * This class provides a simple TriggerHandler framework utilized by triggers in this package.
+	 * It includes methods to disable triggers, if desired by callers
+	 **/
 	private static Set<Type> bypassed = new Set<Type>();
 
 	@TestVisible
