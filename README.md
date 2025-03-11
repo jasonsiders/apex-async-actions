@@ -10,9 +10,9 @@ This tool empowers developers to create and manage custom asynchronous actions u
 
 The framework offers a range of configuration options, which allows developers to tailor various aspects of their asynchronous jobs:
 
--   **How/When Job is Triggered**: Define how your action processor should be initiated, and how often it should run.
--   **Batch Size**: Specify the number of records to process per invocation.
--   **Error Handling**: Determine if certain types of errors should be automatically retried.
+- **How/When Job is Triggered**: Define how your action processor should be initiated, and how often it should run.
+- **Batch Size**: Specify the number of records to process per invocation.
+- **Error Handling**: Determine if certain types of errors should be automatically retried.
 
 ## **Getting Started**
 
@@ -121,8 +121,8 @@ Example:
 
 Whether your processor logic resides in an Apex Class or a Flow, each should typically result in one of two outcomes:
 
--   If the logic was successfully processed, set the `AsyncAction__c` record(s)' _Status_ to "Completed"
--   Else, use handle any errors using the `AsyncActions.Failure` class, or the `Handle Async Action Failures` invocable method.
+- If the logic was successfully processed, set the `AsyncAction__c` record(s)' _Status_ to "Completed"
+- Else, use handle any errors using the `AsyncActions.Failure` class, or the `Handle Async Action Failures` invocable method.
 
 For more examples of both apex and flow processors, consult the [`/example-app`](/example-app/) directory.
 
@@ -139,8 +139,8 @@ To run your action immediately, set the _Run On Insert_ to `true`. An instance o
 
 To process accumulated actions (or retries) at regular intervals, use the `AsyncActionScheduledJob__mdt` and `AsyncActionScheduledJobItem__mdt` custom metadata types to automatically configure scheduled jobs. Read more about using these custom metadata types below:
 
--   [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md)
--   [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md)
+- [`AsyncActionScheduledJob__mdt`](/docs/SCHEDULEDJOBSETTINGS.md)
+- [`AsyncActionScheduledJobItem__mdt`](/docs/SCHEDULEDJOBITEMSETTINGS.md)
 
 Read more about this custom metadata type [here](/docs/PROCESSORSETTINGS.md).
 

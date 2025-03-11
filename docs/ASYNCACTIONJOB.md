@@ -12,8 +12,8 @@ Each time the `AsyncActionJob` Queueable is run, it follows this process:
 2. Queries `AsyncAction__c` records with a `ProcessorName__c` value that matches the configuration record's DeveloperName, and are in _Pending_ status, and have a `NextEligibleAt__c` value in the past. Records are returned in order of its `NextEligibleAt__c` value, prioritizing older records first. This query is limited by the configuration record's `BatchSize__c`.
 3. Creates a `AsyncActions.Processor` object, based on the `ProcessorType__c`:
 
--   If "Apex", then the framework uses `Type.forName` to create the provided `Processor__c`.
--   If "Flow", the framework creates a special `AsyncActionFlowProcessor`, which in turn dynamically generates the flow to be run.
+- If "Apex", then the framework uses `Type.forName` to create the provided `Processor__c`.
+- If "Flow", the framework creates a special `AsyncActionFlowProcessor`, which in turn dynamically generates the flow to be run.
 
 4. The user-defined logic is run
 5. The current `List<AsyncAction__c>` in memory are updated in the database.

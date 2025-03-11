@@ -12,9 +12,9 @@ The `AsyncActions` class includes methods which let you easily create an Async A
 
 #### `initAction(AsyncActionProcessor__mdt settings, [Id relatedRecordId], [String data])`
 
--   `settings`: (Required) The `AsyncActionProcessor__mdt` responsible for processing the current action.
--   `relatedRecordId`: (Optional) The Id of the record to store in the `RelatedRecordId__c` field
--   `data`: (Optional) A serialized data structure to store in the `Data__c` field. If this value is not provided, will default to `null`.
+- `settings`: (Required) The `AsyncActionProcessor__mdt` responsible for processing the current action.
+- `relatedRecordId`: (Optional) The Id of the record to store in the `RelatedRecordId__c` field
+- `data`: (Optional) A serialized data structure to store in the `Data__c` field. If this value is not provided, will default to `null`.
 
 ## Providing Context to Processors
 
@@ -64,10 +64,10 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ![The Async Action Custom Object](/media/sample_async_action.png)
 
--   **Data** (Text): A serialized custom data structure used to provide additional context about the action to be used by the processor class. Its use may vary. See [Providing Context to Processors](#providing-context-to-processors) for more.
--   **Error** (Text): Details about the last error that the Action encountered, if any.
--   **Next Eligible At**: The Date/Time that the action is eligible to be processed. The framework will only process records that have a _Next Eligible At_ value in the past.
--   **Processor Name**: The `DeveloperName` of a `AsyncActionProcessor__mdt` record which is responsible for processing the current Async Action record.
--   **Related Record** and **Related Record Id**: `RelatedRecordId__c` stores the Id of a Salesforce record which is closely related to the request. `RelatedRecord__c` is a read-only formula field which displays a link to the record in question, for use in the UI.
--   **Retries**: Indicates the number of times that the record may be retried, if allowed. If a record has 0 retries, any failures to that record will cause the Status to change to _Failed_. This does not apply to custom [error handling](/docs/ASYNCACTIONPROCESSOR.md#error-handling).
--   **Status**: Indicates the status of the current request. Possible values include `Pending`, `Completed`, `Failed`, or `Canceled`. The framework will only process records that are _Pending_.
+- **Data** (Text): A serialized custom data structure used to provide additional context about the action to be used by the processor class. Its use may vary. See [Providing Context to Processors](#providing-context-to-processors) for more.
+- **Error** (Text): Details about the last error that the Action encountered, if any.
+- **Next Eligible At**: The Date/Time that the action is eligible to be processed. The framework will only process records that have a _Next Eligible At_ value in the past.
+- **Processor Name**: The `DeveloperName` of a `AsyncActionProcessor__mdt` record which is responsible for processing the current Async Action record.
+- **Related Record** and **Related Record Id**: `RelatedRecordId__c` stores the Id of a Salesforce record which is closely related to the request. `RelatedRecord__c` is a read-only formula field which displays a link to the record in question, for use in the UI.
+- **Retries**: Indicates the number of times that the record may be retried, if allowed. If a record has 0 retries, any failures to that record will cause the Status to change to _Failed_. This does not apply to custom [error handling](/docs/ASYNCACTIONPROCESSOR.md#error-handling).
+- **Status**: Indicates the status of the current request. Possible values include `Pending`, `Completed`, `Failed`, or `Canceled`. The framework will only process records that are _Pending_.

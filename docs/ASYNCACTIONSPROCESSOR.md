@@ -4,9 +4,9 @@
 
 Creating your own `AsyncAction.Processor` is easy, but you must follow these requirements:
 
--   Must extend `AsyncActionJob` and implement the [abstract methods](#abstract-methods). Else, the class will not compile.
--   Must be an outer class. The framework uses the `AsyncApexJob` object to check for existing/pending queueable jobs. Its `ApexClass` field always displays the name of the _outer_ type, even if the Queueable job is an inner type. The framework will behave unpredictably if you use an inner class to extend `AsyncActionJob`.
--   Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORSETTINGS.md) configuration record with a corresponding `Processor__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
+- Must extend `AsyncActionJob` and implement the [abstract methods](#abstract-methods). Else, the class will not compile.
+- Must be an outer class. The framework uses the `AsyncApexJob` object to check for existing/pending queueable jobs. Its `ApexClass` field always displays the name of the _outer_ type, even if the Queueable job is an inner type. The framework will behave unpredictably if you use an inner class to extend `AsyncActionJob`.
+- Must create a [`AsyncActionProcessor__mdt`](/docs/PROCESSORSETTINGS.md) configuration record with a corresponding `Processor__c` value. This value should equal the value of your class's `Type.getName()` value, including namespace (if it has one). Without a corresponding metadata record, the class will never be run.
 
 ## Abstract Methods
 
@@ -58,16 +58,16 @@ This class is responsible for handling errors, according to the defined retry be
 
 Start by generating an `AsyncActions.Failure` object. The constructor accepts these parameters:
 
--   `AsyncActionProcessor__mdt`: (Required) The current processor settings object.
--   `AsyncActions.RetryBehavior`: (Optional) Enumerates how any errors will be handled. Values:
-    -   `ALLOW_RETRY` (default): Actions will be retried, until their _Retries_ value is 0. Then, their _Status_ will be set to "Failed".
-    -   `KEEP_ALIVE`: Actions will never be marked as failed; they will remain in "Pending" _Status_. Exercise caution when using this behavior.
-    -   `SUDDEN_DEATH`: Actions will be marked as "Failed", regardless of the number of _Retries_ remaining.
+- `AsyncActionProcessor__mdt`: (Required) The current processor settings object.
+- `AsyncActions.RetryBehavior`: (Optional) Enumerates how any errors will be handled. Values:
+    - `ALLOW_RETRY` (default): Actions will be retried, until their _Retries_ value is 0. Then, their _Status_ will be set to "Failed".
+    - `KEEP_ALIVE`: Actions will never be marked as failed; they will remain in "Pending" _Status_. Exercise caution when using this behavior.
+    - `SUDDEN_DEATH`: Actions will be marked as "Failed", regardless of the number of _Retries_ remaining.
 
 Once the object is created, use the `fail` method to mark specific record(s) as failed for a specific reason. The `fail` method accepts these parameters:
 
--   `List<AsyncAction__c>` or `AsyncAction__c`: The record(s) to be marked as failed
--   `Object error`: The error message responsible for the failure.
+- `List<AsyncAction__c>` or `AsyncAction__c`: The record(s) to be marked as failed
+- `Object error`: The error message responsible for the failure.
 
 Examples:
 
@@ -106,12 +106,12 @@ This invocable method exposes the same [`AsyncActions.Failure`](#the-asyncaction
 
 The invocable accepts the following inputs:
 
--   `AsyncAction action`: (Required) The Async Action record to process.
--   `String developerName`: (Required) The DeveloperName of the `AsyncActionsProcessor__mdt` record responsible for processing the action.
--   `String errorMessage`: (Required) The error message/reason for failure. Ex., `{!$Flow.FaultMessage}`, or your own custom error.
--   `String retryBehaviorName`: (Optional) An `AsyncActions.RetryBehavior` enum value, and dictates how the method will handle errors. Defaults to "ALLOW_RETRY" if left blank.
+- `AsyncAction action`: (Required) The Async Action record to process.
+- `String developerName`: (Required) The DeveloperName of the `AsyncActionsProcessor__mdt` record responsible for processing the action.
+- `String errorMessage`: (Required) The error message/reason for failure. Ex., `{!$Flow.FaultMessage}`, or your own custom error.
+- `String retryBehaviorName`: (Optional) An `AsyncActions.RetryBehavior` enum value, and dictates how the method will handle errors. Defaults to "ALLOW_RETRY" if left blank.
 
 ## Best Practices
 
--   To avoid endless looping, remember to update each `AsyncAction__c` record with the results of the transaction. If the action succeeded, set the `Status__c` field to _"Completed"_. If the action failed, use the `AsyncActions.Failure` class to mark the action as failed. Read more about error handling [here](#error-handling).
--   Be careful when fetching `Id` values from `RelatedRecordId__c`, as well as custom data structures from `Data__c`. Always guard against unexpected inputs to avoid an unhandled exception.
+- To avoid endless looping, remember to update each `AsyncAction__c` record with the results of the transaction. If the action succeeded, set the `Status__c` field to _"Completed"_. If the action failed, use the `AsyncActions.Failure` class to mark the action as failed. Read more about error handling [here](#error-handling).
+- Be careful when fetching `Id` values from `RelatedRecordId__c`, as well as custom data structures from `Data__c`. Always guard against unexpected inputs to avoid an unhandled exception.
