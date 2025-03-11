@@ -38,7 +38,7 @@ To properly use this framework, developers first define **_processors_**. Proces
 
 Once a processor is defined, developers can insert `AsyncAction__c` records linked to that processor, to invoke those functions against a set of Salesforce records and/or other data structures.
 
-The boilerplate details of _when_, _how_, and _how often_ these functions run are all handled by the `AsyncActionProcessor__mdt` custom metadata type.
+The fine details of _when_, _how_, and _how often_ these functions run are all handled by the `AsyncActionProcessor__mdt` custom metadata type.
 
 ### Creating Processors
 
