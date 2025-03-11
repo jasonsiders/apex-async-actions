@@ -132,7 +132,7 @@ The `AsyncActionProcessor__mdt` custom metadata type record configures various a
 
 The record's _Processor_ should match the fully-qualified name of your Flow or Apex class. If this record is missing or invalid, your async action job will not run.
 
-Here's an example processor record:
+Example:
 ![An AsyncActionProcessor__mdt Record](/media/sample_processor_config.png)
 
 To run your action immediately, set the _Run On Insert_ to `true`. An instance of the job will start shortly after corresponding Async Action record(s) are inserted.
@@ -184,7 +184,7 @@ void save();
 
 The `log` method is called by the framework to record various log messages. The `save` method is called by the framework at the end of a transaction to commit previously captured log messages to the database.
 
-Here's a sample adapter that integrates with the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
+This sample adapter integrates with the [apex-logger](https://github.com/jasonsiders/apex-logger) framework:
 
 ```java
 public class ApexLoggerAdapter implements AsyncActionLogger.Adapter {
