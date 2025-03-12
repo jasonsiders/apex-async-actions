@@ -122,7 +122,11 @@ private class AsyncActionJobTest {
 		}
 
 		// Should keep re-enqueueing until the retries are exhausted
-		List<AsyncApexJob> asyncJobs = [SELECT Id, Status FROM AsyncApexJob WHERE JobType = 'Queueable'];
+		List<AsyncApexJob> asyncJobs = [
+			SELECT Id, Status
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+		];
 		Assert.areEqual(settings?.Retries__c, asyncJobs?.size(), 'Wrong # of jobs');
 		// Test.stopTest() will only process the first job -- unless aborted, they'll continue to run now, and throw an error
 		for (AsyncApexJob asyncJob : asyncJobs) {

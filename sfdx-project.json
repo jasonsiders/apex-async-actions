@@ -17,7 +17,8 @@
 		"apex-async-actions@1.9.0-1": "04tDn0000006yqdIAA",
 		"apex-async-actions@2.0.0-2": "04tDn0000006yrCIAQ",
 		"apex-async-actions@2.1.0-1": "04tDn0000006zJNIAY",
-		"apex-async-actions@3.0.0-1": "04tDn0000011O1TIAU"
+		"apex-async-actions@3.0.0-1": "04tDn0000011O1TIAU",
+		"apex-async-actions@3.0.1-1": "04tDn0000011O1YIAU"
 	},
 	"packageDirectories": [
 		{
@@ -25,8 +26,8 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 3.0.0",
-			"versionNumber": "3.0.0.NEXT",
+			"versionName": "ver 3.0.1",
+			"versionNumber": "3.0.1.NEXT",
 			"versionDescription": ""
 		}
 	],

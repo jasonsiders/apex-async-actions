@@ -119,6 +119,7 @@ private class AsyncActionLauncherTest {
 			SELECT COUNT()
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
 		];
 	}
 }

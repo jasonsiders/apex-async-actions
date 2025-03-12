@@ -64,12 +64,14 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldPerformDefaultLoggingLogic() {
-		AsyncActionLogger.DefaultLogger logger = (AsyncActionLogger.DefaultLogger) AsyncActionLogger.INSTANCE;
+		// Ensure the default logger is used
+		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		settings.LoggerPlugin__c = null;
 
 		Test.startTest();
 		try {
-			logger?.log(System.LoggingLevel.FINEST, 'Hello world!');
-			logger?.save();
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, 'Hello world!');
+			AsyncActionLogger.save();
 		} catch (Exception error) {
 			Assert.fail('An error was thrown while performing default logging logic: ' + error);
 		}

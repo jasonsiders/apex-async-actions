@@ -15,6 +15,7 @@ private class AsyncActionStartTriggerHandlerTest {
 			SELECT Id
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
 		];
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched');
 	}
@@ -37,6 +38,7 @@ private class AsyncActionStartTriggerHandlerTest {
 			SELECT Id
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
 		];
 		Assert.areEqual(1, jobs?.size(), 'Job was not launched');
 	}
@@ -57,6 +59,7 @@ private class AsyncActionStartTriggerHandlerTest {
 			SELECT Id
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
 		];
 		Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched, but not listed in Actions__c');
 	}
