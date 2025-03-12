@@ -2,7 +2,7 @@
 AsyncActionProcessor__mdt leadJob = AsyncActionProcessor__mdt.getInstance('Example_Lead_Convert');
 Lead lead = new Lead(Company = 'Test Company', FirstName = 'John', LastName = 'Doe');
 insert lead;
-LeadStatus status = [SELECT ApiName FROM LeadStatus WHERE IsConverted = true LIMIT 1];
+LeadStatus status = [SELECT ApiName FROM LeadStatus WHERE IsConverted = TRUE LIMIT 1];
 Database.LeadConvert conversionInfo = new Database.LeadConvert();
 conversionInfo.setConvertedStatus(status?.ApiName);
 conversionInfo.setLeadId(lead?.Id);
@@ -12,11 +12,11 @@ AsyncActionProcessor__mdt oppJob = AsyncActionProcessor__mdt.getInstance('Exampl
 Account account = new Account(Name = 'Test Account');
 insert account;
 Opportunity opportunity = new Opportunity(
-    AccountId = account?.Id,
-    Amount = 100,
-    CloseDate = Date.today(),
-    Name = 'Test Opportunity',
-    StageName = 'New'
+	AccountId = account?.Id,
+	Amount = 100,
+	CloseDate = Date.today(),
+	Name = 'Test Opportunity',
+	StageName = 'New'
 );
 insert opportunity;
 AsyncAction__c oppAction = AsyncActions.initAction(oppJob, opportunity);

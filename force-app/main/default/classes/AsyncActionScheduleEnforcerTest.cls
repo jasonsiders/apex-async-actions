@@ -189,6 +189,7 @@ private class AsyncActionScheduleEnforcerTest {
 			WHERE
 				ApexClass.Name = :AsyncActionSchedulable.class.getName()
 				AND Status IN ('Holding', 'Queued', 'Preparing', 'Processing')
+			WITH SYSTEM_MODE
 			ORDER BY CreatedDate ASC
 		];
 	}

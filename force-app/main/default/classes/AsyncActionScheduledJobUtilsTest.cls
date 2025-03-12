@@ -19,6 +19,7 @@ private class AsyncActionScheduledJobUtilsTest {
 			SELECT Id, CronTriggerId, CronTrigger.CronJobDetail.Name, Status
 			FROM AsyncApexJob
 			WHERE CronTrigger.CronJobDetail.Name = :jobName
+			WITH SYSTEM_MODE
 		];
 	}
 

@@ -169,6 +169,8 @@ private class AsyncActionSchedulableTest {
 		return [
 			SELECT ApexClass.Name, JobType, CronTrigger.NextFireTime
 			FROM AsyncApexJob
+			WHERE ApexClass.Name IN (:AsyncActionJob.class.getName(), :AsyncActionSchedulable.class.getName())
+			WITH SYSTEM_MODE
 			LIMIT 50000
 		];
 	}

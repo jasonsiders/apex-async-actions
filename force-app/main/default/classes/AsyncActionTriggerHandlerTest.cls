@@ -12,7 +12,8 @@ private class AsyncActionTriggerHandlerTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE JobType = 'Queueable'
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
 			LIMIT 1
 		];
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert');
@@ -30,7 +31,8 @@ private class AsyncActionTriggerHandlerTest {
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE JobType = 'Queueable'
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
 			LIMIT 1
 		];
 		Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched on insert');
@@ -51,6 +53,7 @@ private class AsyncActionTriggerHandlerTest {
 			SELECT Id
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionSchedulable.class.getName()
+			WITH SYSTEM_MODE
 			LIMIT 1
 		];
 		Assert.isFalse(jobs?.isEmpty(), 'Enabled Scheduled Job was not created');
@@ -70,6 +73,7 @@ private class AsyncActionTriggerHandlerTest {
 			SELECT Id
 			FROM AsyncApexJob
 			WHERE ApexClass.Name = :AsyncActionSchedulable.class.getName()
+			WITH SYSTEM_MODE
 			LIMIT 1
 		];
 		Assert.isTrue(jobs?.isEmpty(), 'Disabled Scheduled Job was created');
