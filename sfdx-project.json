@@ -25,8 +25,8 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 3.0.0",
-			"versionNumber": "3.0.0.NEXT",
+			"versionName": "ver 3.0.1",
+			"versionNumber": "3.0.1.NEXT",
 			"versionDescription": ""
 		}
 	],
