@@ -4,6 +4,7 @@
     <description>Contains information about what the Async Action does/what it&apos;s used for</description>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Description</label>
-    <required>false</required>
-    <type>TextArea</type>
+    <length>1000</length>
+    <type>LongTextArea</type>
+    <visibleLines>3</visibleLines>
 </CustomField>
