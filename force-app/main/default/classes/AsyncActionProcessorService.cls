@@ -46,7 +46,7 @@ public abstract class AsyncActionProcessorService {
 		Set<String> fieldNames = SObjectType.AsyncActionProcessor__mdt.fields.getMap()?.keySet();
 		String queryString = String.format(
 			'SELECT {0} FROM {1}',
-			new List<String>{ String.join(fieldNames, ','), AsyncActionProcessor__mdt.SObjectType.toString() }
+			new List<String>{ String.join(fieldNames, ', '), AsyncActionProcessor__mdt.SObjectType.toString() }
 		);
 		return Database.query(queryString);
 	}
