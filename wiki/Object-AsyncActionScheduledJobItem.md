@@ -1,5 +1,3 @@
-# The `AsyncActionScheduledJobItem__mdt` Custom Metadata Type
-
 The `AsyncActionScheduledJobItem__mdt` custom metadata type links individual processors to scheduled jobs, defining which async action processors should be executed when a scheduled job runs.
 
 ## Overview
@@ -269,12 +267,5 @@ Include both scheduled job and item metadata in deployments:
 
 ## Related Objects
 
--   [AsyncActionScheduledJob\_\_mdt](./Object-AsyncActionScheduledJob) - Parent scheduled job configuration
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor) - Referenced processor configuration
--   [AsyncActionSchedulable Class](./The-AsyncActionSchedulable-Class) - Execution engine
-
-## See Also
-
--   [Scheduled Job Configuration](./Scheduled-Job-Configuration) - Complete scheduling setup guide
--   [AsyncActionLauncher Class](./The-AsyncActionLauncher-Class) - Manual processor launching
--   [Monitoring and Troubleshooting](./Monitoring-and-Troubleshooting) - Operational guidance
+-   [AsyncActionScheduledJob\_\_mdt](AsyncActionScheduledJob Custom Metadata Type) - Parent scheduled job configuration
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Referenced processor configuration

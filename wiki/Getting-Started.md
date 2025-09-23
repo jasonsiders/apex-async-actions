@@ -1,5 +1,3 @@
-# Getting Started
-
 This guide will walk you through installing and setting up `apex-async-actions` in your Salesforce org, then creating your first asynchronous processor.
 
 ## Prerequisites
@@ -125,20 +123,16 @@ Congratulations! You've successfully created and executed your first async actio
 
 ### Learn Core Concepts
 
--   [Core Concepts](./Core-Concepts) - Understand the framework architecture
--   [Error Handling](./Error-Handling-and-Retry-Logic) - Learn about retry behaviors and failure handling
+-   [Core Concepts](Core Concepts) - Understand the framework architecture
 
 ### Explore Advanced Features
 
--   [Flow Integration](./Flow-TemplateAsyncActionFlow) - Create processors using Flows
--   [Scheduled Jobs](./Scheduled-Job-Configuration) - Set up recurring processing
--   [Monitoring](./Monitoring-and-Troubleshooting) - Track and troubleshoot your actions
+-   [Flow Integration](Template: Async Action Flow) - Create processors using Flows
 
 ### Review Objects and Classes
 
--   [AsyncAction\_\_c Object](./Object-AsyncAction) - Understanding the core data model
--   [AsyncActions Class](./The-AsyncActions-Class) - The main framework class
--   [AsyncActionJob Class](./The-AsyncActionJob-Class) - How processing works under the hood
+-   [AsyncAction\_\_c Object](AsyncAction Custom Object) - Understanding the core data model
+-   [AsyncActions Class](AsyncActions Class) - The main framework class
 
 ## Common Issues
 
@@ -163,6 +157,4 @@ Congratulations! You've successfully created and executed your first async actio
 
 For additional help:
 
--   Review the [Best Practices](./Best-Practices) guide
--   Check the [Monitoring and Troubleshooting](./Monitoring-and-Troubleshooting) documentation
 -   Review example implementations in the package

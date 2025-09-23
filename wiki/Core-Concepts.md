@@ -1,5 +1,3 @@
-# Core Concepts
-
 Understanding the core concepts of `apex-async-actions` is essential for effectively using the framework. This guide explains the fundamental architecture and patterns that drive the system.
 
 ## Framework Architecture
@@ -234,7 +232,6 @@ The framework includes `AsyncActionStart__e` platform events for:
 
 Now that you understand the core concepts:
 
-1. [Create Your First Processor](./Creating-Your-First-Processor) - Hands-on implementation guide
-2. [Error Handling & Retry Logic](./Error-Handling-and-Retry-Logic) - Deep dive into failure scenarios
-3. [Object Documentation](./Object-AsyncAction) - Detailed field-level information
-4. [Class Documentation](./The-AsyncActions-Class) - Complete API reference
+1. [Create Your First Processor](Creating Your First Processor) - Hands-on implementation guide
+2. [Object Documentation](AsyncAction Custom Object) - Detailed field-level information
+3. [Class Documentation](AsyncActions Class) - Complete API reference

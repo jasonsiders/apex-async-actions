@@ -1,5 +1,3 @@
-# The `AsyncActionScheduledJob__mdt` Custom Metadata Type
-
 The `AsyncActionScheduledJob__mdt` custom metadata type defines automatic scheduled jobs that process accumulated async actions at regular intervals. These records enable hands-off operation of async action processors.
 
 ## Overview
@@ -236,12 +234,5 @@ for (AsyncActionScheduledJob__mdt job : jobs) {
 
 ## Related Objects
 
--   [AsyncActionScheduledJobItem\_\_mdt](./Object-AsyncActionScheduledJobItem) - Links processors to scheduled jobs
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor) - Individual processor configurations
--   [AsyncActionSchedulable Class](./The-AsyncActionSchedulable-Class) - The schedulable class that executes
-
-## See Also
-
--   [Scheduled Job Configuration](./Scheduled-Job-Configuration) - Comprehensive scheduling guide
--   [AsyncActionSchedulable Class](./The-AsyncActionSchedulable-Class) - Implementation details
--   [Monitoring and Troubleshooting](./Monitoring-and-Troubleshooting) - Operational guidance
+-   [AsyncActionScheduledJobItem\_\_mdt](AsyncActionScheduledJobItem Custom Metadata Type) - Links processors to scheduled jobs
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Individual processor configurations

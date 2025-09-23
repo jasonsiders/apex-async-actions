@@ -1,5 +1,3 @@
-# The `AsyncActionGlobalSetting__mdt` Custom Metadata Type
-
 The `AsyncActionGlobalSetting__mdt` custom metadata type defines package-wide behavior for the async actions framework. It controls global settings that affect all processors and framework operations.
 
 ## Overview
@@ -321,12 +319,4 @@ if (setting?.LoggerPlugin__c != null) {
 
 ## Related Components
 
--   [AsyncActionLogger Class](./The-AsyncActionLogger-Class) - Framework logging infrastructure
--   [Plugin Framework](./Plugin-Framework) - Comprehensive plugin development guide
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor) - Processor-specific configurations
-
-## See Also
-
--   [Best Practices](./Best-Practices) - General framework best practices
--   [Monitoring and Troubleshooting](./Monitoring-and-Troubleshooting) - Operational guidance
--   [Advanced Topics](./Advanced-Topics) - Extended configuration scenarios
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Processor-specific configurations

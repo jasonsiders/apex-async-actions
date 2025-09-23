@@ -1,5 +1,3 @@
-# `apex-async-actions`
-
 Welcome to `apex-async-actions`, a production-ready Salesforce platform tool designed to simplify and enhance asynchronous task management.
 
 ## Features
@@ -63,7 +61,7 @@ public class FooProcessor implements AsyncActions.Processor {
 ```
 
 **Using Flow:**
-Clone the included [Template Flow](./Flow-TemplateAsyncActionFlow) and customize the logic. The framework automatically handles bulkification.
+Clone the included [Template Flow](Template: Async Action Flow) and customize the logic. The framework automatically handles bulkification.
 
 ### 2. Configure Your Processor
 
@@ -107,9 +105,8 @@ Track the status of your actions through the included UI components:
 
 Check out the sidebar for comprehensive documentation about:
 
--   [Getting started guide](./Getting-Started) with detailed setup instructions
--   [Core concepts](./Core-Concepts) explaining the framework architecture
--   [Object documentation](./Object-AsyncAction) for all custom objects and fields
--   [Class documentation](./The-AsyncActions-Class) for all global classes and methods
--   [Flow integration](./Flow-TemplateAsyncActionFlow) and customization guide
--   [Security model](./PermissionSet-AsyncActionAdministrator) and permission requirements
+-   [Getting started guide](Getting Started) with detailed setup instructions
+-   [Core concepts](Core Concepts) explaining the framework architecture
+-   [Object documentation](AsyncAction Custom Object) for all custom objects and fields
+-   [Class documentation](AsyncActions Class) for all global classes and methods
+-   [Flow integration](Template: Async Action Flow) and customization guide

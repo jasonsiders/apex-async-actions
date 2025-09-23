@@ -1,5 +1,3 @@
-# Template: Async Action Flow
-
 The Template Async Action Flow is a pre-built Flow template that demonstrates the proper structure for creating Flow-based async action processors. It serves as a starting point for declarative async action implementations.
 
 ## Overview
@@ -311,12 +309,10 @@ System.debug('Updated Status: ' + updatedAction.Status__c);
 
 ## Related Components
 
--   [AsyncActionFlowProcessor](./The-AsyncActionFlowProcessor-Class) - Apex wrapper that executes flows
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor) - Configuration for flow processors
--   [InvocableFailAsyncAction](./The-InvocableFailAsyncAction-Class) - Flow-compatible error handling
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Configuration for flow processors
 
 ## See Also
 
--   [Creating Your First Processor](./Creating-Your-First-Processor) - Apex processor tutorial
--   [Core Concepts](./Core-Concepts) - Framework architecture overview
+-   [Creating Your First Processor](Creating Your First Processor) - Apex processor tutorial
+-   [Core Concepts](Core Concepts) - Framework architecture overview
 -   [Flow Documentation](https://help.salesforce.com/s/articleView?id=sf.flow.htm) - Salesforce Flow fundamentals

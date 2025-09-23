@@ -1,5 +1,3 @@
-# The `AsyncActionProcessor__mdt` Custom Metadata Type
-
 The `AsyncActionProcessor__mdt` custom metadata type governs the configuration of specific async action processor implementations. Each record defines how a processor behaves, including execution parameters, retry logic, and performance settings.
 
 ## Overview
@@ -332,12 +330,10 @@ ORDER BY DeveloperName
 
 ## Related Objects
 
--   [AsyncAction\_\_c](./Object-AsyncAction) - Records that reference these configurations
--   [AsyncActionScheduledJobItem\_\_mdt](./Object-AsyncActionScheduledJobItem) - Scheduled execution of processors
--   [AsyncActionGlobalSetting\_\_mdt](./Object-AsyncActionGlobalSetting) - Framework-wide settings
+-   [AsyncAction\_\_c](AsyncAction Custom Object) - Records that reference these configurations
+-   [AsyncActionScheduledJobItem\_\_mdt](AsyncActionScheduledJobItem Custom Metadata Type) - Scheduled execution of processors
+-   [AsyncActionGlobalSetting\_\_mdt](AsyncActionGlobalSetting Custom Metadata Type) - Framework-wide settings
 
 ## See Also
 
--   [AsyncActions.Processor Interface](./The-AsyncActions.Processor-Interface) - Required interface for Apex processors
--   [AsyncActionJob Class](./The-AsyncActionJob-Class) - Execution engine that uses these configurations
--   [Creating Your First Processor](./Creating-Your-First-Processor) - Step-by-step processor creation guide
+-   [Creating Your First Processor](Creating Your First Processor) - Step-by-step processor creation guide

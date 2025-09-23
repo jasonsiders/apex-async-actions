@@ -1,5 +1,3 @@
-# Creating Your First Processor
-
 This tutorial walks you through creating a complete async action processor from start to finish. We'll build a processor that creates follow-up tasks for accounts, demonstrating common patterns and best practices.
 
 ## Scenario

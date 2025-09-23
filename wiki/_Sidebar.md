@@ -2,49 +2,29 @@
 
 ## Home
 
--   [Overview](./Home)
+-   [Overview](apex-async-actions)
 
 ## Getting Started
 
--   [Installation & Setup](./Getting-Started)
--   [Core Concepts](./Core-Concepts)
--   [Your First Processor](./Creating-Your-First-Processor)
+-   [Installation & Setup](Getting Started)
+-   [Core Concepts](Core Concepts)
+-   [Your First Processor](Creating Your First Processor)
 
 ## Objects
 
--   [AsyncAction\_\_c](./Object-AsyncAction)
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor)
--   [AsyncActionGlobalSetting\_\_mdt](./Object-AsyncActionGlobalSetting)
--   [AsyncActionScheduledJob\_\_mdt](./Object-AsyncActionScheduledJob)
--   [AsyncActionScheduledJobItem\_\_mdt](./Object-AsyncActionScheduledJobItem)
--   [AsyncActionStart\_\_e](./Object-AsyncActionStart)
+-   [AsyncAction\_\_c](AsyncAction Custom Object)
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type)
+-   [AsyncActionGlobalSetting\_\_mdt](AsyncActionGlobalSetting Custom Metadata Type)
+-   [AsyncActionScheduledJob\_\_mdt](AsyncActionScheduledJob Custom Metadata Type)
+-   [AsyncActionScheduledJobItem\_\_mdt](AsyncActionScheduledJobItem Custom Metadata Type)
+-   [AsyncActionStart\_\_e](AsyncActionStart Platform Event)
 
 ## Classes
 
--   [**AsyncActions**](./The-AsyncActions-Class)
-    -   [AsyncActions.Failure](./The-AsyncActions.Failure-Class)
-    -   [AsyncActions.Processor](./The-AsyncActions.Processor-Interface)
-    -   [AsyncActions.RetryBehavior](./The-AsyncActions.RetryBehavior-Enum)
-    -   [AsyncActions.Status](./The-AsyncActions.Status-Enum)
--   [**AsyncActionJob**](./The-AsyncActionJob-Class)
--   [**AsyncActionLauncher**](./The-AsyncActionLauncher-Class)
-    -   [AsyncActionLauncher.Factory](./The-AsyncActionLauncher.Factory-Class)
--   [**AsyncActionFlowProcessor**](./The-AsyncActionFlowProcessor-Class)
--   [**AsyncActionLogger**](./The-AsyncActionLogger-Class)
-    -   [AsyncActionLogger.Adapter](./The-AsyncActionLogger.Adapter-Interface)
--   [**AsyncActionSchedulable**](./The-AsyncActionSchedulable-Class)
--   [**AsyncActionTestUtils**](./The-AsyncActionTestUtils-Class)
--   [**InvocableFailAsyncAction**](./The-InvocableFailAsyncAction-Class)
--   [**InvocableInitAsyncAction**](./The-InvocableInitAsyncAction-Class)
+-   [**AsyncActions**](AsyncActions Class)
 
 ## Flows
 
--   [Template: Async Action Flow](./Flow-TemplateAsyncActionFlow)
+-   [Template: Async Action Flow](Template: Async Action Flow)
 
 ## Advanced Topics
-
--   [Error Handling & Retry Logic](./Error-Handling-and-Retry-Logic)
--   [Scheduled Job Configuration](./Scheduled-Job-Configuration)
--   [Monitoring & Troubleshooting](./Monitoring-and-Troubleshooting)
--   [Plugin Framework](./Plugin-Framework)
--   [Best Practices](./Best-Practices)

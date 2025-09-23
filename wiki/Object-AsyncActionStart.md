@@ -1,5 +1,3 @@
-# The `AsyncActionStart__e` Platform Event
-
 The `AsyncActionStart__e` platform event provides a mechanism for triggering async action processing from external systems or through event-driven architectures.
 
 ## Overview
@@ -310,12 +308,9 @@ System.debug('Created ' + createdActions.size() + ' actions');
 
 ## Related Components
 
--   [AsyncActionStartTriggerHandler](./The-AsyncActionStartTriggerHandler-Class) - Event processing logic
--   [AsyncAction\_\_c](./Object-AsyncAction) - Records created from events
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor) - Referenced processor configurations
+-   [AsyncAction\_\_c](AsyncAction Custom Object) - Records created from events
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Referenced processor configurations
 
 ## See Also
 
 -   [Platform Events Documentation](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/) - Salesforce platform event fundamentals
--   [External Integration Patterns](./External-Integration-Patterns) - Advanced integration scenarios
--   [Event-Driven Architecture](./Event-Driven-Architecture) - Architectural guidance

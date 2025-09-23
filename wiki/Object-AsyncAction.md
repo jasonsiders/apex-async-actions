@@ -1,5 +1,3 @@
-# The `AsyncAction__c` Custom Object
-
 The `AsyncAction__c` object is the cornerstone of the async actions framework. Each record represents an individual work item to be processed asynchronously by the framework.
 
 ## Overview
@@ -304,12 +302,10 @@ public class AccountBatchProcessor implements Database.Batchable<SObject> {
 
 ## Related Objects
 
--   [AsyncActionProcessor\_\_mdt](./Object-AsyncActionProcessor) - Configuration for processors
--   [AsyncActionStart\_\_e](./Object-AsyncActionStart) - Platform event for triggering processing
--   [AsyncActionGlobalSetting\_\_mdt](./Object-AsyncActionGlobalSetting) - Global framework settings
+-   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Configuration for processors
+-   [AsyncActionStart\_\_e](AsyncActionStart Platform Event) - Platform event for triggering processing
+-   [AsyncActionGlobalSetting\_\_mdt](AsyncActionGlobalSetting Custom Metadata Type) - Global framework settings
 
 ## See Also
 
--   [AsyncActions Class](./The-AsyncActions-Class) - Primary framework class for creating actions
--   [AsyncActionJob Class](./The-AsyncActionJob-Class) - The queueable that processes actions
--   [Error Handling Guide](./Error-Handling-and-Retry-Logic) - Comprehensive error handling patterns
+-   [AsyncActions Class](AsyncActions Class) - Primary framework class for creating actions
