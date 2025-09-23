@@ -5,7 +5,7 @@ on:
         branches:
             - main
         paths:
-            - "source/**"
+            - "force-app/**"
     workflow_dispatch:
         inputs:
             promote-package:
@@ -24,12 +24,12 @@ concurrency:
     cancel-in-progress: false
 
 jobs:
-    versioning:
-        name: Versioning
-        outputs:
-            version-number: ${{ steps.determine-version.outputs.version-number }}
+    release:
+        name: Create Package Version and Release
+        permissions:
+            contents: write
         runs-on: ubuntu-latest
-        timeout-minutes: 10
+        timeout-minutes: 30
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -84,59 +84,125 @@ jobs:
                     exit 1
                   fi
 
-    create-unlocked-package-version:
-        name: Create Unlocked Package Version
-        needs: [versioning]
-        permissions:
-            contents: write
-        uses: ./.github/workflows/packaging.yml
-        secrets: inherit
-        with:
-            package: unlocked
-            promote-package: ${{ inputs.promote-package || false }}
-            version: ${{ needs.versioning.outputs.version-number }}
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: lts/*
+                  cache: "npm"
 
-    create-release:
-        name: Create Release
-        needs: [versioning, create-unlocked-package-version]
-        if: ${{ success() && needs.create-unlocked-package-version.outputs.version-id != '' }}
-        permissions:
-            contents: write
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        steps:
-            - name: Draft Release Body
-              id: release-body
+            - name: Setup NPM
+              shell: bash
+              run: npm ci
+
+            - name: Setup SF CLI
+              uses: ./.github/actions/setup-sf-cli
+
+            - name: Authenticate Devhub
+              env:
+                  CLIENT_ID: ${{ secrets.SALESFORCE_CONSUMER_KEY }}
+                  JWT_KEY: ${{ secrets.SALESFORCE_JWT_KEY }}
+                  USERNAME: ${{ secrets.SALESFORCE_DEVHUB_USERNAME }}
+              shell: bash
               run: |
-                  VERSION="${{ needs.versioning.outputs.version-number }}"
-                  UNLOCKED_ID="${{ needs.create-unlocked-package-version.outputs.version-id }}"
-                  # Start building release body
-                  {
-                    echo "## Installation"
-                    echo ""
-                    echo "### Unlocked Package"  
-                    echo "**Package Version**: \`$UNLOCKED_ID\`"
-                    echo "\`\`\`bash"
-                    echo "sf package install --package $UNLOCKED_ID --wait 20"
-                    echo "\`\`\`"
-                    echo ""
-                    echo "---"
-                    echo ""
-                  } > release_body.md
+                  set -euo pipefail
+                  echo "${JWT_KEY}" > server.key
+                  sf org login jwt \
+                    --client-id "$CLIENT_ID" \
+                    --jwt-key-file server.key \
+                    --set-default-dev-hub \
+                    --username "$USERNAME"
+                  trap 'rm -f server.key' EXIT
 
-                  # Set as output for next step
-                  {
-                    echo 'body<<EOF'
-                    cat release_body.md
-                    echo 'EOF'  
-                  } >> "$GITHUB_OUTPUT"
+            - name: Get Version Number
+              id: get-version
+              env:
+                  INPUT_VERSION: ${{ steps.determine-version.outputs.version-number }}
+              shell: bash
+              run: |
+                  VERSION_NUMBER="${INPUT_VERSION}.NEXT"
+                  VERSION_NAME="v${INPUT_VERSION}"
+                  echo "Using version number: $VERSION_NUMBER"
+                  echo "version-number=$VERSION_NUMBER" >> "$GITHUB_OUTPUT"
+                  echo "version-name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+            - name: Update Package Version
+              shell: bash
+              env:
+                  VERSION_NUMBER: ${{ steps.get-version.outputs.version-number }}
+                  VERSION_NAME: ${{ steps.get-version.outputs.version-name }}
+              run: |
+                  jq --arg vn "$VERSION_NUMBER" --arg vnm "$VERSION_NAME" \
+                    '(.packageDirectories[] | select(.default == true)) |= (.versionNumber = $vn | .versionName = $vnm)' \
+                    sfdx-project.json > sfdx-project.json.tmp && mv sfdx-project.json.tmp sfdx-project.json
+
+            - name: Create New Package Version
+              id: create-package
+              env:
+                  VERSION_NUMBER: ${{ steps.get-version.outputs.version-number }}
+                  WIKI_URL: "https://github.com/jasonsiders/apex-async-actions/wiki"
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  PACKAGE_ALIAS=$(jq -r '.packageDirectories[] | select(.default == true) | .package' sfdx-project.json)
+                  COMMAND="sf package version create --code-coverage --installation-key-bypass --json --package \"$PACKAGE_ALIAS\" --post-install-url \"$WIKI_URL\" --wait 29"
+                  echo "$COMMAND"
+                  if RESULT=$(eval "$COMMAND" 2>&1); then
+                    # Success - extract version ID
+                    VERSION_ID=$(echo "$RESULT" | jq -r '.result.SubscriberPackageVersionId')
+                    echo "Package Version ID: $VERSION_ID"
+                    echo "version-id=$VERSION_ID" >> "$GITHUB_OUTPUT"
+                    [[ -n "$VERSION_ID" && "$VERSION_ID" != "null" ]] || { echo "ERROR: Invalid version ID"; exit 1; }
+                  else
+                    echo "::error::Package creation failed: $RESULT"
+                    exit 1
+                  fi
+
+            - name: Promote Package Version
+              if: ${{ inputs.promote-package == true }}
+              env:
+                  VERSION_ID: ${{ steps.create-package.outputs.version-id }}
+                  VERSION_NAME: ${{ steps.get-version.outputs.version-name }}
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  sf package version promote --package "$VERSION_ID" --no-prompt
+                  echo "Promoted package $VERSION_NAME - $VERSION_ID"
+
+            - name: Run Prettier
+              shell: bash
+              run: |
+                  npx prettier -w sfdx-project.json
+
+            - name: Pull Latest Changes
+              shell: bash
+              run: |
+                  git fetch origin main
+                  git rebase origin/main || {
+                    echo "Rebase failed, trying merge strategy"
+                    git rebase --abort 2>/dev/null || true
+                    git pull --no-rebase origin main
+                  }
+
+            - name: Tag & Commit Changes
+              uses: "stefanzweifel/git-auto-commit-action@v6"
+              with:
+                  commit_message: "Packaged new version ${{ steps.get-version.outputs.version-name }}"
+                  skip_dirty_check: true
 
             - name: Create Release
+              if: ${{ success() && steps.create-package.outputs.version-id != '' }}
               id: create_release
               uses: softprops/action-gh-release@v2.3.2
               with:
-                  body: ${{ steps.release-body.outputs.body }}
+                  body: |
+                      ## Installation
+
+                      ### Unlocked Package
+                      **Package Version**: `${{ steps.create-package.outputs.version-id }}`
+                      ```bash
+                      sf package install --package ${{ steps.create-package.outputs.version-id }} --wait 20
+                      ```
                   generate_release_notes: true
                   make_latest: true
-                  tag_name: v${{ needs.versioning.outputs.version-number }}
+                  tag_name: ${{ steps.get-version.outputs.version-name }}
                   token: ${{ secrets.GITHUB_TOKEN }}
