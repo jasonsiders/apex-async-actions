@@ -1,11 +1,11 @@
-@SuppressWarnings('PMD.ApexDoc')
-public without sharing class AsyncActionLauncher {
+@SuppressWarnings('PMD.ApexDoc,PMD.AvoidGlobalModifier')
+global without sharing class AsyncActionLauncher {
 	/**
 	 * This class is responsible for constructing and launching AsyncActionJob queueables
 	 * Its `launch` methods will result in a new queueable job if the provided AsyncActionProcessor__mdt object
 	 * is active, valid, and has pending AsyncAction__c records associated to it
 	 **/
-	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> settingsList) {
+	global Map<String, Id> launch(List<AsyncActionProcessor__mdt> settingsList) {
 		// Get all specified pending Actions by their processor class, and launch each
 		Map<String, Id> results = new Map<String, Id>();
 		for (PendingAction result : this.queryPendingActions(settingsList)) {
@@ -16,13 +16,13 @@ public without sharing class AsyncActionLauncher {
 		return results;
 	}
 
-	public Id launch(AsyncActionProcessor__mdt settings) {
+	global Id launch(AsyncActionProcessor__mdt settings) {
 		// Overload launches a single AsyncActionJob job
 		String processorName = settings?.DeveloperName;
 		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
 
-	public Map<String, Id> launchAll() {
+	global Map<String, Id> launchAll() {
 		// Create & launch an AsyncActionJob job for every AsyncActionConfig__mdt
 		List<AsyncActionProcessor__mdt> all = AsyncActionProcessorService.getAll()?.values();
 		return this.launch(all);
