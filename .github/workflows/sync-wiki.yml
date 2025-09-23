@@ -1,0 +1,70 @@
+name: Sync Wiki
+
+on:
+    push:
+        branches: [main]
+        paths: ["wiki/**"]
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    pages: write
+    id-token: write
+
+jobs:
+    sync-wiki:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Codebase
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Checkout Wiki
+              uses: actions/checkout@v4
+              with:
+                  repository: ${{ github.repository }}.wiki
+                  path: wiki-repo
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Sync Wiki Files
+              run: |
+                  # Copy the changes from the local wiki files to the *actual* wiki repository connected to Github's Wiki feature
+                  set -e
+
+                  # Verify wiki directory exists
+                  if [ ! -d "wiki" ]; then
+                    echo "❌ No wiki directory found in main repository"
+                    exit 1
+                  fi
+
+                  # Clean and copy files
+                  find wiki-repo -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+                  cp -r wiki/* wiki-repo/
+
+                  cd wiki-repo
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
+                  # Check if there are any changes
+                  if git diff --quiet && git diff --staged --quiet; then
+                    echo "ℹ️ No changes to sync"
+                    exit 0
+                  fi
+
+                  # Show what's being synced
+                  echo "📋 Changes detected:"
+                  git status --porcelain
+
+                  # Commit and push changes
+                  git add .
+                  git commit -m "Sync wiki from main repository
+
+                  🤖 Automated sync from main repository
+                  Co-Authored-By: GitHub Action <action@github.com>"
+
+                  # Set up authentication and push
+                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git
+                  git push origin master
+
+                  echo "✅ Wiki files have been synced from main repository to GitHub wiki"
