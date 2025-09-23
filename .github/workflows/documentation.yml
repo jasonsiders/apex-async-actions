@@ -1,4 +1,4 @@
-name: Auto Documentation
+name: Documentation
 
 on:
     pull_request:
