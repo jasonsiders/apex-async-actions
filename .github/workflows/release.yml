@@ -158,7 +158,7 @@ jobs:
                   fi
 
             - name: Promote Package Version
-              if: ${{ inputs.promote-package == true }}
+              if: ${{ github.event_name == 'push' || inputs.promote-package == true }}
               env:
                   VERSION_ID: ${{ steps.create-package.outputs.version-id }}
                   VERSION_NAME: ${{ steps.get-version.outputs.version-name }}
