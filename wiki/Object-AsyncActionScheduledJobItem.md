@@ -6,7 +6,7 @@ The `AsyncActionScheduledJobItem__mdt` custom metadata type links individual pro
 
 AsyncActionScheduledJobItem records create the association between scheduled jobs and processors. Each record represents a single processor that will be launched when its parent scheduled job executes.
 
-![Sample Scheduled Job Item](../media/sample_scheduled_job_item.png)
+![Sample Scheduled Job Item](media/sample_scheduled_job_item.png)
 
 ## Purpose and Usage
 

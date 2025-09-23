@@ -6,7 +6,7 @@ The Template Async Action Flow is a pre-built Flow template that demonstrates th
 
 This template flow provides the correct input/output variable structure and basic processing logic required for Flow processors. You can clone and customize it to create your own Flow-based async action processors without writing Apex code.
 
-![Sample Flow Configuration](../media/sample_flow.png)
+![Sample Flow Configuration](media/sample_flow.png)
 
 ## Flow Details
 

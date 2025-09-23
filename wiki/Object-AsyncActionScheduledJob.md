@@ -6,7 +6,7 @@ The `AsyncActionScheduledJob__mdt` custom metadata type defines automatic schedu
 
 AsyncActionScheduledJob records automatically create and manage Salesforce scheduled jobs that run the `AsyncActionSchedulable` class. This provides a declarative way to set up recurring processing without manual job management.
 
-![Sample Scheduled Job Configuration](../media/sample_scheduled_job_config.png)
+![Sample Scheduled Job Configuration](media/sample_scheduled_job_config.png)
 
 ## Purpose and Usage
 

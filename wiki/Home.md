@@ -69,7 +69,7 @@ Clone the included [Template Flow](./Flow-TemplateAsyncActionFlow) and customize
 
 Create an `AsyncActionProcessor__mdt` record to configure how your processor runs:
 
-![Sample Processor Configuration](../media/sample_processor_config.png)
+![Sample Processor Configuration](media/sample_processor_config.png)
 
 Set the _Processor_ field to your class name or flow API name, configure batch size and retry settings, then enable the processor.
 
@@ -99,9 +99,9 @@ The framework operates on several key principles:
 
 Track the status of your actions through the included UI components:
 
-![Async Action List View](../media/list_view.png)
+![Async Action List View](media/list_view.png)
 
-![The Async Action Related List Component](../media/related_list.png)
+![The Async Action Related List Component](media/related_list.png)
 
 ## Want To Learn More?
 

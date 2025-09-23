@@ -6,7 +6,7 @@ The `AsyncActionProcessor__mdt` custom metadata type governs the configuration o
 
 AsyncActionProcessor metadata records serve as the configuration backbone for the async actions framework. They control every aspect of processor behavior, from basic settings like batch size to advanced features like automatic retry intervals.
 
-![Sample Processor Configuration](../media/sample_processor_config.png)
+![Sample Processor Configuration](media/sample_processor_config.png)
 
 ## Purpose and Usage
 

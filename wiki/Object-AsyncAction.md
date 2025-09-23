@@ -6,7 +6,7 @@ The `AsyncAction__c` object is the cornerstone of the async actions framework. E
 
 AsyncAction records serve as both the request and the audit trail for asynchronous operations. They track the status of requests throughout their lifecycle and provide context information to processor implementations.
 
-![Sample AsyncAction Record](../media/sample_async_action.png)
+![Sample AsyncAction Record](media/sample_async_action.png)
 
 ## Purpose and Usage
 
@@ -214,13 +214,13 @@ The framework includes several pre-built list views:
 -   **Failed Actions** - Actions that have permanently failed
 -   **Pending Actions** - Actions awaiting processing
 
-![AsyncAction List View](../media/list_view.png)
+![AsyncAction List View](media/list_view.png)
 
 ### Related List Component
 
 Use the included Lightning component to display related actions on record pages:
 
-![AsyncAction Related List](../media/related_list.png)
+![AsyncAction Related List](media/related_list.png)
 
 ### Reports and Dashboards
 

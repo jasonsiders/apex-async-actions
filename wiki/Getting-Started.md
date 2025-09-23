@@ -89,7 +89,7 @@ Navigate to **Setup → Custom Metadata Types → Async Action Processor → Man
 -   **Retry Interval**: 5
 -   **Run On Insert**: Checked
 
-![Sample Processor Configuration](../media/sample_processor_config.png)
+![Sample Processor Configuration](media/sample_processor_config.png)
 
 ### Step 3: Create an Async Action
 

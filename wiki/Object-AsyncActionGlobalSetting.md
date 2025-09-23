@@ -6,7 +6,7 @@ The `AsyncActionGlobalSetting__mdt` custom metadata type defines package-wide be
 
 AsyncActionGlobalSetting records provide a centralized location for framework-wide configuration. Unlike processor-specific settings, these configurations apply to all async action operations across your entire org.
 
-![Sample Global Setting Record](../media/sample_global_setting_record.png)
+![Sample Global Setting Record](media/sample_global_setting_record.png)
 
 ## Purpose and Usage
 
