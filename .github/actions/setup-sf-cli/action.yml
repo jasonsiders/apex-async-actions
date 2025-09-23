@@ -1,0 +1,39 @@
+name: Setup SF CLI & Plugins
+
+inputs:
+    install-plugins:
+        description: "When 'true', this action will install plugins defined in config.json along with the SF CLI"
+        default: "false"
+        required: false
+
+runs:
+    using: "composite"
+    steps:
+        - name: Install SF CLI
+          uses: patrykacc/sf-cli-setup@v1.1.0
+
+        - name: Cache SF CLI Plugins
+          if: ${{ inputs.install-plugins == 'true' }}
+          id: cache-plugins
+          uses: actions/cache@v4
+          with:
+              path: |
+                  ~/.sf/plugins
+                  ~/.local/share/sf
+              key: sf-plugins-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('.github/actions/setup-sf-cli/config.json') }}
+              restore-keys: |
+                  sf-plugins-${{ runner.os }}-
+
+        - name: Install Plugins
+          if: ${{ inputs.install-plugins == 'true' && steps.cache-plugins.outputs.cache-hit != 'true' }}
+          shell: bash
+          run: |
+              # Install the plugins listed in config.json:
+              PLUGIN_CONFIG=".github/actions/setup-sf-cli/config.json"
+              readarray -t PLUGINS < <(jq -r '.plugins[]' "$PLUGIN_CONFIG")
+              for plugin in "${PLUGINS[@]}"; do
+                echo "Installing ${plugin}..."
+                echo y | sf plugins install "${plugin}" --silent
+              done
+              echo "✅ The following sf plugins are now available:"
+              sf plugins --core
