@@ -41,10 +41,6 @@
 
 -   [Template: Async Action Flow](./Flow-TemplateAsyncActionFlow)
 
-## Security
-
--   [AsyncActionAdministrator Permission Set](./PermissionSet-AsyncActionAdministrator)
-
 ## Advanced Topics
 
 -   [Error Handling & Retry Logic](./Error-Handling-and-Retry-Logic)
