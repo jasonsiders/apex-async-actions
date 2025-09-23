@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionScheduleEnforcerTest {
 	private static final String NIGHTLY_AT_MIDNIGHT = '0 0 0 * * ?';

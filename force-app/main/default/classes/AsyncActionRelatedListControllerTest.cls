@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionRelatedListControllerTest {
 	private static final Integer NUM_TEST_ACTIONS = 200;

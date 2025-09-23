@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.EmptyCatchBlock')
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionFlowProcessorTest {
 	private static final String TEST_FLOW_NAME = 'Template_Async_Action_Flow';
@@ -100,7 +100,7 @@ private class AsyncActionFlowProcessorTest {
 
 	// **** HELPER **** //
 	private static List<AsyncAction__c> getActions() {
-		return [SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c FROM AsyncAction__c];
+		return [SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c FROM AsyncAction__c LIMIT :TEST_SIZE];
 	}
 
 	private static AsyncActionProcessor__mdt initSettings() {

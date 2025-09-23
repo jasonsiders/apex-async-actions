@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc, PMD.EmptyStatementBlock')
+@SuppressWarnings('PMD.ApexDoc,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionScheduledJobUtilsTest {
 	@IsTest

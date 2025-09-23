@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc, PMD.AvoidDebugStatements, PMD.AvoidGlobalModifier, PMD.EmptyStatementBlock')
+@SuppressWarnings('PMD.ApexDoc,PMD.AvoidDebugStatements,PMD.AvoidGlobalModifier,PMD.EmptyStatementBlock')
 global abstract class AsyncActionLogger {
 	/**
 	 * This class is responsible for logging details about the AsyncActionFramework

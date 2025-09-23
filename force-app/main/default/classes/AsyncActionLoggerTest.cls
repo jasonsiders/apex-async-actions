@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc, PMD.EmptyStatementBlock')
+@SuppressWarnings('PMD.ApexDoc,PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionLoggerTest {
 	@IsTest

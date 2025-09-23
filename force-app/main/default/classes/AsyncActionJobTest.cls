@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.EmptyCatchBlock')
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionJobTest {
 	private static final Integer TEST_SIZE = 200;
