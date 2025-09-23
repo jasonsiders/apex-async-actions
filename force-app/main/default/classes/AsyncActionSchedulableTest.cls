@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,CPD.DetectCopyPasteForApex')
 @IsTest
 private class AsyncActionSchedulableTest {
 	private static AsyncActionProcessor__mdt actionSettings;
@@ -24,8 +24,7 @@ private class AsyncActionSchedulableTest {
 		Test.getEventBus().deliver();
 
 		// Should create 1 Queueable, and a future instance of the schedulable job
-		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
-		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
+		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
 		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNotNull(processorJob, 'Processor job was not launched');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
@@ -42,8 +41,7 @@ private class AsyncActionSchedulableTest {
 		Test.getEventBus().deliver();
 
 		// Should create 1 Queueable, and a future instance of the schedulable job
-		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
-		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
+		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
 		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNotNull(processorJob, 'Processor job was not launched');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
@@ -54,14 +52,14 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldLaunchSemiHourlyIfEnabled() {
+		jobSettings.Interval__c = 15;
 		jobSettings.Type__c = 'Semi-Hourly';
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
 
 		// Should create 1 Queueable, and a future instance of the schedulable job
-		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
-		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
+		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
 		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNotNull(processorJob, 'Processor job was not launched');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
@@ -79,7 +77,7 @@ private class AsyncActionSchedulableTest {
 		Test.getEventBus().deliver();
 
 		// Neither a scheduled job or queueable should be created
-		List<AsyncApexJob> jobs = AsyncActionSchedulableTest.getAsyncJobs();
+		Map<String, AsyncApexJob> jobs = AsyncActionSchedulableTest.getAsyncJobs();
 		Assert.isTrue(jobs?.isEmpty(), 'Job disabled, but performed actions anyway');
 	}
 
@@ -91,8 +89,7 @@ private class AsyncActionSchedulableTest {
 		Test.getEventBus().deliver();
 
 		// Should create a new schedulable instance, but not a queueable one
-		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
-		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
+		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
 		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNull(processorJob, 'Processor job');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
@@ -107,8 +104,7 @@ private class AsyncActionSchedulableTest {
 		Test.getEventBus().deliver();
 
 		// Should create a new schedulable instance, but not a queueable one
-		List<AsyncApexJob> asyncJobs = AsyncActionSchedulableTest.getAsyncJobs();
-		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.mapAsyncJobsByClassName(asyncJobs);
+		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
 		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
 		Assert.isNull(processorJob, 'Processor job');
 		AsyncApexJob scheduledJob = jobsByClassName?.get(AsyncActionSchedulable.class.getName());
@@ -116,16 +112,6 @@ private class AsyncActionSchedulableTest {
 	}
 
 	// **** HELPER **** //
-	static List<AsyncApexJob> getAsyncJobs() {
-		return [
-			SELECT ApexClass.Name, JobType, CronTrigger.NextFireTime
-			FROM AsyncApexJob
-			WHERE ApexClass.Name IN (:AsyncActionJob.class.getName(), :AsyncActionSchedulable.class.getName())
-			WITH SYSTEM_MODE
-			LIMIT 50000
-		];
-	}
-
 	static void insertAction() {
 		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
 		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
@@ -134,9 +120,15 @@ private class AsyncActionSchedulableTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 	}
 
-	static Map<String, AsyncApexJob> mapAsyncJobsByClassName(List<AsyncApexJob> jobs) {
+	static Map<String, AsyncApexJob> getAsyncJobs() {
 		Map<String, AsyncApexJob> jobsByClassName = new Map<String, AsyncApexJob>{};
-		for (AsyncApexJob job : jobs) {
+		for (AsyncApexJob job : [
+			SELECT ApexClass.Name, JobType, CronTrigger.NextFireTime
+			FROM AsyncApexJob
+			WHERE ApexClass.Name IN (:AsyncActionJob.class.getName(), :AsyncActionSchedulable.class.getName())
+			WITH SYSTEM_MODE
+			LIMIT 50000
+		]) {
 			String className = job?.ApexClass?.Name;
 			jobsByClassName?.put(className, job);
 		}
