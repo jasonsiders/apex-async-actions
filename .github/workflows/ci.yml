@@ -6,8 +6,7 @@ on:
             - main
         types: [opened, ready_for_review, reopened, synchronize]
         paths:
-            - "source/**"
-            - "plugins/**"
+            - "force-app/**"
             - ".github/**"
 
 concurrency:
@@ -59,7 +58,7 @@ jobs:
                   # Ensure this check only runs against changed files in the current PR; not the entire codebase
                   set -euo pipefail
                   mkdir "$CHANGES_DIR"
-                  sf sgd source delta --generate-delta --from "HEAD^" --to "HEAD" --output-dir "$CHANGES_DIR"/ --source-dir "source/"
+                  sf sgd source delta --generate-delta --from "HEAD^" --to "HEAD" --output-dir "$CHANGES_DIR"/ --source-dir "force-app/"
                   echo "Changed files:"
                   ls "$CHANGES_DIR"
 
@@ -174,7 +173,7 @@ jobs:
                     --coverage-formatters json-summary \
                     --dry-run \
                     --ignore-conflicts \
-                    --source-dir source \
+                    --source-dir force-app \
                     --test-level RunLocalTests \
                     --verbose \
                     --wait 30
