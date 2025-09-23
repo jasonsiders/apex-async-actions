@@ -37,7 +37,7 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 
 	private Set<String> getTriggeredActions() {
 		// Returns a collection of Processor names of current Action(s) that are configured to run on insert
-		Set<String> results = new Set<String>();
+		Set<String> results = new Set<String>{};
 		for (AsyncAction__c action : this.actions) {
 			String processorName = action?.ProcessorName__c;
 			if (

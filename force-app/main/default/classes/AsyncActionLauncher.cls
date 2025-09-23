@@ -6,7 +6,7 @@ public without sharing class AsyncActionLauncher {
 	 **/
 	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> settingsList) {
 		// Get all specified pending Actions by their processor class, and launch each
-		Map<String, Id> results = new Map<String, Id>();
+		Map<String, Id> results = new Map<String, Id>{};
 		for (PendingAction result : this.queryPendingActions(settingsList)) {
 			String processorName = result?.processorName;
 			Id jobId = this.launchJobToProcess(processorName);
@@ -39,7 +39,7 @@ public without sharing class AsyncActionLauncher {
 
 	private Set<String> extractDeveloperNamesFrom(List<AsyncActionProcessor__mdt> settingsList) {
 		// Extract the DeveloperName from the
-		Set<String> results = new Set<String>();
+		Set<String> results = new Set<String>{};
 		for (AsyncActionProcessor__mdt settings : settingsList) {
 			String developerName = settings?.DeveloperName;
 			results?.add(developerName);

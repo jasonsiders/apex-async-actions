@@ -6,7 +6,7 @@ global class InvocableInitAsyncAction {
 	 **/
 	@InvocableMethod(category='Async Actions' label='Init Async Action')
 	global static List<AsyncAction__c> invoke(List<InvocableInitAsyncAction.Input> inputs) {
-		List<AsyncAction__c> actions = new List<AsyncAction__c>();
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		for (InvocableInitAsyncAction.Input input : inputs) {
 			AsyncAction__c action = input?.initAction();
 			actions?.add(action);

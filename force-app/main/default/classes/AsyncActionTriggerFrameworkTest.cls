@@ -1,7 +1,7 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.ApexUnitTestClassShouldHaveAsserts')
 @IsTest
 private class AsyncActionTriggerFrameworkTest {
-	static Map<System.TriggerOperation, List<SObject>> results = new Map<System.TriggerOperation, List<SObject>>();
+	static Map<System.TriggerOperation, List<SObject>> results = new Map<System.TriggerOperation, List<SObject>>{};
 
 	// **** TESTS **** //
 	@IsTest
@@ -87,7 +87,7 @@ private class AsyncActionTriggerFrameworkTest {
 
 	// **** HELPER **** //
 	static List<Account> generateRecords() {
-		List<Account> accounts = new List<Account>();
+		List<Account> accounts = new List<Account>{};
 		for (Integer i = 0; i < 200; i++) {
 			accounts?.add(new Account());
 		}

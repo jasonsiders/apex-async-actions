@@ -9,7 +9,7 @@ private class AsyncActionFlowProcessorTest {
 		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 		// Insert AsyncActions, but do not run the trigger logic
 		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
-		List<AsyncAction__c> actions = new List<AsyncAction__c>();
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		for (Integer i = 0; i < TEST_SIZE; i++) {
 			AsyncAction__c action = AsyncActions.initAction(settings);
 			actions?.add(action);
@@ -112,7 +112,7 @@ private class AsyncActionFlowProcessorTest {
 	private static Invocable.Action.Result mockFlowResult() {
 		// Generate a mock Invocable.Action.Result, for testing error handling paths
 		Map<String, Object> params = new Map<String, Object>{
-			'outputParameters' => new Map<String, Object>(),
+			'outputParameters' => new Map<String, Object>{},
 			'success' => true
 		};
 		return (Invocable.Action.Result) JSON.deserialize(JSON.serialize(params), Invocable.Action.Result.class);

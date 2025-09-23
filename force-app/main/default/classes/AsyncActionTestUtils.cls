@@ -78,7 +78,7 @@ global class AsyncActionTestUtils {
 		// Gives @IsTest access to inject settings records to external callers
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
 			? AsyncActionProcessorService.processors
-			: new Map<String, AsyncActionProcessor__mdt>();
+			: new Map<String, AsyncActionProcessor__mdt>{};
 		String processorName = settings?.DeveloperName;
 		AsyncActionProcessorService.processors?.put(processorName, settings);
 	}
@@ -90,7 +90,7 @@ global class AsyncActionTestUtils {
 		List<AsyncActionScheduledJobItem__mdt> matching = AsyncActionScheduledJobItemService.jobItems
 				?.containsKey(jobName)
 			? AsyncActionScheduledJobItemService.jobItems?.get(jobName)
-			: new List<AsyncActionScheduledJobItem__mdt>();
+			: new List<AsyncActionScheduledJobItem__mdt>{};
 		matching?.add(item);
 		AsyncActionScheduledJobItemService.jobItems?.put(jobName, matching);
 	}
@@ -99,7 +99,7 @@ global class AsyncActionTestUtils {
 		// Gives @IsTest access to inject job settings records to external callers
 		AsyncActionScheduledJobService.settings = (AsyncActionScheduledJobService.settings != null)
 			? AsyncActionScheduledJobService.settings
-			: new Map<String, AsyncActionScheduledJob__mdt>();
+			: new Map<String, AsyncActionScheduledJob__mdt>{};
 		String jobName = jobSettings?.DeveloperName;
 		AsyncActionScheduledJobService.settings?.put(jobName, jobSettings);
 	}

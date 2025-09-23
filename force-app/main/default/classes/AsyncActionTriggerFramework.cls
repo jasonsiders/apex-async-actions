@@ -4,7 +4,7 @@ public abstract class AsyncActionTriggerFramework {
 	 * This class provides a simple TriggerHandler framework utilized by triggers in this package.
 	 * It includes methods to disable triggers, if desired by callers
 	 **/
-	private static Set<Type> bypassed = new Set<Type>();
+	private static Set<Type> bypassed = new Set<Type>{};
 
 	@TestVisible
 	protected List<SObject> triggerNew;
@@ -76,10 +76,10 @@ public abstract class AsyncActionTriggerFramework {
 
 	private void initialize() {
 		Boolean isTrigger = Trigger.isExecuting;
-		this.triggerNew = (isTrigger) ? Trigger.new : new List<SObject>();
-		this.triggerOld = (isTrigger) ? Trigger.old : new List<SObject>();
-		this.triggerNewMap = (isTrigger) ? Trigger.newMap : new Map<Id, SObject>();
-		this.triggerOldMap = (isTrigger) ? Trigger.oldMap : new Map<Id, SObject>();
+		this.triggerNew = (isTrigger) ? Trigger.new : new List<SObject>{};
+		this.triggerOld = (isTrigger) ? Trigger.old : new List<SObject>{};
+		this.triggerNewMap = (isTrigger) ? Trigger.newMap : new Map<Id, SObject>{};
+		this.triggerOldMap = (isTrigger) ? Trigger.oldMap : new Map<Id, SObject>{};
 		this.operation = (isTrigger) ? Trigger.operationType : null;
 	}
 }

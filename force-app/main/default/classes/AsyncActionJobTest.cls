@@ -146,7 +146,7 @@ private class AsyncActionJobTest {
 	}
 
 	static List<AsyncAction__c> initTestActions(AsyncActionProcessor__mdt settings) {
-		List<AsyncAction__c> actions = new List<AsyncAction__c>();
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		for (Integer i = 0; i < TEST_SIZE; i++) {
 			AsyncAction__c action = AsyncActions.initAction(settings);
 			actions?.add(action);

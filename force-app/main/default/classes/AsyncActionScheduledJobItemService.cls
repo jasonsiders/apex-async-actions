@@ -6,7 +6,7 @@ public abstract without sharing class AsyncActionScheduledJobItemService {
 	 * See the `AsyncActionTestUtils` class methods to easily inject settings for your apex tests.
 	 **/
 	@TestVisible
-	static Map<String, List<AsyncActionScheduledJobItem__mdt>> jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>();
+	static Map<String, List<AsyncActionScheduledJobItem__mdt>> jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>{};
 	@TestVisible
 	static Boolean useRealData = (Test.isRunningTest() == false);
 
@@ -27,6 +27,6 @@ public abstract without sharing class AsyncActionScheduledJobItemService {
 			];
 			jobItems?.put(jobName, matching);
 		}
-		return jobItems?.containsKey(jobName) ? jobItems?.get(jobName) : new List<AsyncActionScheduledJobItem__mdt>();
+		return jobItems?.containsKey(jobName) ? jobItems?.get(jobName) : new List<AsyncActionScheduledJobItem__mdt>{};
 	}
 }

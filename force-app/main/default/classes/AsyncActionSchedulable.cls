@@ -32,7 +32,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	}
 
 	private List<AsyncActionScheduledJobItem__mdt> getActiveItems() {
-		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>();
+		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>{};
 		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
 			if (item?.Enabled__c == true) {
 				activeItems?.add(item);
@@ -42,7 +42,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	}
 
 	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
-		Set<String> actionSet = new Set<String>();
+		Set<String> actionSet = new Set<String>{};
 		for (AsyncActionScheduledJobItem__mdt item : items) {
 			String actionName = item?.AsyncActionProcessor__r?.DeveloperName;
 			actionSet?.add(actionName);

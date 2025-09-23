@@ -16,7 +16,7 @@ public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework 
 	}
 
 	private List<AsyncActionProcessor__mdt> getActionsToLaunch(List<AsyncActionStart__e> events) {
-		Map<String, AsyncActionProcessor__mdt> actions = new Map<String, AsyncActionProcessor__mdt>();
+		Map<String, AsyncActionProcessor__mdt> actions = new Map<String, AsyncActionProcessor__mdt>{};
 		for (String actionName : this.extractActionNames(events)) {
 			AsyncActionProcessor__mdt action = AsyncActionProcessorService.get(actionName);
 			actions?.put(actionName, action);
@@ -26,7 +26,7 @@ public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework 
 	}
 
 	private Set<String> extractActionNames(List<AsyncActionStart__e> events) {
-		Set<String> actionNames = new Set<String>();
+		Set<String> actionNames = new Set<String>{};
 		for (AsyncActionStart__e event : events) {
 			if (String.isNotBlank(event?.Actions__c)) {
 				// If Actions__c are specified, launch only the jobs specified in the field

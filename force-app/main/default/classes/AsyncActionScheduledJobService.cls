@@ -25,7 +25,7 @@ public abstract class AsyncActionScheduledJobService {
 		if (settings == null && useRealData == true) {
 			settings = AsyncActionScheduledJob__mdt.getAll();
 		} else if (settings == null) {
-			settings = new Map<String, AsyncActionScheduledJob__mdt>();
+			settings = new Map<String, AsyncActionScheduledJob__mdt>{};
 		}
 	}
 }

@@ -22,7 +22,7 @@ public abstract without sharing class AsyncActionProcessorService {
 
 	@TestVisible
 	private static Map<String, AsyncActionProcessor__mdt> mapByDeveloperName(List<AsyncActionProcessor__mdt> configs) {
-		Map<String, AsyncActionProcessor__mdt> results = new Map<String, AsyncActionProcessor__mdt>();
+		Map<String, AsyncActionProcessor__mdt> results = new Map<String, AsyncActionProcessor__mdt>{};
 		for (AsyncActionProcessor__mdt settings : configs) {
 			String developerName = settings?.DeveloperName;
 			results?.put(developerName, settings);
@@ -33,7 +33,7 @@ public abstract without sharing class AsyncActionProcessorService {
 	private static Map<String, AsyncActionProcessor__mdt> retrieve() {
 		List<AsyncActionProcessor__mdt> configs = AsyncActionProcessorService.useRealData
 			? AsyncActionProcessorService.queryAllProcessors()
-			: new List<AsyncActionProcessor__mdt>();
+			: new List<AsyncActionProcessor__mdt>{};
 		Map<String, AsyncActionProcessor__mdt> configMap = AsyncActionProcessorService.mapByDeveloperName(configs);
 		return configMap;
 	}
@@ -41,10 +41,9 @@ public abstract without sharing class AsyncActionProcessorService {
 	private static List<AsyncActionProcessor__mdt> queryAllProcessors() {
 		// Build & execute a dynamic query that includes all fields on the processor object, and returns all processor records
 		// Note: Custom Metadata's built in getAll() method doesn't return values for long text area fields, like Data__c
-		String template = 'SELECT {0} FROM {1} WITH SYSTEM_MODE';
 		Set<String> fieldNames = SObjectType.AsyncActionProcessor__mdt.fields.getMap()?.keySet();
 		String queryString = String.format(
-			'SELECT {0} FROM {1}',
+			'SELECT {0} FROM {1} WITH SYSTEM_MODE',
 			new List<String>{ String.join(fieldNames, ', '), AsyncActionProcessor__mdt.SObjectType.toString() }
 		);
 		return Database.query(queryString);

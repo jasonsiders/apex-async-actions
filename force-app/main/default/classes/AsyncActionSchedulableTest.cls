@@ -1,21 +1,24 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionSchedulableTest {
+	private static AsyncActionProcessor__mdt actionSettings;
+	private static AsyncActionScheduledJob__mdt jobSettings;
+	private static AsyncActionScheduledJobItem__mdt jobItem;
+	static {
+		AsyncActionSchedulableTest.insertAction();
+		Type mock = MockAsyncActionProcessor.class;
+		actionSettings = AsyncActionTestUtils.initApexProcessor(mock);
+		jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+		jobSettings.CronExpression__c = '0 0 0 * * ?'; // Nightly at midnight
+		jobSettings.Type__c = 'Custom';
+		jobItem = AsyncActionTestUtils.initScheduledJobItem(actionSettings, jobSettings);
+		jobItem.Enabled__c = true;
+	}
+
 	@IsTest
 	static void shouldLaunchCustomCronIfEnabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
-		);
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.CronExpression__c = '0 0 0 * * ?'; // Nightly at midnight
-		jobSettings.Enabled__c = true;
 		jobSettings.Type__c = 'Custom';
-		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
-			actionSettings,
-			jobSettings
-		);
-		jobItem.Enabled__c = true;
-		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -33,19 +36,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldLaunchHourlyIfEnabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
-		);
-		AsyncActionSchedulableTest.insertAction();
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
 		jobSettings.Type__c = 'Hourly';
-		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
-			actionSettings,
-			jobSettings
-		);
-		jobItem.Enabled__c = true;
-		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -63,19 +54,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldLaunchSemiHourlyIfEnabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
-		);
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
-		jobSettings.Interval__c = 15;
 		jobSettings.Type__c = 'Semi-Hourly';
-		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
-			actionSettings,
-			jobSettings
-		);
-		jobItem.Enabled__c = true;
-		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -94,19 +73,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfJobIsDisabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
-		);
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = false; // The scheduled job should do nothing
-		jobSettings.Interval__c = 15;
-		jobSettings.Type__c = 'Semi-Hourly';
-		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
-			actionSettings,
-			jobSettings
-		);
-		jobItem.Enabled__c = true;
-		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -118,19 +85,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfJobItemIsDisabled() {
-		AsyncActionProcessor__mdt actionSettings = AsyncActionTestUtils.initApexProcessor(
-			MockAsyncActionProcessor.class
-		);
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
-		jobSettings.Interval__c = 15;
-		jobSettings.Type__c = 'Semi-Hourly';
-		AsyncActionScheduledJobItem__mdt jobItem = AsyncActionTestUtils.initScheduledJobItem(
-			actionSettings,
-			jobSettings
-		);
 		jobItem.Enabled__c = false; // Should not execute the action
-		AsyncActionSchedulableTest.insertAction();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -146,12 +101,7 @@ private class AsyncActionSchedulableTest {
 
 	@IsTest
 	static void shouldNotLaunchIfNoJobItems() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
-		jobSettings.Interval__c = 15;
-		jobSettings.Type__c = 'Semi-Hourly';
-		// No job items!
-		AsyncActionSchedulableTest.insertAction();
+		AsyncActionScheduledJobItemService.jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>{};
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();
@@ -185,7 +135,7 @@ private class AsyncActionSchedulableTest {
 	}
 
 	static Map<String, AsyncApexJob> mapAsyncJobsByClassName(List<AsyncApexJob> jobs) {
-		Map<String, AsyncApexJob> jobsByClassName = new Map<String, AsyncApexJob>();
+		Map<String, AsyncApexJob> jobsByClassName = new Map<String, AsyncApexJob>{};
 		for (AsyncApexJob job : jobs) {
 			String className = job?.ApexClass?.Name;
 			jobsByClassName?.put(className, job);

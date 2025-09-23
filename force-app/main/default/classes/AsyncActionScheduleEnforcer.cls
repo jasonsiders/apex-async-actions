@@ -6,7 +6,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 	private Map<String, JobWrapper> jobs;
 
 	public AsyncActionScheduleEnforcer() {
-		this.jobs = new Map<String, JobWrapper>();
+		this.jobs = new Map<String, JobWrapper>{};
 	}
 
 	public void enforce() {
