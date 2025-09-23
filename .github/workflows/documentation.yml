@@ -1,0 +1,276 @@
+name: Auto Documentation
+
+on:
+    pull_request:
+        branches: [main]
+        types: [opened, ready_for_review, reopened, synchronize]
+        paths:
+            - "force-app/**"
+
+concurrency:
+    group: auto-doc
+    cancel-in-progress: true
+
+permissions:
+    contents: write
+    pull-requests: write
+    id-token: write
+
+jobs:
+    auto-documentation:
+        name: Generate Documentation
+        if: ${{ !github.event.pull_request.draft }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout PR Branch
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  ref: ${{ github.head_ref }}
+                  fetch-depth: 0
+
+            - name: Check if last commit was auto-documentation
+              id: check-auto-commit
+              run: |
+                  LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+                  if [[ "$LAST_COMMIT_MSG" == *"Auto-generate documentation"* ]]; then
+                    echo "auto-commit=true" >> "$GITHUB_OUTPUT"
+                    echo "Last commit was auto-documentation - skipping to prevent loops"
+                  else
+                    echo "auto-commit=false" >> "$GITHUB_OUTPUT"
+                    echo "Last commit was not auto-documentation - analyzing code for documentation updates"
+                  fi
+
+            - name: Get Changed Salesforce Files
+              if: steps.check-auto-commit.outputs.auto-commit == 'false'
+              id: changed-files
+              run: |
+                  # Get list of changed Salesforce files in force-app directory
+                  git diff --name-only origin/main..HEAD | grep -E '\.(cls|trigger|flow-meta\.xml|object-meta\.xml|field-meta\.xml|permissionset-meta\.xml)$' > changed_files.txt || touch changed_files.txt
+
+                  # Check for specific types of changes
+                  if git diff --name-only origin/main..HEAD | grep -E '\.(cls|trigger)$' > /dev/null; then
+                    echo "has-apex-changes=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has-apex-changes=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+                  if git diff --name-only origin/main..HEAD | grep -E '\.flow-meta\.xml$' > /dev/null; then
+                    echo "has-flow-changes=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has-flow-changes=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+                  if git diff --name-only origin/main..HEAD | grep -E '\.(object-meta\.xml|field-meta\.xml)$' > /dev/null; then
+                    echo "has-object-changes=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has-object-changes=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+                  if git diff --name-only origin/main..HEAD | grep -E '\.permissionset-meta\.xml$' > /dev/null; then
+                    echo "has-permset-changes=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has-permset-changes=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+                  if [ -s changed_files.txt ]; then
+                    echo "has-sf-changes=true" >> "$GITHUB_OUTPUT"
+                    echo "Changed Salesforce files:"
+                    cat changed_files.txt
+                  else
+                    echo "has-sf-changes=false" >> "$GITHUB_OUTPUT"
+                    echo "No Salesforce files changed"
+                  fi
+
+            - name: Analyze Apex Changes with Claude
+              if: steps.check-auto-commit.outputs.auto-commit == 'false' && steps.changed-files.outputs.has-apex-changes == 'true'
+              uses: anthropics/claude-code-action@beta
+              with:
+                  claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+                  direct_prompt: |
+                      I need you to analyze the changed Apex files in this PR and automatically generate/update wiki documentation.
+
+                      ## Your Task:
+                      1. **Analyze each changed .cls and .trigger file** to identify new or modified `global` elements:
+                         - New `global` classes (including inner types)
+                         - New `global` methods
+                         - New `global` properties
+                         - Modified signatures of existing global elements
+
+                      2. **Generate wiki documentation** for any new global elements:
+                         - Create new wiki files for new global classes following the pattern `The-[ClassName]-Class.md`
+                         - Add new methods to existing class documentation files in the wiki directory
+                         - Add new properties to existing class documentation files in the wiki directory
+                         - Update `wiki/_Sidebar.md` to include new class files in alphabetical order within their appropriate sections
+
+                      3. **Follow the existing documentation patterns** in the `wiki/` directory:
+                         - Use the same markdown structure and formatting as existing files
+                         - Include method signatures, parameter descriptions, and return types
+                         - Add code examples where appropriate
+                         - Maintain consistent cross-references between files using relative links
+                         - Follow the existing naming conventions exactly
+
+                      ## Important Guidelines:
+                      - Only document `global` elements (ignore private/protected/public without global)
+                       - Follow the existing wiki file naming conventions exactly (The-[ClassName]-Class.md)
+                      - Preserve existing content - only add new sections or update existing ones
+                      - If no new global elements are found, create no files
+                      - When updating existing files, insert new content in appropriate sections
+                      - Maintain alphabetical ordering in _Sidebar.md
+
+                      ## Expected Output:
+                      Create or modify files in the `wiki/` directory as needed. I will review these changes as part of the PR.
+
+            - name: Analyze Flow Changes with Claude
+              if: steps.check-auto-commit.outputs.auto-commit == 'false' && steps.changed-files.outputs.has-flow-changes == 'true'
+              uses: anthropics/claude-code-action@beta
+              with:
+                  claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+                  direct_prompt: |
+                      I need you to analyze the changed Flow files in this PR and automatically generate/update wiki documentation for flows.
+
+                      ## Your Task:
+                      1. **Analyze each changed .flow-meta.xml file** to identify new or modified flows
+                      2. **Generate comprehensive flow documentation** including:
+                         - Flow name, description, and purpose
+                         - Input/Output variable signatures with data types
+                         - Instructions on how to clone and customize the flow
+                         - Flow architecture and key components
+                         - Screenshots from the media directory that show the flow configuration
+
+                      3. **Create or update wiki documentation**:
+                         - Create new wiki files for new flows following the pattern `Flow-[FlowName].md`
+                         - Update existing flow documentation for modified flows
+                         - Include relevant screenshots from the `media/` directory
+                         - Update `wiki/_Sidebar.md` to include new flow files in the "Flows" section
+
+                      ## Flow Documentation Requirements:
+                      - Document input/output variables with their data types and purposes
+                      - Provide step-by-step cloning instructions
+                      - Include screenshots showing flow configuration (use images from media/ directory)
+                      - Explain how the flow integrates with the AsyncAction framework
+                      - Document any special configuration requirements
+
+                      ## Expected Output:
+                      Create or modify files in the `wiki/` directory as needed. Include relevant media files in documentation.
+
+            - name: Analyze Object Changes with Claude
+              if: steps.check-auto-commit.outputs.auto-commit == 'false' && steps.changed-files.outputs.has-object-changes == 'true'
+              uses: anthropics/claude-code-action@beta
+              with:
+                  claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+                  direct_prompt: |
+                      I need you to analyze the changed Custom Object and Field files in this PR and automatically generate/update wiki documentation.
+
+                      ## Your Task:
+                      1. **Analyze each changed .object-meta.xml and .field-meta.xml file** to identify new or modified objects and fields
+                      2. **Generate comprehensive object documentation** including:
+                         - Object purpose and role in the application
+                         - Comprehensive field documentation in table format
+                         - Field details: API Name, Label, Data Type, Description, Usage
+                         - How objects relate to each other and the overall architecture
+                         - Screenshots from the media directory showing object configuration
+
+                      3. **Create or update wiki documentation**:
+                         - Create new wiki files for new objects following the pattern `Object-[ObjectName].md`
+                         - Update existing object documentation for modified objects/fields
+                         - Include a comprehensive table of all fields with their properties
+                         - Include relevant screenshots from the `media/` directory
+                         - Update `wiki/_Sidebar.md` to include new object files in the "Objects" section
+
+                      ## Object Documentation Requirements:
+                      - Provide a summary of what the object represents
+                      - Explain how the object is used in the context of the AsyncAction framework
+                      - Create a comprehensive table with columns: Field API Name, Label, Data Type, Description, Usage
+                      - Include screenshots from media/ directory showing object records and configuration
+                      - Document relationships between objects
+                      - Explain permission requirements and access patterns
+
+                      ## Expected Output:
+                      Create or modify files in the `wiki/` directory as needed. Include relevant media files in documentation.
+
+            - name: Analyze Permission Set Changes with Claude
+              if: steps.check-auto-commit.outputs.auto-commit == 'false' && steps.changed-files.outputs.has-permset-changes == 'true'
+              uses: anthropics/claude-code-action@beta
+              with:
+                  claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+                  direct_prompt: |
+                      I need you to analyze the changed Permission Set files in this PR and automatically generate/update wiki documentation.
+
+                      ## Your Task:
+                      1. **Analyze each changed .permissionset-meta.xml file** to identify new or modified permission sets
+                      2. **Generate comprehensive permission set documentation** including:
+                         - Permission set purpose and target user groups
+                         - Detailed breakdown of object permissions (CRUD + View/Modify All)
+                         - Field-level permissions with read/write access details
+                         - Tab visibility settings
+                         - Who should be assigned each permission set and when
+                         - Installation and assignment instructions
+
+                      3. **Create or update wiki documentation**:
+                         - Create new wiki files for new permission sets following the pattern `PermissionSet-[PermissionSetName].md`
+                         - Update existing permission set documentation for modifications
+                         - Update `wiki/_Sidebar.md` to include new permission set files in the "Security" section
+
+                      ## Permission Set Documentation Requirements:
+                      - Describe which types of users should receive each permission set
+                      - Document all object-level permissions in a clear table format
+                      - Document all field-level permissions with read/write status
+                      - Explain the security model and access patterns
+                      - Provide assignment instructions for administrators
+                      - Include any prerequisites or dependencies
+
+                      ## Expected Output:
+                      Create or modify files in the `wiki/` directory as needed.
+
+            - name: Check if Home.md Changed
+              if: steps.check-auto-commit.outputs.auto-commit == 'false'
+              id: check-home
+              run: |
+                  # Check if wiki/Home.md was modified in the previous documentation step
+                  if git diff --quiet HEAD -- wiki/Home.md; then
+                    echo "home-changed=false" >> "$GITHUB_OUTPUT"
+                    echo "wiki/Home.md was not changed"
+                  else
+                    echo "home-changed=true" >> "$GITHUB_OUTPUT"
+                    echo "wiki/Home.md was changed"
+                  fi
+
+            - name: Sync Home.md to README.md
+              if: steps.check-auto-commit.outputs.auto-commit == 'false' && steps.check-home.outputs.home-changed == 'true'
+              run: |
+                  # Copy wiki/Home.md content to README.md
+                  if [ -f wiki/Home.md ]; then
+                    cp wiki/Home.md README.md
+                    echo "Copied wiki/Home.md to README.md"
+                  else
+                    echo "wiki/Home.md not found, skipping sync"
+                  fi
+
+            - name: Check for Documentation Changes
+              if: steps.check-auto-commit.outputs.auto-commit == 'false'
+              id: check-docs
+              run: |
+                  if git diff --quiet HEAD -- wiki/ README.md; then
+                    echo "has-doc-changes=false" >> "$GITHUB_OUTPUT"
+                    echo "No documentation changes generated"
+                  else
+                    echo "has-doc-changes=true" >> "$GITHUB_OUTPUT"
+                    echo "Documentation changes detected:"
+                    git diff --name-only HEAD -- wiki/ README.md
+                  fi
+
+            - name: Commit Documentation Updates
+              if: steps.check-auto-commit.outputs.auto-commit == 'false' && steps.check-docs.outputs.has-doc-changes == 'true'
+              run: |
+                  rm -f changed_files.txt
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+                  git add wiki/ README.md
+                  git commit -m "Auto-generate documentation for code changes
+
+                  Generated documentation for new global classes/methods/properties"
+
+                  git push origin ${{ github.head_ref }}
