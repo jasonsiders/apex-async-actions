@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc,PMD.EmptyStatementBlock')
+@SuppressWarnings('PMD.EmptyStatementBlock')
 public abstract class AsyncActionTriggerFramework {
 	/**
 	 * This class provides a simple TriggerHandler framework utilized by triggers in this package.

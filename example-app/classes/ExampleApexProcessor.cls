@@ -22,7 +22,6 @@ public without sharing class ExampleApexProcessor implements AsyncActions.Proces
 		);
 		for (Integer i = 0; i < results?.size(); i++) {
 			AsyncAction__c action = actions?.get(i);
-			Database.LeadConvert leadConvert = leadConverts?.get(i);
 			Database.LeadConvertResult result = results?.get(i);
 			if (result?.isSuccess() == true) {
 				// Mark the action as completed

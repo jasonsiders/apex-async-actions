@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionRelatedListController {
 	/**
 	 * This class provides controller methods for LWCs that display AsyncAction records related to a specific SObject record

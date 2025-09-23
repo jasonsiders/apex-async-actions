@@ -1,5 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc')
-public abstract class AsyncActionProcessorService {
+public abstract without sharing class AsyncActionProcessorService {
 	/**
 	 * This class is used to retrieve AsyncActionProcessor__mdt objects from the database
 	 * Its `processors` property serves as a seam to inject test records in @IsTest context,

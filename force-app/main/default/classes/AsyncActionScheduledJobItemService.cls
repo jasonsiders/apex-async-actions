@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public abstract without sharing class AsyncActionScheduledJobItemService {
 	/**
 	 * This class is used to retrieve AsyncActionScheduledJobItem__mdt objects from the database

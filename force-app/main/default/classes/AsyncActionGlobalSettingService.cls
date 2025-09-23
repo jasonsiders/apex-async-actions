@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public abstract class AsyncActionGlobalSettingService {
 	/**
 	 * This class is used to retrieve AsyncActionGlobalSetting__mdt objects from the database

@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.ApexDoc,PMD.AvoidGlobalModifier')
+@SuppressWarnings('PMD.AvoidGlobalModifier')
 @IsTest
 global class AsyncActionTestUtils {
 	/**

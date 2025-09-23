@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public without sharing abstract class AsyncActionScheduledJobUtils {
 	/**
 	 * This class provides common utility methods used by the framework's scheduled jobs mechanism

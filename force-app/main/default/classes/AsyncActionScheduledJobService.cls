@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public abstract class AsyncActionScheduledJobService {
 	/**
 	 * This class is used to retrieve AsyncActionScheduledJob__mdt objects from the database

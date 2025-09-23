@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionSchedulable implements System.Schedulable {
 	/**
 	 * This class runs AsyncAction jobs on a regularly scheduled cadence,

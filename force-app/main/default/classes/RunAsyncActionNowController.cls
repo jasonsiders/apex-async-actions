@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public with sharing class RunAsyncActionNowController {
 	/**
 	 * This class exposes a method which allows LWC consumers to run an `AsyncAction__c` record on-demand,

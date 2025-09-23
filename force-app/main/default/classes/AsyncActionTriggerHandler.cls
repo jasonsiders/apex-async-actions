@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	/**
 	 * This class handles inserted `AsyncAction__c` records:

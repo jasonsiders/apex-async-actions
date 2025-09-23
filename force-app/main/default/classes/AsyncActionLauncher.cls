@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionLauncher {
 	/**
 	 * This class is responsible for constructing and launching AsyncActionJob queueables

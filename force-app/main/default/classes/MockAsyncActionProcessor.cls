@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 @IsTest
 public class MockAsyncActionProcessor implements AsyncActions.Processor {
 	/**

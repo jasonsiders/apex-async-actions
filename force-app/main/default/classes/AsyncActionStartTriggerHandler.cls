@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework {
 	/**
 	 * This class handles published `AsyncActionStart__e` platform events

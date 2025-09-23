@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
 	/**
 	 * This class is responsible for processing Async Actions via a Queueable job

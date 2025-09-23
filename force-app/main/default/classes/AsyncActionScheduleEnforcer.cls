@@ -1,4 +1,3 @@
-@SuppressWarnings('PMD.ApexDoc')
 public without sharing class AsyncActionScheduleEnforcer {
 	/**
 	 * This class is responsible for ensuring that the Scheduled Jobs queue
