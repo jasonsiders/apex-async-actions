@@ -1,4 +1,4 @@
-name: Code Review
+name: Claude Code Review
 
 on:
     workflow_call:
