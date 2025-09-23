@@ -302,10 +302,10 @@ public class AccountBatchProcessor implements Database.Batchable<SObject> {
 
 ## Related Objects
 
--   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Configuration for processors
--   [AsyncActionStart\_\_e](AsyncActionStart Platform Event) - Platform event for triggering processing
--   [AsyncActionGlobalSetting\_\_mdt](AsyncActionGlobalSetting Custom Metadata Type) - Global framework settings
+-   [AsyncActionProcessor\_\_mdt](./AsyncActionProcessor-Custom-Metadata-Type) - Configuration for processors
+-   [AsyncActionStart\_\_e](./AsyncActionStart-Platform-Event) - Platform event for triggering processing
+-   [AsyncActionGlobalSetting\_\_mdt](./AsyncActionGlobalSetting-Custom-Metadata-Type) - Global framework settings
 
 ## See Also
 
--   [AsyncActions Class](AsyncActions Class) - Primary framework class for creating actions
+-   [AsyncActions-Class](./AsyncActions-Class) - Primary framework class for creating actions

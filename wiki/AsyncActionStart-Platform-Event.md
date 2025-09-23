@@ -308,8 +308,8 @@ System.debug('Created ' + createdActions.size() + ' actions');
 
 ## Related Components
 
--   [AsyncAction\_\_c](AsyncAction Custom Object) - Records created from events
--   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Referenced processor configurations
+-   [AsyncAction\_\_c](./AsyncAction-Custom-Object) - Records created from events
+-   [AsyncActionProcessor\_\_mdt](./AsyncActionProcessor-Custom-Metadata-Type) - Referenced processor configurations
 
 ## See Also
 

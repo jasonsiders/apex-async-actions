@@ -330,10 +330,10 @@ ORDER BY DeveloperName
 
 ## Related Objects
 
--   [AsyncAction\_\_c](AsyncAction Custom Object) - Records that reference these configurations
--   [AsyncActionScheduledJobItem\_\_mdt](AsyncActionScheduledJobItem Custom Metadata Type) - Scheduled execution of processors
--   [AsyncActionGlobalSetting\_\_mdt](AsyncActionGlobalSetting Custom Metadata Type) - Framework-wide settings
+-   [AsyncAction\_\_c](./AsyncAction-Custom-Object) - Records that reference these configurations
+-   [AsyncActionScheduledJobItem\_\_mdt](./AsyncActionScheduledJobItem-Custom-Metadata-Type) - Scheduled execution of processors
+-   [AsyncActionGlobalSetting\_\_mdt](./AsyncActionGlobalSetting-Custom-Metadata-Type) - Framework-wide settings
 
 ## See Also
 
--   [Creating Your First Processor](Creating Your First Processor) - Step-by-step processor creation guide
+-   [Creating-Your-First-Processor](./Creating-Your-First-Processor) - Step-by-step processor creation guide

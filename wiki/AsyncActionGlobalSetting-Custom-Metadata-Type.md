@@ -319,4 +319,4 @@ if (setting?.LoggerPlugin__c != null) {
 
 ## Related Components
 
--   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Processor-specific configurations
+-   [AsyncActionProcessor\_\_mdt](./AsyncActionProcessor-Custom-Metadata-Type) - Processor-specific configurations

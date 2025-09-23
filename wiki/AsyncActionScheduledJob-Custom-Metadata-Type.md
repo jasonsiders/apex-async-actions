@@ -234,5 +234,5 @@ for (AsyncActionScheduledJob__mdt job : jobs) {
 
 ## Related Objects
 
--   [AsyncActionScheduledJobItem\_\_mdt](AsyncActionScheduledJobItem Custom Metadata Type) - Links processors to scheduled jobs
--   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Individual processor configurations
+-   [AsyncActionScheduledJobItem\_\_mdt](./AsyncActionScheduledJobItem-Custom-Metadata-Type) - Links processors to scheduled jobs
+-   [AsyncActionProcessor\_\_mdt](./AsyncActionProcessor-Custom-Metadata-Type) - Individual processor configurations

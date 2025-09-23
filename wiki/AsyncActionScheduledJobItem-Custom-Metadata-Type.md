@@ -267,5 +267,5 @@ Include both scheduled job and item metadata in deployments:
 
 ## Related Objects
 
--   [AsyncActionScheduledJob\_\_mdt](AsyncActionScheduledJob Custom Metadata Type) - Parent scheduled job configuration
--   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Referenced processor configuration
+-   [AsyncActionScheduledJob\_\_mdt](./AsyncActionScheduledJob-Custom-Metadata-Type) - Parent scheduled job configuration
+-   [AsyncActionProcessor\_\_mdt](./AsyncActionProcessor-Custom-Metadata-Type) - Referenced processor configuration

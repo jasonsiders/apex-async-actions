@@ -121,18 +121,18 @@ Since you enabled "Run On Insert", the action should process automatically withi
 
 Congratulations! You've successfully created and executed your first async action. Here's what to explore next:
 
-### Learn Core Concepts
+### Learn Core-Concepts
 
--   [Core Concepts](Core Concepts) - Understand the framework architecture
+-   [Core-Concepts](./Core-Concepts) - Understand the framework architecture
 
 ### Explore Advanced Features
 
--   [Flow Integration](Template: Async Action Flow) - Create processors using Flows
+-   [Flow Integration](./Template-Async-Action-Flow) - Create processors using Flows
 
 ### Review Objects and Classes
 
--   [AsyncAction\_\_c Object](AsyncAction Custom Object) - Understanding the core data model
--   [AsyncActions Class](AsyncActions Class) - The main framework class
+-   [AsyncAction\_\_c Object](./AsyncAction-Custom-Object) - Understanding the core data model
+-   [AsyncActions-Class](./AsyncActions-Class) - The main framework class
 
 ## Common Issues
 

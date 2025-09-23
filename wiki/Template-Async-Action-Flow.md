@@ -49,7 +49,7 @@ This minimal implementation demonstrates the expected pattern:
 ### Step 1: Access Flow Builder
 
 1. Navigate to **Setup → Flows**
-2. Find \"Template: Async Action Flow\"
+2. Find \"Template-Async-Action-Flow\"
 3. Click the dropdown arrow next to the flow name
 4. Select **Clone**
 
@@ -309,10 +309,10 @@ System.debug('Updated Status: ' + updatedAction.Status__c);
 
 ## Related Components
 
--   [AsyncActionProcessor\_\_mdt](AsyncActionProcessor Custom Metadata Type) - Configuration for flow processors
+-   [AsyncActionProcessor\_\_mdt](./AsyncActionProcessor-Custom-Metadata-Type) - Configuration for flow processors
 
 ## See Also
 
--   [Creating Your First Processor](Creating Your First Processor) - Apex processor tutorial
--   [Core Concepts](Core Concepts) - Framework architecture overview
+-   [Creating-Your-First-Processor](./Creating-Your-First-Processor) - Apex processor tutorial
+-   [Core-Concepts](./Core-Concepts) - Framework architecture overview
 -   [Flow Documentation](https://help.salesforce.com/s/articleView?id=sf.flow.htm) - Salesforce Flow fundamentals

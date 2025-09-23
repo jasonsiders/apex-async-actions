@@ -61,7 +61,7 @@ public class FooProcessor implements AsyncActions.Processor {
 ```
 
 **Using Flow:**
-Clone the included [Template Flow](Template: Async Action Flow) and customize the logic. The framework automatically handles bulkification.
+Clone the included [Template Flow](./Template-Async-Action-Flow) and customize the logic. The framework automatically handles bulkification.
 
 ### 2. Configure Your Processor
 
@@ -83,7 +83,7 @@ insert action;
 
 The framework will automatically process pending actions based on your configuration!
 
-## Core Concepts
+## Core-Concepts
 
 The framework operates on several key principles:
 
@@ -105,8 +105,8 @@ Track the status of your actions through the included UI components:
 
 Check out the sidebar for comprehensive documentation about:
 
--   [Getting started guide](Getting Started) with detailed setup instructions
--   [Core concepts](Core Concepts) explaining the framework architecture
--   [Object documentation](AsyncAction Custom Object) for all custom objects and fields
--   [Class documentation](AsyncActions Class) for all global classes and methods
--   [Flow integration](Template: Async Action Flow) and customization guide
+-   [Getting started guide](./Getting-Started) with detailed setup instructions
+-   [Core concepts](./Core-Concepts) explaining the framework architecture
+-   [Object documentation](./AsyncAction-Custom-Object) for all custom objects and fields
+-   [Class documentation](./AsyncActions-Class) for all global classes and methods
+-   [Flow integration](./Template-Async-Action-Flow) and customization guide

@@ -232,6 +232,6 @@ The framework includes `AsyncActionStart__e` platform events for:
 
 Now that you understand the core concepts:
 
-1. [Create Your First Processor](Creating Your First Processor) - Hands-on implementation guide
-2. [Object Documentation](AsyncAction Custom Object) - Detailed field-level information
-3. [Class Documentation](AsyncActions Class) - Complete API reference
+1. [Create Your First Processor](./Creating-Your-First-Processor) - Hands-on implementation guide
+2. [Object Documentation](./AsyncAction-Custom-Object) - Detailed field-level information
+3. [Class Documentation](./AsyncActions-Class) - Complete API reference
