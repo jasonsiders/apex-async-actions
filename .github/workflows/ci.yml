@@ -1,0 +1,194 @@
+name: CI
+
+on:
+    pull_request:
+        branches:
+            - main
+        types: [opened, ready_for_review, reopened, synchronize]
+        paths:
+            - "source/**"
+            - "plugins/**"
+            - ".github/**"
+
+concurrency:
+    # Cancel old runs when a new commit is pushed to the same branch
+    group: ci-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+env:
+    CHANGES_DIR: changes
+    SCRATCH_ORG_DOMAIN: apex-async-actions.com
+    GH_TOKEN: ${{ github.token }}
+    PR_NUMBER: ${{ github.event.pull_request.number }}
+    SCAN_OUTPUTS: results.txt
+    SCAN_SUMMARY: summary.md
+    SFCA_RESULTS: sf-code-analyzer-results.json
+
+permissions:
+    actions: read
+    contents: read
+    id-token: write
+    issues: write
+    pull-requests: write
+
+jobs:
+    claude-review:
+        name: Claude Code Review
+        if: ${{ '! github.event.pull_request.draft' }}
+        uses: ./.github/workflows/claude-code-review.yml
+        secrets: inherit
+
+    scan:
+        name: Run Static Analysis
+        if: ${{ '! github.event.pull_request.draft' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 2
+
+            - name: Setup SF CLI
+              uses: ./.github/actions/setup-sf-cli
+              with:
+                  install-plugins: "true"
+
+            - name: Get Changed Files
+              run: |
+                  # Ensure this check only runs against changed files in the current PR; not the entire codebase
+                  set -euo pipefail
+                  mkdir "$CHANGES_DIR"
+                  sf sgd source delta --generate-delta --from "HEAD^" --to "HEAD" --output-dir "$CHANGES_DIR"/ --source-dir "source/"
+                  echo "Changed files:"
+                  ls "$CHANGES_DIR"
+
+            - name: Scan
+              id: scan
+              run: |
+                  # Perform the scanning logic, via a .py script that creates various artifacts:
+                  export PATH="$HOME/sf/bin:$PATH"
+                  python3 .github/scripts/static_analysis.py \
+                    --results-file "$SCAN_OUTPUTS" \
+                    --sfca-output-file "$SFCA_RESULTS" \
+                    --summary-file "$SCAN_SUMMARY" \
+                    --target "$CHANGES_DIR" \
+                    --threshold 5
+                  # Save the output variables to be referenced in later steps:
+                  cat "$SCAN_OUTPUTS" >> $GITHUB_OUTPUT
+
+            - name: Summarize
+              run: |
+                  # Add the .md Summary to a PR Review, and the Step Summary;
+                  SUMMARY=$(cat "$SCAN_SUMMARY")
+                  echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+                  gh pr review "$PR_NUMBER" --body "$SUMMARY" --comment
+
+            - name: Upload Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: Raw Results
+                  path: |
+                      ${{ env.SFCA_RESULTS }}
+
+            - name: Report Violations
+              if: ${{ steps.scan.outputs.num-violations-above-threshold > 0 }}
+              run: |
+                  # If any violations above the specified threshold, post the results to the PR and fail the check:
+                  NUM_VIOLATIONS=${{ steps.scan.outputs.num-violations-above-threshold}}
+                  echo "⚠️ Detected $NUM_VIOLATIONS violations that meet/exceed the set threshold. View the job summary for more details:"
+                  echo "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+                  exit 1
+
+    run-unit-tests:
+        name: Run Unit Tests
+        if: ${{ '! github.event.pull_request.draft' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup SF CLI
+              uses: ./.github/actions/setup-sf-cli
+
+            - name: Authenticate Devhub
+              env:
+                  CLIENT_ID: ${{ secrets.SALESFORCE_CONSUMER_KEY }}
+                  JWT_KEY: ${{ secrets.SALESFORCE_JWT_KEY }}
+                  USERNAME: ${{ secrets.SALESFORCE_DEVHUB_USERNAME }}
+              run: |
+                  set -euo pipefail
+                  echo "${JWT_KEY}" > server.key
+                  sf org login jwt \
+                    --client-id "$CLIENT_ID" \
+                    --jwt-key-file server.key \
+                    --set-default-dev-hub \
+                    --username "$USERNAME"
+
+            - name: Get Existing Scratch Org
+              id: get-existing
+              continue-on-error: true
+              env:
+                  CLIENT_ID: ${{ secrets.SALESFORCE_CONSUMER_KEY }}
+                  DEV_HUB: ${{ secrets.SALESFORCE_DEVHUB_USERNAME }}
+                  JWT_KEY: ${{ secrets.SALESFORCE_JWT_KEY }}
+              run: |
+                  # Re-use scratch orgs to prevent exceeding new scratch orgs/day limits:
+                  set -euo pipefail
+                  QUERY="SELECT LoginUrl, SignupUsername FROM ScratchOrgInfo WHERE SignupUsername LIKE '%$SCRATCH_ORG_DOMAIN' AND Status = 'Active'"
+                  echo "$QUERY"
+                  RESPONSE=$(sf data query --target-org "$DEV_HUB" -q "$QUERY" --json 2>/dev/null || true)
+                  echo "$RESPONSE"
+                  LOGIN_URL=$(echo "$RESPONSE" | jq -r '.result.records[0]?.LoginUrl // empty')
+                  USERNAME=$(echo "$RESPONSE" | jq -r '.result.records[0]?.SignupUsername // empty')
+                  if [[ -n "$USERNAME" && "$USERNAME" != "null" ]]; then
+                    echo "Signing into scratch org with username $USERNAME..."
+                    sf org login jwt \
+                      --client-id "$CLIENT_ID" \
+                      --instance-url "$LOGIN_URL" \
+                      --jwt-key-file server.key \
+                      --set-default \
+                      --username "$USERNAME"
+                    echo "success=true" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Create Scratch Org
+              if: ${{ steps.get-existing.outputs.success != 'true' }}
+              run: |
+                  # Create a new scratch org, with a dynamic username ending in the repo's domain:
+                  set -euo pipefail
+                  DATE=$(date +%y%m%d)
+                  USERNAME="$DATE-ci@$SCRATCH_ORG_DOMAIN"
+                  echo "Creating scratch org with username $USERNAME..."
+                  sf org create scratch \
+                    --definition-file config/project-scratch-def.json \
+                    --duration-days 2 \
+                    --set-default \
+                    --username "$USERNAME" \
+                    --wait 10
+
+            - name: Run Tests
+              run: |
+                  sf project deploy start \
+                    --coverage-formatters json-summary \
+                    --dry-run \
+                    --ignore-conflicts \
+                    --source-dir source \
+                    --test-level RunLocalTests \
+                    --verbose \
+                    --wait 30
+
+            - name: Check Code Coverage
+              run: |
+                  # Parse the JSON coverage summary file to extract overall coverage percentage
+                  COVERAGE_PERCENT=$(cat coverage/coverage/coverage-summary.json | jq -r '.total.lines.pct')
+                  echo "Code coverage: ${COVERAGE_PERCENT}%"
+                  if (( $(echo "$COVERAGE_PERCENT < 100" | bc -l) )); then
+                    echo "❌ Code coverage is ${COVERAGE_PERCENT}%, but 100% is required"
+                    exit 1
+                  fi
+
+            - name: Post Authenticate Devhub
+              if: ${{ always() }}
+              run: rm -f server.key
