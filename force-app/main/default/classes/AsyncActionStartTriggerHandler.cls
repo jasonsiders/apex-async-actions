@@ -1,10 +1,12 @@
-@SuppressWarnings('PMD.ApexDoc')
+/**
+ * @description Trigger handler for AsyncActionStart__e platform events.
+ * Handles published AsyncActionStart__e platform events by launching AsyncActionJobs
+ * that correspond with the event's Actions__c field, or all if none specified.
+ */
 public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework {
 	/**
-	 * This class handles published `AsyncActionStart__e` platform events
-	 * When these events are inserted, they should launch `AsyncActionJob`s
-	 * that correspond with the event's Actions__c field, or all if none specified
-	 **/
+	 * @description Processes AsyncActionStart__e events and launches corresponding AsyncActionJobs.
+	 */
 	public override void afterInsert() {
 		List<AsyncActionStart__e> events = (List<AsyncActionStart__e>) this.triggerNew;
 		List<AsyncActionProcessor__mdt> actions = this.getActionsToLaunch(events);
@@ -12,12 +14,16 @@ public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework 
 		AsyncActionLogger.save();
 	}
 
+	/**
+	 * @description Returns the Type of this trigger handler class.
+	 * @return Type of AsyncActionStartTriggerHandler
+	 */
 	public override Type getType() {
 		return AsyncActionStartTriggerHandler.class;
 	}
 
 	private List<AsyncActionProcessor__mdt> getActionsToLaunch(List<AsyncActionStart__e> events) {
-		Map<String, AsyncActionProcessor__mdt> actions = new Map<String, AsyncActionProcessor__mdt>();
+		Map<String, AsyncActionProcessor__mdt> actions = new Map<String, AsyncActionProcessor__mdt>{};
 		for (String actionName : this.extractActionNames(events)) {
 			AsyncActionProcessor__mdt action = AsyncActionProcessorService.get(actionName);
 			actions?.put(actionName, action);
@@ -27,7 +33,7 @@ public class AsyncActionStartTriggerHandler extends AsyncActionTriggerFramework 
 	}
 
 	private Set<String> extractActionNames(List<AsyncActionStart__e> events) {
-		Set<String> actionNames = new Set<String>();
+		Set<String> actionNames = new Set<String>{};
 		for (AsyncActionStart__e event : events) {
 			if (String.isNotBlank(event?.Actions__c)) {
 				// If Actions__c are specified, launch only the jobs specified in the field

@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionScheduledJobItemServiceTest {
 	@IsTest
@@ -40,7 +41,7 @@ private class AsyncActionScheduledJobItemServiceTest {
 		AsyncActionScheduledJob__mdt jobSettings = new AsyncActionScheduledJob__mdt();
 		jobSettings.DeveloperName = jobName;
 		// Generate mock job items
-		List<AsyncActionScheduledJobItem__mdt> mockItems = new List<AsyncActionScheduledJobItem__mdt>();
+		List<AsyncActionScheduledJobItem__mdt> mockItems = new List<AsyncActionScheduledJobItem__mdt>{};
 		for (Integer i = 0; i < 200; i++) {
 			AsyncActionScheduledJobItem__mdt mockItem = new AsyncActionScheduledJobItem__mdt(
 				AsyncActionProcessor__r = new AsyncActionProcessor__mdt(DeveloperName = 'Mock_Action_' + i),

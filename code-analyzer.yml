@@ -1,0 +1,3 @@
+engines:
+    eslint:
+        disable_engine: true

@@ -1,8 +1,14 @@
+/**
+ * @description Example processor implementation that converts leads using the AsyncActions framework.
+ * This processor can be used to convert leads.
+ * It expects the `RelatedRecordId__c` to point to a Lead record,
+ * It expects the `Data__c` field to contain a serialized `Database.LeadConvert` object.
+ */
 public without sharing class ExampleApexProcessor implements AsyncActions.Processor {
 	/**
-	 * This processor can be used to convert leads
-	 * It expects the `RelatedRecordId__c` to point to a Lead record,
-	 * It expects the `Data__c` field to contain a serialized `Database.LeadConvert` object
+	 * @description Processes async actions by converting leads using Database.convertLead.
+	 * @param settings The processor configuration metadata
+	 * @param actions List of AsyncAction__c records containing lead conversion data
 	 */
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
 		// Use the actions to build a list of LeadConvert objects
@@ -22,7 +28,6 @@ public without sharing class ExampleApexProcessor implements AsyncActions.Proces
 		);
 		for (Integer i = 0; i < results?.size(); i++) {
 			AsyncAction__c action = actions?.get(i);
-			Database.LeadConvert leadConvert = leadConverts?.get(i);
 			Database.LeadConvertResult result = results?.get(i);
 			if (result?.isSuccess() == true) {
 				// Mark the action as completed

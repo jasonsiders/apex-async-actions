@@ -29,7 +29,7 @@
         <nameSegment>InvocableFailAsyncAction</nameSegment>
         <offset>0</offset>
     </actionCalls>
-    <apiVersion>63.0</apiVersion>
+    <apiVersion>64.0</apiVersion>
     <assignments>
         <name>Error_Fault_Message</name>
         <label>Error = Fault Message</label>

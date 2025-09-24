@@ -1,13 +1,16 @@
-@SuppressWarnings('PMD.ApexDoc')
+/**
+ * @description Responsible for constructing and launching AsyncActionJob queueables.
+ * Its `launch` methods will result in a new queueable job if the provided AsyncActionProcessor__mdt object
+ * is active, valid, and has pending AsyncAction__c records associated to it.
+ */
 public without sharing class AsyncActionLauncher {
 	/**
-	 * This class is responsible for constructing and launching AsyncActionJob queueables
-	 * Its `launch` methods will result in a new queueable job if the provided AsyncActionProcessor__mdt object
-	 * is active, valid, and has pending AsyncAction__c records associated to it
-	 **/
+	 * @description Launches AsyncActionJob queueables for each processor that has pending actions.
+	 * @param settingsList List of processor configurations to check for pending actions
+	 * @return Map of processor names to their corresponding launched job IDs
+	 */
 	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> settingsList) {
-		// Get all specified pending Actions by their processor class, and launch each
-		Map<String, Id> results = new Map<String, Id>();
+		Map<String, Id> results = new Map<String, Id>{};
 		for (PendingAction result : this.queryPendingActions(settingsList)) {
 			String processorName = result?.processorName;
 			Id jobId = this.launchJobToProcess(processorName);
@@ -16,19 +19,31 @@ public without sharing class AsyncActionLauncher {
 		return results;
 	}
 
+	/**
+	 * @description Launches a single AsyncActionJob for the specified processor configuration.
+	 * @param settings The processor configuration to launch a job for
+	 * @return The ID of the launched job, or null if no job was launched
+	 */
 	public Id launch(AsyncActionProcessor__mdt settings) {
-		// Overload launches a single AsyncActionJob job
 		String processorName = settings?.DeveloperName;
 		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
 
+	/**
+	 * @description Launches AsyncActionJob queueables for all available processor configurations.
+	 * @return Map of processor names to their corresponding launched job IDs
+	 */
 	public Map<String, Id> launchAll() {
-		// Create & launch an AsyncActionJob job for every AsyncActionConfig__mdt
 		List<AsyncActionProcessor__mdt> all = AsyncActionProcessorService.getAll()?.values();
 		return this.launch(all);
 	}
 
 	// **** PRIVATE **** //
+	/**
+	 * @description Builds a QueueableDuplicateSignature to prevent launching duplicate queueable jobs
+	 * @param settings The processor configuration to create a signature for
+	 * @return A QueueableDuplicateSignature based on the processor's developer name
+	 */
 	private System.QueueableDuplicateSignature buildDuplicateSignature(AsyncActionProcessor__mdt settings) {
 		// Build a QueueableDuplicateSigntuare to prevent launching duplicate Queueable jobs
 		// Note: Max size of QueueableDuplicateSignature is 32 bytes; hash the processor value to prevent exceeding this value
@@ -38,9 +53,14 @@ public without sharing class AsyncActionLauncher {
 		return new System.QueueableDuplicateSignature.Builder()?.addString(hashedSignature)?.build();
 	}
 
+	/**
+	 * @description Extracts developer names from a list of processor configurations
+	 * @param settingsList List of processor configurations to extract names from
+	 * @return Set of developer names from the processor configurations
+	 */
 	private Set<String> extractDeveloperNamesFrom(List<AsyncActionProcessor__mdt> settingsList) {
 		// Extract the DeveloperName from the
-		Set<String> results = new Set<String>();
+		Set<String> results = new Set<String>{};
 		for (AsyncActionProcessor__mdt settings : settingsList) {
 			String developerName = settings?.DeveloperName;
 			results?.add(developerName);
@@ -48,12 +68,22 @@ public without sharing class AsyncActionLauncher {
 		return results;
 	}
 
+	/**
+	 * @description Gets the maximum stack depth value from processor settings
+	 * @param settings The processor configuration containing stack depth setting
+	 * @return Maximum stack depth value, defaults to 5 if not specified
+	 */
 	private Integer getMaxStackDepth(AsyncActionProcessor__mdt settings) {
 		// Returns the maximum stack depth value defined in the settings
 		// Defaults to 5 if none found; this matches the current Queueable defaults
 		return (settings?.MaxStackDepth__c)?.intValue() ?? 5;
 	}
 
+	/**
+	 * @description Initializes AsyncOptions for enqueueing AsyncActionJob
+	 * @param settings The processor configuration to configure async options for
+	 * @return Configured AsyncOptions with duplicate signature and stack depth
+	 */
 	private System.AsyncOptions initAsyncOptions(AsyncActionProcessor__mdt settings) {
 		// This method defines the AsyncOptions used to enqueue an AsyncActionJob
 		System.AsyncOptions options = new System.AsyncOptions();
@@ -64,6 +94,11 @@ public without sharing class AsyncActionLauncher {
 		return options;
 	}
 
+	/**
+	 * @description Launches an AsyncActionJob for the specified processor name
+	 * @param processorName Name of the processor to launch a job for
+	 * @return ID of the launched job, or null if launch failed
+	 */
 	private Id launchJobToProcess(String processorName) {
 		// The main/underlying processing method; attempts to launch an AsyncActionJob for the specified processor
 		try {
@@ -86,6 +121,11 @@ public without sharing class AsyncActionLauncher {
 		}
 	}
 
+	/**
+	 * @description Queries for processors that have pending actions ready for processing
+	 * @param settingsList List of processor configurations to check for pending actions
+	 * @return List of PendingAction objects representing processors with pending work
+	 */
 	private List<PendingAction> queryPendingActions(List<AsyncActionProcessor__mdt> settingsList) {
 		// Retrieves a list of processors w/open actions, in FIFO order
 		List<AggregateResult> results = [
@@ -104,6 +144,10 @@ public without sharing class AsyncActionLauncher {
 		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
 	}
 
+	/**
+	 * @description Validates that the processor configuration is enabled and ready for use
+	 * @param settings The processor configuration to validate
+	 */
 	private void validateProcessorSettings(AsyncActionProcessor__mdt settings) {
 		// Throws an exception if the current job is disabled
 		if (settings?.Enabled__c != true) {
@@ -111,6 +155,9 @@ public without sharing class AsyncActionLauncher {
 		}
 	}
 
+	/**
+	 * @description Validates that queueable job limits have not been reached
+	 */
 	private void validateQueueableLimits() {
 		// Throws an exception if Queueable limits have been reached
 		if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
@@ -119,28 +166,42 @@ public without sharing class AsyncActionLauncher {
 	}
 
 	// **** INNER **** //
+	/**
+	 * @description Factory class used to construct AsyncActionJob instances.
+	 * This pattern forces callers to use the `launch` methods to create & launch jobs.
+	 */
 	public class Factory {
 		/**
-		 * This class is used to construct AsyncActionJob instances
-		 * This pattern forces callers to use the `launch` methdods to create & launch jobs
-		 **/
+		 * @description The processor settings associated with this factory
+		 */
 		private AsyncActionProcessor__mdt settings;
 
+		/**
+		 * @description Test visible constructor for the Factory class
+		 * @param settings The processor configuration to associate with this factory
+		 */
 		@TestVisible
 		private Factory(AsyncActionProcessor__mdt settings) {
 			this.settings = settings;
 		}
 
+		/**
+		 * @description Returns the processor settings associated with this factory.
+		 * @return The AsyncActionProcessor__mdt settings for this factory
+		 */
 		public AsyncActionProcessor__mdt getSettings() {
 			return this.settings;
 		}
 	}
 
+	/**
+	 * @description Used to store aggregate query results for processors with pending actions.
+	 * Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions.
+	 */
 	private class PendingAction {
 		/**
-		 * This class is used to store aggregate query results
-		 * Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions
-		 **/
+		 * @description Name of the processor that has pending actions
+		 */
 		public String processorName { get; private set; }
 	}
 }

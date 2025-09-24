@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionRelatedListControllerTest {
 	private static final Integer NUM_TEST_ACTIONS = 200;
@@ -12,7 +13,7 @@ private class AsyncActionRelatedListControllerTest {
 		// Create actions related to the Account
 		Type thisClass = AsyncActionRelatedListControllerTest.class;
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(thisClass);
-		List<AsyncAction__c> actions = new List<AsyncAction__c>();
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		for (Integer i = 0; i < NUM_TEST_ACTIONS; i++) {
 			AsyncAction__c action = AsyncActions.initAction(settings, account?.Id);
 			actions?.add(action);

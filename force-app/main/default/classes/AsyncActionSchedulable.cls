@@ -1,16 +1,23 @@
-@SuppressWarnings('PMD.ApexDoc')
+/**
+ * @description Schedulable class that runs AsyncAction jobs on a regularly scheduled cadence.
+ * Schedule configuration is defined by the AsyncActionScheduledJob__mdt custom metadata type.
+ */
 public without sharing class AsyncActionSchedulable implements System.Schedulable {
-	/**
-	 * This class runs AsyncAction jobs on a regularly scheduled cadence,
-	 * defined by the `AsyncActionScheduledJob__mdt` custom metadata type
-	 **/
 	// **** MEMBER **** //
 	private AsyncActionScheduledJob__mdt jobSettings;
 
+	/**
+	 * @description Constructs an AsyncActionSchedulable with the specified job settings.
+	 * @param jobSettings The scheduled job configuration metadata
+	 */
 	public AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
 		this.jobSettings = jobSettings;
 	}
 
+	/**
+	 * @description Executes the scheduled job, processing active job items and rescheduling as needed.
+	 * @param context The schedulable execution context
+	 */
 	public void execute(System.SchedulableContext context) {
 		// On a scheduled cadence, this class will launch all of its job items
 		this.getUpdatedJobSettings();
@@ -33,7 +40,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	}
 
 	private List<AsyncActionScheduledJobItem__mdt> getActiveItems() {
-		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>();
+		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>{};
 		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
 			if (item?.Enabled__c == true) {
 				activeItems?.add(item);
@@ -43,7 +50,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	}
 
 	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
-		Set<String> actionSet = new Set<String>();
+		Set<String> actionSet = new Set<String>{};
 		for (AsyncActionScheduledJobItem__mdt item : items) {
 			String actionName = item?.AsyncActionProcessor__r?.DeveloperName;
 			actionSet?.add(actionName);
