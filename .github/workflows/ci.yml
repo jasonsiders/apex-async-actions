@@ -31,12 +31,6 @@ permissions:
     pull-requests: write
 
 jobs:
-    claude-review:
-        name: Claude Code Review
-        if: ${{ ! github.event.pull_request.draft && ! contains(github.event.pull_request.head.commit.message, 'skip-ci') }}
-        uses: ./.github/workflows/claude-code-review.yml
-        secrets: inherit
-
     scan:
         name: Run Static Analysis
         if: ${{ ! github.event.pull_request.draft && ! contains(github.event.pull_request.head.commit.message, 'skip-ci') }}
