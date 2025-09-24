@@ -75,9 +75,41 @@ jobs:
                   fi
                   echo "version-number=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
-            - name: Validate Package Version
+            - name: Validate and Adjust Version
+              id: validate-version
               env:
                   VERSION: ${{ steps.determine-version.outputs.version-number }}
+              run: |
+                  # Query existing package versions for the determined version
+                  PACKAGE_ALIAS=$(jq -r '.packageDirectories[] | select(.default == true) | .package' sfdx-project.json)
+
+                  # Check if version exists and is released
+                  if EXISTING=$(sf package version list --packages "$PACKAGE_ALIAS" --json 2>/dev/null | jq -r --arg v "$VERSION" '.result[]? | select(.Version == $v) | .IsReleased' 2>/dev/null); then
+                    if [ "$EXISTING" = "true" ]; then
+                      # Version exists and is released - bump patch version
+                      IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+                      MAJOR=${VERSION_PARTS[0]}
+                      MINOR=${VERSION_PARTS[1]}
+                      PATCH=${VERSION_PARTS[2]}
+                      NEW_PATCH=$((PATCH + 1))
+                      FINAL_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+                      echo "Version $VERSION already released, bumping to: $FINAL_VERSION"
+                    else
+                      # Version exists but not released - proceed with chosen version
+                      FINAL_VERSION="$VERSION"
+                      echo "Version $VERSION exists but not released, proceeding with: $FINAL_VERSION"
+                    fi
+                  else
+                    # Version doesn't exist - proceed with chosen version
+                    FINAL_VERSION="$VERSION"
+                    echo "Version $VERSION doesn't exist, proceeding with: $FINAL_VERSION"
+                  fi
+
+                  echo "final-version=$FINAL_VERSION" >> "$GITHUB_OUTPUT"
+
+            - name: Validate Package Version
+              env:
+                  VERSION: ${{ steps.validate-version.outputs.final-version }}
               run: |
                   if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                     echo "ERROR: Version '$VERSION' is not valid semver format. Expected 'MAJOR.MINOR.PATCH'"
@@ -116,7 +148,7 @@ jobs:
             - name: Get Version Number
               id: get-version
               env:
-                  INPUT_VERSION: ${{ steps.determine-version.outputs.version-number }}
+                  INPUT_VERSION: ${{ steps.validate-version.outputs.final-version }}
               shell: bash
               run: |
                   VERSION_NUMBER="${INPUT_VERSION}.NEXT"
