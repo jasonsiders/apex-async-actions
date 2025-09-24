@@ -1,14 +1,19 @@
+/**
+ * @description Sample processor providing a mechanism to test various paths in the AsyncActionJob.
+ * By itself, it does nothing -- it simply marks the provided actions as completed.
+ * Test consumers can modify any of its public static properties to determine its behavior.
+ */
 @IsTest
 public class MockAsyncActionProcessor implements AsyncActions.Processor {
-	/**
-	 * This sample processor provides a mechanism to test various paths in the AsyncActionJob
-	 * By itself, it does nothing -- it simply marks the provided actions as completed
-	 * Test consumers can modify any of its public static properties to determine its behavior
-	 **/
 	public static Exception error = new System.DmlException();
 	public static MockAsyncActionProcessor.Path pathType = MockAsyncActionProcessor.Path.SUCCESS;
 	public static AsyncActions.RetryBehavior retryBehavior = AsyncActions.RetryBehavior.ALLOW_RETRY;
 
+	/**
+	 * @description Processes async actions according to the configured test path.
+	 * @param settings The processor configuration metadata
+	 * @param actions List of AsyncAction__c records to process
+	 */
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
 		if (pathType == MockAsyncActionProcessor.Path.THROW_ERROR) {
 			throw error;
@@ -28,6 +33,9 @@ public class MockAsyncActionProcessor implements AsyncActions.Processor {
 		}
 	}
 
+	/**
+	 * @description Enumeration defining different test execution paths for the mock processor.
+	 */
 	public enum Path {
 		FAIL,
 		SUCCESS,

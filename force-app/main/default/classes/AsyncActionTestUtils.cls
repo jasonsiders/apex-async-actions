@@ -1,9 +1,14 @@
+/**
+ * @description Global test utility class providing methods to test various parts of the AsyncActions framework.
+ * Contains factory methods for creating test metadata and mock configuration objects.
+ */
 @SuppressWarnings('PMD.AvoidGlobalModifier')
 @IsTest
 global class AsyncActionTestUtils {
 	/**
-	 * This class provides global methods to be used to test various parts of the AsyncActions framework
-	 **/
+	 * @description Constructs an AsyncActionGlobalSetting__mdt settings object for testing.
+	 * @return Initialized AsyncActionGlobalSetting__mdt record with test values
+	 */
 	global static AsyncActionGlobalSetting__mdt initGlobalSettings() {
 		// Constructs an AsyncActionGlobalSetting__mdt settings object
 		// This is usually not necessary, unless testing logging or other plugin(s) behavior
@@ -14,6 +19,11 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	/**
+	 * @description Instantiates and returns an Apex processor settings object with default values for testing.
+	 * @param processorType The processor class type to create settings for
+	 * @return AsyncActionProcessor__mdt record configured for Apex processing
+	 */
 	global static AsyncActionProcessor__mdt initApexProcessor(Type processorType) {
 		// Instantiates & returns an Apex processor settings object with default values for testing
 		String className = processorType?.getName();
@@ -22,6 +32,11 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	/**
+	 * @description Instantiates and returns a Flow processor settings object with default values for testing.
+	 * @param flowName The name of the flow to create settings for
+	 * @return AsyncActionProcessor__mdt record configured for Flow processing
+	 */
 	global static AsyncActionProcessor__mdt initFlowProcessor(String flowName) {
 		// Instantiates & returns a Flow processor settings object with default values for testing
 		AsyncActionProcessor__mdt settings = new AsyncActionProcessor__mdt(
@@ -39,6 +54,10 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	/**
+	 * @description Instantiates and returns a scheduled job settings with default values for testing.
+	 * @return AsyncActionScheduledJob__mdt record with test configuration
+	 */
 	global static AsyncActionScheduledJob__mdt initScheduledJobSettings() {
 		// Instantiates and returns a scheduled job settings w/default values for testing
 		Set<String> jobNames = AsyncActionScheduledJobService.settings?.keySet();
@@ -54,6 +73,12 @@ global class AsyncActionTestUtils {
 		return settings;
 	}
 
+	/**
+	 * @description Instantiates and returns a scheduled job item settings with default values for testing.
+	 * @param actionSettings The action processor settings to associate with this job item
+	 * @param jobSettings The scheduled job settings to associate with this job item
+	 * @return AsyncActionScheduledJobItem__mdt record linking the action and job settings
+	 */
 	global static AsyncActionScheduledJobItem__mdt initScheduledJobItem(
 		AsyncActionProcessor__mdt actionSettings,
 		AsyncActionScheduledJob__mdt jobSettings
@@ -69,11 +94,19 @@ global class AsyncActionTestUtils {
 		return item;
 	}
 
+	/**
+	 * @description Provides @IsTest access to inject global settings record to external callers.
+	 * @param settings The global settings record to inject for testing
+	 */
 	global static void mockGlobalSettings(AsyncActionGlobalSetting__mdt settings) {
 		// Gives @IsTest access to inject global settings record(s) to external callers
 		AsyncActionGlobalSettingService.settings = settings;
 	}
 
+	/**
+	 * @description Provides @IsTest access to inject processor settings records to external callers.
+	 * @param settings The processor settings record to inject for testing
+	 */
 	global static void mockProcessorSettings(AsyncActionProcessor__mdt settings) {
 		// Gives @IsTest access to inject settings records to external callers
 		AsyncActionProcessorService.processors = (AsyncActionProcessorService.processors != null)
@@ -83,6 +116,11 @@ global class AsyncActionTestUtils {
 		AsyncActionProcessorService.processors?.put(processorName, settings);
 	}
 
+	/**
+	 * @description Provides @IsTest access to inject scheduled job item settings records to external callers.
+	 * IMPORTANT: The input object must have a fully populated ScheduledJob__r relationship.
+	 * @param item The scheduled job item to inject for testing
+	 */
 	global static void mockScheduledJobItem(AsyncActionScheduledJobItem__mdt item) {
 		// Gives @IsTest access to inject settings records to external callers
 		// **IMPORTANT**: The input object must have a fully populated ScheduledJob__r relationship
@@ -95,6 +133,10 @@ global class AsyncActionTestUtils {
 		AsyncActionScheduledJobItemService.jobItems?.put(jobName, matching);
 	}
 
+	/**
+	 * @description Provides @IsTest access to inject job settings records to external callers.
+	 * @param jobSettings The scheduled job settings record to inject for testing
+	 */
 	global static void mockScheduledJobSettings(AsyncActionScheduledJob__mdt jobSettings) {
 		// Gives @IsTest access to inject job settings records to external callers
 		AsyncActionScheduledJobService.settings = (AsyncActionScheduledJobService.settings != null)

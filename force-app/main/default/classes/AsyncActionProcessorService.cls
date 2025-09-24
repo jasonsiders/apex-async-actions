@@ -1,20 +1,29 @@
+/**
+ * @description Service class for retrieving AsyncActionProcessor__mdt objects from the database.
+ * The processors property serves as a seam to inject test records in @IsTest context,
+ * since custom metadata types cannot be manipulated via traditional DML.
+ * See the AsyncActionTestUtils class methods to easily inject settings for your apex tests.
+ */
 public abstract without sharing class AsyncActionProcessorService {
-	/**
-	 * This class is used to retrieve AsyncActionProcessor__mdt objects from the database
-	 * Its `processors` property serves as a seam to inject test records in @IsTest context,
-	 * since custom metadata types cannot be manipulated via traditional dml.
-	 * See the `AsyncActionTestUtils` class methods to easily inject settings for your apex tests.
-	 **/
 	@TestVisible
 	static Map<String, AsyncActionProcessor__mdt> processors;
 	@TestVisible
 	static Boolean useRealData = (Test.isRunningTest() == false);
 
+	/**
+	 * @description Returns a map of all AsyncActionProcessor__mdt records by their DeveloperName values.
+	 * @return Map of AsyncActionProcessor__mdt records keyed by DeveloperName
+	 */
 	public static Map<String, AsyncActionProcessor__mdt> getAll() {
 		// Returns a map of AsyncActionProcessor__mdt records by their "DeveloperName" values
 		return processors ?? AsyncActionProcessorService.retrieve();
 	}
 
+	/**
+	 * @description Returns a specific AsyncActionProcessor__mdt record by its DeveloperName value.
+	 * @param developerName The DeveloperName of the processor to retrieve
+	 * @return AsyncActionProcessor__mdt record or null if not found
+	 */
 	public static AsyncActionProcessor__mdt get(String developerName) {
 		// Return a specific AsyncActionProcessor__mdt record by its "DeveloperName" value
 		return AsyncActionProcessorService.getAll()?.get(developerName);

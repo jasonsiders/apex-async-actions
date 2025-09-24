@@ -1,12 +1,16 @@
+/**
+ * @description Trigger handler for AsyncAction__c records.
+ * Handles inserted AsyncAction__c records by:
+ * - Inheriting values from their AsyncActionProcessor__mdt settings
+ * - Triggering corresponding jobs to be launched if defined
+ * - Running AsyncActionScheduleEnforcer logic
+ */
 public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
-	/**
-	 * This class handles inserted `AsyncAction__c` records:
-	 * - When these records are inserted, they should inherit certain values from their `AsyncActionProcessor__mdt` settings.
-	 * - If defined, these records may trigger the corresponding job to be launched.
-	 * - Whenever an async action is inserted, we will run the `AsyncActionScheduleEnforcer` logic
-	 **/
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
 
+	/**
+	 * @description Sets the number of retries based on configured metadata or 0 if none specified.
+	 */
 	public override void beforeInsert() {
 		// Set the # of Retries based on the configured metadata - or 0, if none specified
 		for (AsyncAction__c action : this.actions) {
@@ -18,6 +22,9 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 		}
 	}
 
+	/**
+	 * @description Runs jobs configured to run on insert and ensures scheduled jobs align with current configuration.
+	 */
 	public override void afterInsert() {
 		// Run any jobs configured to run on insert
 		Set<String> triggeredActions = this.getTriggeredActions();
@@ -31,6 +38,10 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 		AsyncActionLogger.save();
 	}
 
+	/**
+	 * @description Returns the Type of this trigger handler class.
+	 * @return Type of AsyncActionTriggerHandler
+	 */
 	public override Type getType() {
 		return AsyncActionTriggerHandler.class;
 	}

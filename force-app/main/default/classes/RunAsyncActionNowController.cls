@@ -1,8 +1,12 @@
+/**
+ * @description Controller class that allows Lightning Web Components to run AsyncAction__c records on-demand.
+ * Bypasses current NextEligibleAt__c or Status__c values to execute actions immediately.
+ */
 public with sharing class RunAsyncActionNowController {
 	/**
-	 * This class exposes a method which allows LWC consumers to run an `AsyncAction__c` record on-demand,
-	 * regardless of its current `NextEligibleAt__c` or `Status__c` values
-	 **/
+	 * @description Executes an AsyncAction__c record immediately by updating its status and publishing a start event.
+	 * @param recordId The ID of the AsyncAction__c record to execute
+	 */
 	@AuraEnabled
 	public static void runAction(String recordId) {
 		try {

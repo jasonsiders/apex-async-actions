@@ -1,20 +1,29 @@
+/**
+ * @description Service class for retrieving AsyncActionScheduledJob__mdt objects from the database.
+ * The settings property serves as a seam to inject test records in @IsTest context,
+ * since custom metadata types cannot be manipulated via traditional DML.
+ * See the AsyncActionTestUtils class methods to easily inject settings for your apex tests.
+ */
 public abstract class AsyncActionScheduledJobService {
-	/**
-	 * This class is used to retrieve AsyncActionScheduledJob__mdt objects from the database
-	 * Its `settings` property serves as a seam to inject test records in @IsTest context,
-	 * since custom metadata types cannot be manipulated via traditional dml.
-	 * See the `AsyncActionTestUtils` class methods to easily inject settings for your apex tests.
-	 **/
 	@TestVisible
 	static Map<String, AsyncActionScheduledJob__mdt> settings;
 	@TestVisible
 	static Boolean useRealData = (Test.isRunningTest() == false);
 
+	/**
+	 * @description Returns a map of all AsyncActionScheduledJob__mdt records.
+	 * @return Map of AsyncActionScheduledJob__mdt records keyed by DeveloperName
+	 */
 	public static Map<String, AsyncActionScheduledJob__mdt> getAll() {
 		AsyncActionScheduledJobService.retrieveSettings();
 		return AsyncActionScheduledJobService.settings;
 	}
 
+	/**
+	 * @description Returns a specific AsyncActionScheduledJob__mdt record by its DeveloperName.
+	 * @param developerName The DeveloperName of the scheduled job to retrieve
+	 * @return AsyncActionScheduledJob__mdt record or null if not found
+	 */
 	public static AsyncActionScheduledJob__mdt get(String developerName) {
 		AsyncActionScheduledJobService.retrieveSettings();
 		return settings?.get(developerName);

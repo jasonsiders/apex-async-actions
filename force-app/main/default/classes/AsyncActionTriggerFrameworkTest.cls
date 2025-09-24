@@ -1,6 +1,12 @@
+/**
+ * @description Test class for AsyncActionTriggerFramework functionality including all trigger operations and bypass mechanisms
+ */
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.ApexUnitTestClassShouldHaveAsserts')
 @IsTest
 private class AsyncActionTriggerFrameworkTest {
+	/**
+	 * @description Static map to store test results for different trigger operations
+	 */
 	static Map<System.TriggerOperation, List<SObject>> results = new Map<System.TriggerOperation, List<SObject>>{};
 
 	// **** TESTS **** //
@@ -86,6 +92,10 @@ private class AsyncActionTriggerFrameworkTest {
 	}
 
 	// **** HELPER **** //
+	/**
+	 * @description Helper method to generate test Account records
+	 * @return List of 200 test Account records
+	 */
 	static List<Account> generateRecords() {
 		List<Account> accounts = new List<Account>{};
 		for (Integer i = 0; i < 200; i++) {
@@ -94,6 +104,10 @@ private class AsyncActionTriggerFrameworkTest {
 		return accounts;
 	}
 
+	/**
+	 * @description Helper method to test a specific trigger operation
+	 * @param operation The trigger operation to test
+	 */
 	static void testOperation(System.TriggerOperation operation) {
 		List<Account> accounts = AsyncActionTriggerFrameworkTest.generateRecords();
 		AsyncActionTriggerFramework handler = new ExampleHandler();
@@ -114,45 +128,83 @@ private class AsyncActionTriggerFrameworkTest {
 	}
 
 	// **** INNER **** //
+	/**
+	 * @description Example trigger handler implementation for testing all trigger operations
+	 */
 	public class ExampleHandler extends AsyncActionTriggerFramework {
+		/**
+		 * @description Returns the Type of this handler class
+		 * @return The Type of ExampleHandler class
+		 */
 		public override Type getType() {
 			return ExampleHandler.class;
 		}
 
+		/**
+		 * @description Override for before insert trigger operation
+		 */
 		public override void beforeInsert() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Override for before update trigger operation
+		 */
 		public override void beforeUpdate() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Override for before delete trigger operation
+		 */
 		public override void beforeDelete() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Override for after insert trigger operation
+		 */
 		public override void afterInsert() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Override for after update trigger operation
+		 */
 		public override void afterUpdate() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Override for after delete trigger operation
+		 */
 		public override void afterDelete() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Override for after undelete trigger operation
+		 */
 		public override void afterUndelete() {
 			this.mapOperation();
 		}
 
+		/**
+		 * @description Maps the current operation and trigger new records to the test results
+		 */
 		public void mapOperation() {
 			AsyncActionTriggerFrameworkTest.results?.put(this.operation, this.triggerNew);
 		}
 	}
 
+	/**
+	 * @description Dummy trigger handler implementation for testing base class coverage
+	 */
 	public class DummyHandler extends AsyncActionTriggerFramework {
+		/**
+		 * @description Returns the Type of this handler class
+		 * @return The Type of DummyHandler class
+		 */
 		public override Type getType() {
 			return DummyHandler.class;
 		}

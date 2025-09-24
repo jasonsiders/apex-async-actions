@@ -1,3 +1,6 @@
+/**
+ * @description Test class for AsyncActionJob functionality including processing, error handling, and recursion
+ */
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionJobTest {
@@ -137,6 +140,11 @@ private class AsyncActionJobTest {
 	}
 
 	// **** HELPER **** //
+	/**
+	 * @description Helper method to retrieve updated AsyncAction__c records from database
+	 * @param originalActions List of original AsyncAction__c records to query for updates
+	 * @return List of updated AsyncAction__c records with current field values
+	 */
 	static List<AsyncAction__c> getUpdatedActions(List<AsyncAction__c> originalActions) {
 		return [
 			SELECT Id, Error__c, Retries__c, NextEligibleAt__c, Status__c
@@ -145,6 +153,11 @@ private class AsyncActionJobTest {
 		];
 	}
 
+	/**
+	 * @description Helper method to create test AsyncAction__c records for testing
+	 * @param settings The processor configuration to use when initializing actions
+	 * @return List of initialized AsyncAction__c records for testing
+	 */
 	static List<AsyncAction__c> initTestActions(AsyncActionProcessor__mdt settings) {
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		for (Integer i = 0; i < TEST_SIZE; i++) {
@@ -155,11 +168,22 @@ private class AsyncActionJobTest {
 	}
 
 	// **** INNER **** //
+	/**
+	 * @description Test-specific AsyncActionJob subclass that throws an error in the finalizer
+	 */
 	private class JobWithErrorInFinalizer extends AsyncActionJob {
+		/**
+		 * @description Constructor for test job that will error in finalizer
+		 * @param factory The factory to use for launching async actions
+		 */
 		public JobWithErrorInFinalizer(AsyncActionLauncher.Factory factory) {
 			super(factory);
 		}
 
+		/**
+		 * @description Overridden finalizer that throws a test exception
+		 * @param context The finalizer context (unused in this test implementation)
+		 */
 		public override void finalize(System.FinalizerContext context) {
 			throw new System.DmlException('This is a test exception');
 		}

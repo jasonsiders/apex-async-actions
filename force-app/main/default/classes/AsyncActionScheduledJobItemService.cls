@@ -1,15 +1,20 @@
+/**
+ * @description Service class for retrieving AsyncActionScheduledJobItem__mdt objects from the database.
+ * The jobItems property serves as a seam to inject test records in @IsTest context,
+ * since custom metadata types cannot be manipulated via traditional DML.
+ * See the AsyncActionTestUtils class methods to easily inject settings for your apex tests.
+ */
 public abstract without sharing class AsyncActionScheduledJobItemService {
-	/**
-	 * This class is used to retrieve AsyncActionScheduledJobItem__mdt objects from the database
-	 * Its `jobItems` property serves as a seam to inject test records in @IsTest context,
-	 * since custom metadata types cannot be manipulated via traditional dml.
-	 * See the `AsyncActionTestUtils` class methods to easily inject settings for your apex tests.
-	 **/
 	@TestVisible
 	static Map<String, List<AsyncActionScheduledJobItem__mdt>> jobItems = new Map<String, List<AsyncActionScheduledJobItem__mdt>>{};
 	@TestVisible
 	static Boolean useRealData = (Test.isRunningTest() == false);
 
+	/**
+	 * @description Retrieves all active AsyncActionScheduledJobItem__mdt records that match the scheduled job settings.
+	 * @param jobSettings The scheduled job settings to find related job items for
+	 * @return List of AsyncActionScheduledJobItem__mdt records for the specified job
+	 */
 	public static List<AsyncActionScheduledJobItem__mdt> getJobItems(AsyncActionScheduledJob__mdt jobSettings) {
 		// Retrieve all active AsyncActionScheduledJobItem__mdt records that match the scheduled job settings
 		String jobName = jobSettings?.DeveloperName;

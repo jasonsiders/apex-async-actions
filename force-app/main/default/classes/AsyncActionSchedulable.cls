@@ -1,15 +1,23 @@
+/**
+ * @description Schedulable class that runs AsyncAction jobs on a regularly scheduled cadence.
+ * Schedule configuration is defined by the AsyncActionScheduledJob__mdt custom metadata type.
+ */
 public without sharing class AsyncActionSchedulable implements System.Schedulable {
-	/**
-	 * This class runs AsyncAction jobs on a regularly scheduled cadence,
-	 * defined by the `AsyncActionScheduledJob__mdt` custom metadata type
-	 **/
 	// **** MEMBER **** //
 	private AsyncActionScheduledJob__mdt jobSettings;
 
+	/**
+	 * @description Constructs an AsyncActionSchedulable with the specified job settings.
+	 * @param jobSettings The scheduled job configuration metadata
+	 */
 	public AsyncActionSchedulable(AsyncActionScheduledJob__mdt jobSettings) {
 		this.jobSettings = jobSettings;
 	}
 
+	/**
+	 * @description Executes the scheduled job, processing active job items and rescheduling as needed.
+	 * @param context The schedulable execution context
+	 */
 	public void execute(System.SchedulableContext context) {
 		// On a scheduled cadence, this class will launch all of its job items
 		this.getUpdatedJobSettings();
