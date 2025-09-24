@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionStartTriggerHandlerTest {
 	@IsTest

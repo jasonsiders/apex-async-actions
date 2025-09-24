@@ -1,9 +1,8 @@
-@SuppressWarnings('PMD.ApexDoc')
+/**
+ * @description Responsible for processing Async Actions via a Queueable job.
+ * The actual logic of each action is handled by the `AsyncActions.Processor` interface.
+ */
 public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
-	/**
-	 * This class is responsible for processing Async Actions via a Queueable job
-	 * The actual logic of each action is handled by the `AsyncActions.Processor` interface
-	 **/
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 
@@ -11,13 +10,21 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	private AsyncActions.Processor processor;
 	private AsyncActionProcessor__mdt settings;
 
+	/**
+	 * @description Constructs an AsyncActionJob using the provided factory.
+	 * This class can't be manually instantiated; instead use the AsyncActionLauncher class to launch a job.
+	 * @param factory The factory containing processor settings for this job
+	 */
 	public AsyncActionJob(AsyncActionLauncher.Factory factory) {
-		// This class can't be manually instantiated; instead use the AsyncActionLauncher class to launch a job
 		this.settings = factory?.getSettings();
 		this.initializeProcessor(settings);
 	}
 
 	// **** QUEUEABLE **** //
+	/**
+	 * @description Executes the queueable job, processing pending async actions for the configured processor.
+	 * @param context The queueable context provided by the platform
+	 */
 	public void execute(System.QueueableContext context) {
 		System.attachFinalizer(this);
 		if (this.settings?.Enabled__c == true) {
@@ -35,10 +42,14 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	}
 
 	// **** FINALIZER **** //
+	/**
+	 * @description Executes the finalizer, handling cleanup and error recovery after the queueable job completes.
+	 * Note: Finalizers run in their own execution context, after the Queueable job finishes.
+	 * Its execution does not count towards the async method limit.
+	 * Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_transaction_finalizers.htm
+	 * @param context The finalizer context provided by the platform
+	 */
 	public void execute(System.FinalizerContext context) {
-		// Note: Finalizers run in their own execution context, after the Queueable job finishes.
-		// Its execution does not count towards the async method limit.
-		// Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_transaction_finalizers.htm
 		try {
 			this.finalize(context);
 		} catch (Exception error) {
@@ -50,9 +61,12 @@ public virtual without sharing class AsyncActionJob implements System.Queueable,
 	}
 
 	// **** PRIVATE **** //
+	/**
+	 * @description Handles finalization logic, checking job status and managing failures and recursion.
+	 * @param context The finalizer context containing job execution results
+	 */
 	@TestVisible
 	protected virtual void finalize(System.FinalizerContext context) {
-		// Check the current job status, and handle any unexpected failures
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			// The job failed; mark each action record as failed, according to its defined retry behavior
 			Exception error = context?.getException();

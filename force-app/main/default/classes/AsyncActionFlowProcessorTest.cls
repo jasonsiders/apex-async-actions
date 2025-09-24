@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.EmptyCatchBlock')
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyCatchBlock')
 @IsTest
 private class AsyncActionFlowProcessorTest {
 	private static final String TEST_FLOW_NAME = 'Template_Async_Action_Flow';
@@ -9,7 +9,7 @@ private class AsyncActionFlowProcessorTest {
 		AsyncActionProcessor__mdt settings = AsyncActionFlowProcessorTest.initSettings();
 		// Insert AsyncActions, but do not run the trigger logic
 		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
-		List<AsyncAction__c> actions = new List<AsyncAction__c>();
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		for (Integer i = 0; i < TEST_SIZE; i++) {
 			AsyncAction__c action = AsyncActions.initAction(settings);
 			actions?.add(action);
@@ -100,7 +100,7 @@ private class AsyncActionFlowProcessorTest {
 
 	// **** HELPER **** //
 	private static List<AsyncAction__c> getActions() {
-		return [SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c FROM AsyncAction__c];
+		return [SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c FROM AsyncAction__c LIMIT :TEST_SIZE];
 	}
 
 	private static AsyncActionProcessor__mdt initSettings() {
@@ -112,7 +112,7 @@ private class AsyncActionFlowProcessorTest {
 	private static Invocable.Action.Result mockFlowResult() {
 		// Generate a mock Invocable.Action.Result, for testing error handling paths
 		Map<String, Object> params = new Map<String, Object>{
-			'outputParameters' => new Map<String, Object>(),
+			'outputParameters' => new Map<String, Object>{},
 			'success' => true
 		};
 		return (Invocable.Action.Result) JSON.deserialize(JSON.serialize(params), Invocable.Action.Result.class);

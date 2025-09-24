@@ -1,4 +1,7 @@
-@SuppressWarnings('PMD.ApexDoc, PMD.EmptyStatementBlock')
+/**
+ * @description Test class for AsyncActionLogger functionality including custom adapters and default logging
+ */
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionLoggerTest {
 	@IsTest
@@ -79,11 +82,22 @@ private class AsyncActionLoggerTest {
 	}
 
 	// **** INNER **** //
+	/**
+	 * @description Mock adapter implementation for testing custom logging functionality
+	 */
 	public class MockAdapter implements AsyncActionLogger.Adapter {
+		/**
+		 * @description Mock log implementation that does nothing
+		 * @param level The logging level (unused in mock)
+		 * @param msg The message to log (unused in mock)
+		 */
 		public void log(System.LoggingLevel level, Object msg) {
 			// Doesn't matter
 		}
 
+		/**
+		 * @description Mock save implementation that does nothing
+		 */
 		public void save() {
 			// Doesn't matter
 		}

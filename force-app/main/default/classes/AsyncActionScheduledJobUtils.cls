@@ -1,12 +1,27 @@
-@SuppressWarnings('PMD.ApexDoc')
+/**
+ * @description Abstract utility class providing common methods used by the framework's scheduled jobs mechanism.
+ * Contains utilities for job management, scheduling, and cron expression handling.
+ */
 public without sharing abstract class AsyncActionScheduledJobUtils {
 	/**
-	 * This class provides common utility methods used by the framework's scheduled jobs mechanism
-	 **/
+	 * @description Hourly cron expression constant
+	 */
 	public static final String HOURLY_CRON_EXP = '0 0 * * * ?';
+
+	/**
+	 * @description Prefix used for scheduled job names
+	 */
 	public static final String SCHEDULED_JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
+
+	/**
+	 * @description Default interval in minutes for scheduled jobs
+	 */
 	private static final Integer DEFAULT_INTERVAL = 60;
 
+	/**
+	 * @description Aborts the given AsyncApexJobs.
+	 * @param jobs List of AsyncApexJob records to abort
+	 */
 	public static void abortJobs(List<AsyncApexJob> jobs) {
 		// Aborts the given AsyncApexJobs
 		for (AsyncApexJob job : jobs) {
@@ -20,15 +35,29 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 		}
 	}
 
+	/**
+	 * @description Aborts a single AsyncApexJob.
+	 * @param job The AsyncApexJob record to abort
+	 */
 	public static void abortJobs(AsyncApexJob job) {
 		AsyncActionScheduledJobUtils.abortJobs(new List<AsyncApexJob>{ job });
 	}
 
+	/**
+	 * @description Returns the unique name of the scheduled job based on job settings.
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return The unique job name with prefix
+	 */
 	public static String getJobName(AsyncActionScheduledJob__mdt jobSettings) {
 		// Returns the unique name of the current scheduled job
 		return SCHEDULED_JOB_PREFIX + jobSettings?.DeveloperName;
 	}
 
+	/**
+	 * @description Schedules a new instance of the job, unless it's disabled.
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return ID of the scheduled job, or null if the job is disabled
+	 */
 	public static Id scheduleNewJob(AsyncActionScheduledJob__mdt jobSettings) {
 		// Schedules a new instance of the current job, unless it's disabled
 		if (jobSettings?.Enabled__c == true) {
@@ -46,6 +75,11 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 		}
 	}
 
+	/**
+	 * @description Generates a cron expression based on the scheduled job's configuration
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return The generated cron expression
+	 */
 	private static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
 		// Generate a Cron Expression based on the current scheduled job's configuration
 		if (jobSettings?.Type__c == 'Custom') {
@@ -62,19 +96,44 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	}
 
 	// **** INNER **** //
+	/**
+	 * @description Internal class for manipulating cron expressions
+	 */
 	private class Cron {
 		/**
-		 * This class is used internally to manipulate cron expressions
-		 * Callers can use the `minutesFromNow` method
-		 * to add X number of minutes to an existing cron expression
-		 **/
+		 * @description Seconds component of cron expression
+		 */
 		private String seconds;
+
+		/**
+		 * @description Minutes component of cron expression
+		 */
 		private String minutes;
+
+		/**
+		 * @description Hours component of cron expression
+		 */
 		private String hours;
+
+		/**
+		 * @description Day of month component of cron expression
+		 */
 		private String dayOfMonth;
+
+		/**
+		 * @description Month component of cron expression
+		 */
 		private String month;
+
+		/**
+		 * @description Day of week component of cron expression
+		 */
 		private String dayOfWeek;
 
+		/**
+		 * @description Constructor that parses a cron expression string
+		 * @param exp The cron expression string to parse
+		 */
 		private Cron(String exp) {
 			// Expsting exp to be a valid Cron string
 			List<String> parts = exp?.split(' ');
@@ -86,6 +145,10 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			this.dayOfWeek = parts?.get(5);
 		}
 
+		/**
+		 * @description Returns the cron expression as a string
+		 * @return The formatted cron expression string
+		 */
 		public String expression() {
 			List<String> parts = new List<String>{
 				this.seconds,
@@ -98,6 +161,11 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			return String.join(parts, ' ');
 		}
 
+		/**
+		 * @description Modifies the minutes component to be X minutes from now
+		 * @param minsInFuture Number of minutes in the future to set
+		 * @return This Cron instance for method chaining
+		 */
 		public Cron minutesFromNow(Integer minsInFuture) {
 			// Alter the minutes value to be X minutes from now
 			Integer newMins = DateTime.now().addMinutes(minsInFuture).minute();

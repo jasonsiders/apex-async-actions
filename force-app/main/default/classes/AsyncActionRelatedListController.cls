@@ -1,8 +1,13 @@
-@SuppressWarnings('PMD.ApexDoc')
+/**
+ * @description Controller class for Lightning Web Components that display AsyncAction records related to a specific SObject record.
+ * Provides methods to query and check access to AsyncAction__c records.
+ */
 public without sharing class AsyncActionRelatedListController {
 	/**
-	 * This class provides controller methods for LWCs that display AsyncAction records related to a specific SObject record
-	 **/
+	 * @description Retrieves AsyncAction__c records related to a specific record ID.
+	 * @param recordId The ID of the record to find related async actions for
+	 * @return List of AsyncAction__c records ordered by ID descending, limited to 50,000 records
+	 */
 	@AuraEnabled(cacheable=true)
 	public static List<AsyncAction__c> getActions(String recordId) {
 		if (String.isBlank(recordId)) {
@@ -30,6 +35,10 @@ public without sharing class AsyncActionRelatedListController {
 		];
 	}
 
+	/**
+	 * @description Checks if the current user has read access to AsyncAction__c records.
+	 * @return True if the user can access AsyncAction__c records, false otherwise
+	 */
 	@AuraEnabled(cacheable=true)
 	public static Boolean hasAccess() {
 		return SObjectType.AsyncAction__c?.isAccessible() == true;

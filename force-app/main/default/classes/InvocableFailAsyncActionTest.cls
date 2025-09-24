@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyCatchBlock')
 @IsTest
 private class InvocableFailAsyncActionTest {
 	@IsTest
