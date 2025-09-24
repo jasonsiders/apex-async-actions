@@ -19,7 +19,7 @@ permissions:
 jobs:
     auto-documentation:
         name: Generate Documentation
-        if: ${{ !github.event.pull_request.draft && ! contains(github.event.pull_request.head.commit.message, 'skip-ci') }}
+        if: ${{ !github.event.pull_request.draft && ! contains(github.event.pull_request.title, '[skip-ci]') && ! contains(github.event.pull_request.title, 'skip-ci') }}
         runs-on: ubuntu-latest
         timeout-minutes: 15
 
