@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class InvocableInitAsyncActionTest {
 	@IsTest
@@ -18,6 +19,7 @@ private class InvocableInitAsyncActionTest {
 		Assert.areEqual(input?.relatedRecordId, action?.RelatedRecordId__c, 'Wrong RelatedRecordId');
 	}
 
+	@SuppressWarnings('PMD.EmptyCatchBlock')
 	@IsTest
 	static void shouldThrowErrorIfInvalidDeveloperName() {
 		Type processor = MockAsyncActionProcessor.class;

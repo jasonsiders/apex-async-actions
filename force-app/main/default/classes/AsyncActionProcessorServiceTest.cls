@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionProcessorServiceTest {
 	@IsTest
@@ -70,7 +71,7 @@ private class AsyncActionProcessorServiceTest {
 	@IsTest
 	static void shouldMapByDeveloperName() {
 		Set<String> processorNames = new Set<String>{ 'processor_1', 'processor_2', 'processor_3' };
-		List<AsyncActionProcessor__mdt> testSettings = new List<AsyncActionProcessor__mdt>();
+		List<AsyncActionProcessor__mdt> testSettings = new List<AsyncActionProcessor__mdt>{};
 		for (String processorName : processorNames) {
 			AsyncActionProcessor__mdt testSetting = new AsyncActionProcessor__mdt(DeveloperName = processorName);
 			testSettings?.add(testSetting);

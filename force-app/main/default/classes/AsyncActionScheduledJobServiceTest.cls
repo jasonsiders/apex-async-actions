@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionScheduledJobServiceTest {
 	@IsTest
@@ -36,7 +37,7 @@ private class AsyncActionScheduledJobServiceTest {
 			Interval__c = Integer.valueOf(Math.random() * 60),
 			Type__c = 'Semi-Hourly'
 		);
-		AsyncActionScheduledJobService.settings = new Map<String, AsyncActionScheduledJob__mdt>();
+		AsyncActionScheduledJobService.settings = new Map<String, AsyncActionScheduledJob__mdt>{};
 		AsyncActionScheduledJobService.settings?.put(mockName, mockSettings);
 
 		Test.startTest();
