@@ -405,6 +405,4 @@ static void testScheduledExecution() {
 
 ## See Also
 
--   [AsyncActionSchedulable Class](./AsyncActionSchedulable-Class) - Schedulable implementation
--   [AsyncActionLauncher Class](./AsyncActionLauncher-Class) - Job launching utilities
 -   [Monitoring & Troubleshooting](./Monitoring-and-Troubleshooting) - Operational guidance

@@ -1,279 +1,184 @@
-The `AsyncActionLogger` class provides centralized logging capabilities for the async actions framework.
+The `AsyncActionLogger` class provides a pluggable logging framework for the async actions framework with extensible adapter support.
 
 ## Overview
 
-`AsyncActionLogger` offers structured logging for async action processing, enabling detailed audit trails, debugging support, and operational monitoring across all framework components.
+`AsyncActionLogger` is an abstract global class that provides centralized logging capabilities for async action processing. It uses a singleton pattern with an adapter interface to enable custom logging implementations while providing a default System.debug implementation.
 
-## Features
+## Static Methods
 
--   **Structured Logging** - Consistent log format across all components
--   **Configurable Levels** - Support for DEBUG, INFO, WARN, ERROR log levels
--   **Context Preservation** - Maintains processing context and correlation IDs
--   **Performance Tracking** - Built-in timing and performance metrics
--   **Integration Support** - Hooks for external logging systems
+### `log(System.LoggingLevel level, Object logMessage)`
 
-## Log Levels
+Logs a message at the specified logging level using the configured adapter.
 
-### DEBUG
+**Parameters:**
 
-Detailed diagnostic information for troubleshooting:
+-   `level` (System.LoggingLevel, required) - The logging level for the message
+-   `logMessage` (Object, required) - The message or object to log
+
+**Example:**
 
 ```apex
-AsyncActionLogger.debug('Processing action: ' + action.Id, action);
+AsyncActionLogger.log(System.LoggingLevel.INFO, 'Processing batch started');
+AsyncActionLogger.log(System.LoggingLevel.ERROR, 'Action processing failed: ' + exception.getMessage());
 ```
 
-### INFO
+### `save()`
 
-General informational messages about processing:
+Saves/commits any pending log entries using the configured adapter. Some logging implementations may buffer log entries and require explicit commit/save operations.
 
-```apex
-AsyncActionLogger.info('Completed batch processing: ' + actions.size() + ' actions');
-```
-
-### WARN
-
-Warning conditions that don't stop processing:
+**Example:**
 
 ```apex
-AsyncActionLogger.warn('Retry limit approaching for action: ' + action.Id);
-```
+// Process actions and log throughout
+AsyncActionLogger.log(System.LoggingLevel.DEBUG, 'Starting action processing');
+// ... processing logic ...
+AsyncActionLogger.log(System.LoggingLevel.INFO, 'Processing completed');
 
-### ERROR
-
-Error conditions requiring attention:
-
-```apex
-AsyncActionLogger.error('Failed to process action: ' + action.Id, exception);
-```
-
-## Logging Context
-
-### Action Context
-
-Automatically captures action-specific context:
-
-```apex
-AsyncActionLogger.setContext(action);
-AsyncActionLogger.info('Processing started'); // Includes action ID, processor, etc.
-```
-
-### Processor Context
-
-Maintains processor-level context:
-
-```apex
-AsyncActionLogger.setProcessorContext(settings);
-AsyncActionLogger.debug('Processor configuration loaded');
-```
-
-### Correlation IDs
-
-Track related operations across multiple jobs:
-
-```apex
-String correlationId = AsyncActionLogger.generateCorrelationId();
-AsyncActionLogger.setCorrelationId(correlationId);
+// Commit all pending log entries
+AsyncActionLogger.save();
 ```
 
 ## Configuration
 
-### Log Level Configuration
+The logger uses the singleton pattern to determine which logging adapter to use based on the `AsyncActionGlobalSetting__mdt.LoggerPlugin__c` field.
 
-Configure logging levels via custom metadata:
+**Default Behavior:** If no custom adapter is configured or if the specified adapter is invalid, the framework uses the built-in `DefaultLogger` that writes to System.debug.
 
-```apex
-// AsyncActionLoggerSettings__mdt
-LogLevel__c = 'INFO'
-EnableDebugMode__c = false
-MaxLogRetention__c = 30  // days
-```
+**Custom Adapter:** Specify the fully qualified API name of a class that implements `AsyncActionLogger.Adapter` in the global setting.
 
-### Output Destinations
+**Example Configuration:**
 
 ```apex
-// System debug logs (default)
-AsyncActionLogger.enableSystemDebug(true);
-
-// Custom object logging
-AsyncActionLogger.enableDatabaseLogging(true);
-
-// External system integration
-AsyncActionLogger.setExternalLoggerEndpoint('https://logs.company.com/api');
+// In AsyncActionGlobalSetting__mdt
+LoggerPlugin__c = 'MyCustomLogger'  // Must implement AsyncActionLogger.Adapter
 ```
 
-## Performance Monitoring
+## Adapter Interface
 
-### Execution Timing
+### `AsyncActionLogger.Adapter`
+
+Global interface for custom logging implementations.
+
+#### Methods
+
+**`log(System.LoggingLevel level, Object logMessage)`**
+
+Logs a message at the specified level.
+
+**Parameters:**
+
+-   `level` (System.LoggingLevel, required) - The logging level
+-   `logMessage` (Object, required) - The message or object to log
+
+**`save()`**
+
+Saves/commits any pending log entries. Implementation depends on the logging adapter.
+
+#### Custom Implementation Example
 
 ```apex
-AsyncActionLogger.Timer timer = AsyncActionLogger.startTimer('process_batch');
-try {
-    // Processing logic
-    processor.process(settings, actions);
-    timer.success();
-} catch (Exception e) {
-    timer.failure(e);
-    throw e;
-}
-```
+global class CustomDatabaseLogger implements AsyncActionLogger.Adapter {
+	private List<AsyncActionLog__c> pendingLogs = new List<AsyncActionLog__c>();
 
-### Metrics Collection
-
-```apex
-// Track processing metrics
-AsyncActionLogger.incrementCounter('actions_processed', actions.size());
-AsyncActionLogger.recordMetric('batch_size', actions.size());
-AsyncActionLogger.recordMetric('processing_time_ms', timer.getElapsedTime());
-```
-
-## Structured Logging Format
-
-### Standard Log Entry
-
-```json
-{
-	"timestamp": "2024-01-15T10:30:00.000Z",
-	"level": "INFO",
-	"message": "Processing batch completed",
-	"context": {
-		"actionId": "a0X...",
-		"processorName": "Data_Sync_Processor",
-		"correlationId": "batch-12345",
-		"userId": "005...",
-		"orgId": "00D..."
-	},
-	"metrics": {
-		"actionsProcessed": 25,
-		"processingTimeMs": 1500,
-		"retryCount": 2
-	}
-}
-```
-
-### Error Log Entry
-
-```json
-{
-	"timestamp": "2024-01-15T10:30:00.000Z",
-	"level": "ERROR",
-	"message": "Action processing failed",
-	"exception": {
-		"type": "CalloutException",
-		"message": "Connection timeout",
-		"stackTrace": "...",
-		"cause": "..."
-	},
-	"context": {
-		"actionId": "a0X...",
-		"processorName": "API_Processor",
-		"retryCount": 3,
-		"maxRetries": 3
-	}
-}
-```
-
-## Integration Examples
-
-### Custom Object Logging
-
-```apex
-public class DatabaseLoggerIntegration {
-	public static void writeLog(AsyncActionLogger.LogEntry entry) {
-		AsyncActionLog__c logRecord = new AsyncActionLog__c(
-			Level__c = entry.level,
-			Message__c = entry.message,
-			ActionId__c = entry.context.get('actionId'),
-			ProcessorName__c = entry.context.get('processorName'),
-			Timestamp__c = entry.timestamp,
-			Context__c = JSON.serialize(entry.context)
+	global void log(System.LoggingLevel level, Object logMessage) {
+		pendingLogs.add(
+			new AsyncActionLog__c(
+				Level__c = level.name(),
+				Message__c = String.valueOf(logMessage),
+				Timestamp__c = DateTime.now()
+			)
 		);
+	}
 
-		insert logRecord;
+	global void save() {
+		if (!pendingLogs.isEmpty()) {
+			insert pendingLogs;
+			pendingLogs.clear();
+		}
 	}
 }
 ```
 
-### External System Integration
+## Default Logger Implementation
+
+The framework includes a built-in `DefaultLogger` that implements the Adapter interface using System.debug:
+
+-   **log()** - Writes messages to Salesforce debug logs
+-   **save()** - No-op since System.debug doesn't require explicit commits
+
+## Usage Patterns
+
+### Basic Logging
 
 ```apex
-public class ExternalLoggerIntegration {
-	@future(callout=true)
-	public static void sendToExternalLogger(String logData) {
-		HttpRequest req = new HttpRequest();
-		req.setEndpoint('https://logs.company.com/api/ingest');
-		req.setMethod('POST');
-		req.setHeader('Content-Type', 'application/json');
-		req.setBody(logData);
+public class MyProcessor implements AsyncActions.Processor {
+	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
+		AsyncActionLogger.log(System.LoggingLevel.INFO, 'Processing ' + actions.size() + ' actions');
 
-		Http http = new Http();
-		HttpResponse res = http.send(req);
+		try {
+			// Processing logic
+			processActions(actions);
+			AsyncActionLogger.log(System.LoggingLevel.DEBUG, 'Processing completed successfully');
+		} catch (Exception e) {
+			AsyncActionLogger.log(System.LoggingLevel.ERROR, 'Processing failed: ' + e.getMessage());
+			throw e;
+		} finally {
+			AsyncActionLogger.save();
+		}
 	}
 }
 ```
 
-## Query and Analysis
+### Framework Integration
 
-### Query Recent Logs
-
-```apex
-List<AsyncActionLog__c> recentErrors = [
-    SELECT Message__c, ActionId__c, ProcessorName__c, Timestamp__c
-    FROM AsyncActionLog__c
-    WHERE Level__c = 'ERROR'
-    AND Timestamp__c = LAST_N_DAYS:7
-    ORDER BY Timestamp__c DESC
-];
-```
-
-### Aggregate Error Analysis
+The logger is used throughout the framework components:
 
 ```apex
-List<AggregateResult> errorsByProcessor = [
-    SELECT ProcessorName__c, COUNT(Id) errorCount
-    FROM AsyncActionLog__c
-    WHERE Level__c = 'ERROR'
-    AND Timestamp__c = LAST_N_DAYS:1
-    GROUP BY ProcessorName__c
-    ORDER BY COUNT(Id) DESC
-];
+// AsyncActionJob uses it for job lifecycle logging
+AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
+
+// AsyncActions.Failure uses it for error logging
+AsyncActionLogger.log(System.LoggingLevel.ERROR, 'Async Action failed: ' + errorMessage);
 ```
-
-## Performance Considerations
-
-### Log Volume Management
-
--   Use appropriate log levels to control volume
--   Implement log rotation and cleanup
--   Consider async logging for high-volume scenarios
-
-### Governor Limit Impact
-
--   Database logging counts against DML limits
--   External callouts require future methods
--   System debug logs have built-in limits
 
 ## Testing Support
 
-### Test Log Verification
+The logger includes test visibility modifiers for unit testing:
 
 ```apex
 @isTest
-static void testLogging() {
-    AsyncActionLogger.enableTestMode();
+static void testCustomLogger() {
+    // The INSTANCE field is @TestVisible for testing scenarios
+    AsyncActionLogger.log(System.LoggingLevel.INFO, 'Test message');
+    AsyncActionLogger.save();
 
-    Test.startTest();
-    AsyncActionLogger.info('Test message');
-    Test.stopTest();
-
-    List<AsyncActionLogger.LogEntry> logs = AsyncActionLogger.getTestLogs();
-    System.assertEquals(1, logs.size());
-    System.assertEquals('INFO', logs[0].level);
-    System.assertEquals('Test message', logs[0].message);
+    // Verify behavior based on your custom adapter implementation
 }
 ```
 
+## Best Practices
+
+### Choosing Log Levels
+
+-   **DEBUG/FINEST** - Detailed diagnostic information
+-   **INFO** - General informational messages
+-   **WARN** - Warning conditions that don't stop processing
+-   **ERROR** - Error conditions requiring attention
+
+### Performance Considerations
+
+-   Custom adapters should consider governor limits (DML, heap, etc.)
+-   Use buffering and batch operations for high-volume scenarios
+-   Consider async patterns for external system integration
+
+### Error Handling
+
+-   Custom adapters should handle errors gracefully
+-   Invalid adapter configurations fall back to DefaultLogger
+-   Test adapter implementations thoroughly
+
 ## See Also
 
+-   [AsyncActionGlobalSetting Custom Metadata Type](./AsyncActionGlobalSetting-Custom-Metadata-Type) - Logger configuration
 -   [Monitoring & Troubleshooting](./Monitoring-and-Troubleshooting) - Operational monitoring
--   [Best Practices](./Best-Practices) - Logging best practices
--   [AsyncActionProcessor Custom Metadata Type](./AsyncActionProcessor-Custom-Metadata-Type) - Configuration options
+-   [Best Practices](./Best-Practices) - Framework best practices
