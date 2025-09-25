@@ -17,7 +17,6 @@
 -   [AsyncActionGlobalSetting\_\_mdt](./AsyncActionGlobalSetting-Custom-Metadata-Type)
 -   [AsyncActionScheduledJob\_\_mdt](./AsyncActionScheduledJob-Custom-Metadata-Type)
 -   [AsyncActionScheduledJobItem\_\_mdt](./AsyncActionScheduledJobItem-Custom-Metadata-Type)
--   [AsyncActionStart\_\_e](./AsyncActionStart-Platform-Event)
 
 ## Classes
 
@@ -26,7 +25,6 @@
     -   [AsyncActions.Processor](./AsyncActions.Processor-Interface)
     -   [AsyncActions.RetryBehavior](./AsyncActions.RetryBehavior-Enum)
     -   [AsyncActions.Status](./AsyncActions.Status-Enum)
--   [AsyncActionLogger](./AsyncActionLogger-Class)
 
 ## Flows
 

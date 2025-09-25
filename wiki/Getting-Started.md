@@ -30,9 +30,9 @@ https://login.salesforce.com/packaging/installPackage.apexp?p0=04tXXXXXXXXXXXXXX
 
 ### Step 2: Assign Permissions
 
-The framework includes the `AsyncActionAdministrator` permission set that grants access to all async action objects and features.
+The framework includes the `AsyncActionAdministrator` permission set for users who need to monitor, retry, and manually intervene with async actions. **Note: This permission set is NOT required for end users to trigger or execute async actions.**
 
-Assign it to yourself and any users who need to work with async actions:
+Assign it to users who need administrative access:
 
 ```sh
 sf org assign permset -n AsyncActionAdministrator
@@ -40,99 +40,27 @@ sf org assign permset -n AsyncActionAdministrator
 
 Or assign via Setup → Users → Permission Sets in the Salesforce UI.
 
-### Step 3: Verify Installation
-
-1. Navigate to **Setup → Apps → App Manager**
-2. Confirm you see the "Async Actions" app
-3. Switch to the "Async Actions" app using the app launcher
-4. Verify you can see the "Async Actions" tab
-
 ## Your First Async Action
 
-Let's create a simple async action that logs a message. This will demonstrate the core concepts and workflow.
-
-### Step 1: Create a Processor Class
-
-Create a new Apex class in your org:
-
-```apex
-public class WelcomeProcessor implements AsyncActions.Processor {
-	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-		for (AsyncAction__c action : actions) {
-			// Get any custom data from the action
-			String message = action.Data__c ?? 'Hello from Async Actions!';
-
-			// Log the message
-			System.debug('Processing action: ' + message);
-
-			// Mark the action as completed
-			action.Status__c = 'Completed';
-		}
-		// The framework automatically updates the actions after this method completes
-	}
-}
-```
-
-### Step 2: Create Processor Configuration
-
-Navigate to **Setup → Custom Metadata Types → Async Action Processor → Manage Records** and create a new record:
-
--   **Label**: Welcome Processor
--   **Async Action Processor Name**: Welcome_Processor
--   **Processor**: WelcomeProcessor
--   **Processor Type**: Apex
--   **Enabled**: Checked
--   **Batch Size**: 10
--   **Retries**: 3
--   **Retry Interval**: 5
--   **Run On Insert**: Checked
-
-![Sample Processor Configuration](media/sample_processor_config.png)
-
-### Step 3: Create an Async Action
-
-Now create an async action record to test your processor. You can do this in several ways:
-
-**Option A: Using the UI**
-
-1. Go to the Async Actions tab
-2. Click "New"
-3. Set **Processor Name** to "Welcome_Processor"
-4. Set **Data** to "My first async action!"
-5. Save the record
-
-**Option B: Using Apex in Developer Console**
-
-```apex
-AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Welcome_Processor');
-AsyncAction__c action = AsyncActions.initAction(settings, null, 'My first async action!');
-insert action;
-```
-
-### Step 4: Monitor Execution
-
-Since you enabled "Run On Insert", the action should process automatically within a few seconds. Monitor the execution:
-
-1. Refresh the Async Action record
-2. Check that the **Status** changed from "Pending" to "Completed"
-3. Check the debug logs in Developer Console for your message
+For a complete guide on creating your first async action with step-by-step instructions, see [Creating Your First Processor](./Creating-Your-First-Processor).
 
 ## Next Steps
 
-Congratulations! You've successfully created and executed your first async action. Here's what to explore next:
+Once you've completed the installation, here's what to explore:
 
-### Learn Core-Concepts
+### Learn Core Concepts
 
--   [Core-Concepts](./Core-Concepts) - Understand the framework architecture
+-   [Core Concepts](./Core-Concepts) - Understand the framework architecture
 
 ### Explore Advanced Features
 
 -   [Flow Integration](./Template-Async-Action-Flow) - Create processors using Flows
+-   [Error Handling](./Error-Handling-and-Retry-Logic) - Advanced error handling patterns
 
 ### Review Objects and Classes
 
 -   [AsyncAction\_\_c Object](./AsyncAction-Custom-Object) - Understanding the core data model
--   [AsyncActions-Class](./AsyncActions-Class) - The main framework class
+-   [AsyncActions Class](./AsyncActions-Class) - The main framework class
 
 ## Common Issues
 
@@ -147,14 +75,3 @@ Congratulations! You've successfully created and executed your first async actio
 -   Verify the processor metadata record is **Enabled**
 -   Check that the **Processor Name** on the action matches the metadata **DeveloperName**
 -   If **Run On Insert** is disabled, you may need to manually trigger processing
-
-### Permission Issues
-
--   Ensure users have the `AsyncActionAdministrator` permission set
--   Check object and field-level security for `AsyncAction__c` and related objects
-
-## Support
-
-For additional help:
-
--   Review example implementations in the package

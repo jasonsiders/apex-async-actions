@@ -6,13 +6,13 @@ The `Failure` class encapsulates error handling patterns and retry behaviors for
 
 ## Methods
 
-### fail(AsyncActionProcessor**mdt settings, List<AsyncAction**c> actions, Exception error)
+### `fail`
 
-Marks the provided async actions as failed and handles retry logic according to the processor configuration.
+Marks the provided async actions as failed and handles retry logic according to the specified retry behavior.
 
 **Parameters:**
 
--   `settings` - The processor configuration containing retry behavior
+-   `settings` - The processor configuration metadata
 -   `actions` - List of actions that failed during processing
 -   `error` - The exception that caused the failure
 
@@ -23,27 +23,23 @@ try {
     // Processing logic that might fail
     processRecords(actions);
 } catch (Exception e) {
-    new AsyncActions.Failure(settings).fail(actions, e);
+    new AsyncActions.Failure(settings, AsyncActions.RetryBehavior.ALLOW_RETRY)
+        .fail(actions, e);
     return;
 }
 ```
 
 ## Retry Behaviors
 
-The Failure class respects the `RetryBehavior__c` field from the processor configuration:
+The Failure class works with the `AsyncActions.RetryBehavior` enum:
 
--   **ALLOW_RETRY** - Increments retry count and reschedules if under limit
--   **KEEP_ALIVE** - Marks as failed but keeps record for manual intervention
+-   **ALLOW_RETRY** - Decrements retry count and reschedules if retries remain
+-   **KEEP_ALIVE** - Keeps actions in pending status for indefinite retries
 -   **SUDDEN_DEATH** - Marks as permanently failed, no retries
 
 ## Error Logging
 
-All failures are automatically logged through the framework's logging system, including:
-
--   Exception message and stack trace
--   Action IDs and related record information
--   Processor configuration details
--   Retry attempt information
+All failures are automatically logged through the framework's logging system. Only the supplied error message is logged along with basic action information.
 
 ## See Also
 

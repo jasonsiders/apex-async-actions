@@ -154,7 +154,7 @@ The framework processes actions in configurable batches:
 -   **Batch Size** controls how many actions are processed per job execution
 -   Larger batches = better efficiency but higher risk of hitting limits
 -   Smaller batches = more granular but more job executions
--   Default recommendation: 10-50 actions per batch
+-   Default recommendation: Start with 200+ actions per batch, then adjust based on processing requirements
 
 ## Configuration Through Metadata
 
@@ -177,7 +177,7 @@ All processor behavior is controlled through `AsyncActionProcessor__mdt` records
 When `RunOnInsert` is enabled:
 
 ```
-Insert AsyncAction__c → Trigger → AsyncActionJob queued → Processing
+insert AsyncAction__c → Trigger → AsyncActionJob queued → Processing
 ```
 
 ### Scheduled Execution
@@ -217,9 +217,7 @@ The framework includes `AsyncActionStart__e` platform events for:
 ### Performance Considerations
 
 1. **Governor Limits** - Design for Salesforce's execution limits
-2. **Batch Size Tuning** - Start with smaller batches and increase as needed
-3. **SOQL Optimization** - Use selective queries in your processors
-4. **DML Optimization** - Bulk operations whenever possible
+2. **Batch Size Tuning** - Start with larger batches (200+) and adjust based on processing requirements
 
 ### Monitoring and Observability
 

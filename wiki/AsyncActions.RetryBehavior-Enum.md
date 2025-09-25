@@ -2,57 +2,21 @@ The `AsyncActions.RetryBehavior` enum defines the available retry strategies for
 
 ## Overview
 
-This enum provides standardized retry behavior options that control how the framework handles failed async actions. The behavior is configured in the `AsyncActionProcessor__mdt` metadata.
+This enum provides standardized retry behavior options that control how the framework handles failed async actions.
 
 ## Enum Values
 
 ### ALLOW_RETRY
 
-Allows the action to be retried according to the processor's retry configuration.
-
-**Behavior:**
-
--   Increments the retry count
--   Reschedules processing if under the retry limit
--   Marks as failed if retry limit exceeded
-
-**Use Cases:**
-
--   Temporary network issues
--   Transient system errors
--   Resource availability problems
+Allows the action to be retried according to the processor's retry configuration. This actually decrements the retry count on the Async Action record. A record may start with 3 retries, then after failure, it's decremented to 2, to 1, and to 0. Once a record has 0 retries, a failure with ALLOW_RETRY will result in the record's status being updated to 'Failed'.
 
 ### KEEP_ALIVE
 
-Marks the action as failed but keeps it available for manual intervention.
-
-**Behavior:**
-
--   Sets status to failed
--   Does not increment retry count
--   Preserves record for later processing
-
-**Use Cases:**
-
--   Data validation errors requiring correction
--   Business rule violations needing review
--   Configuration issues requiring admin attention
+The retries won't be decremented, and the record will remain in 'Pending' status no matter what. Callers should exercise caution when using this option, as it could lead to actions perpetually remaining open.
 
 ### SUDDEN_DEATH
 
 Immediately marks the action as permanently failed with no retry attempts.
-
-**Behavior:**
-
--   Sets status to permanently failed
--   No further processing attempts
--   Logs error for audit purposes
-
-**Use Cases:**
-
--   Permanent data corruption
--   Security violations
--   Unrecoverable system errors
 
 ## Usage in Processors
 
@@ -61,17 +25,10 @@ try {
     // Processing logic
     processActions(actions);
 } catch (Exception e) {
-    // The retry behavior is determined by processor configuration
-    new AsyncActions.Failure(settings).fail(actions, e);
+    // Use specific retry behavior
+    new AsyncActions.Failure(settings, AsyncActions.RetryBehavior.ALLOW_RETRY)
+        .fail(actions, e);
 }
-```
-
-## Configuration
-
-Set the retry behavior in your `AsyncActionProcessor__mdt` record:
-
-```
-RetryBehavior__c = 'ALLOW_RETRY'  // or 'KEEP_ALIVE' or 'SUDDEN_DEATH'
 ```
 
 ## See Also

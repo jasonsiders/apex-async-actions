@@ -1,4 +1,4 @@
-The `AsyncActions.Status` enum defines the available status values for async action lifecycle management.
+The `AsyncActions.Status` enum defines the available status values for async action lifecycle management. You can use this to provide type-safety against the Status picklist values; otherwise, there isn't any protection against accidental values which might cause an action to fail (ex., 'Complete' instead of 'Completed', or 'Error'/'Fail' instead of 'Failed').
 
 ## Overview
 
@@ -6,100 +6,33 @@ This enum provides standardized status values used throughout the async actions 
 
 ## Enum Values
 
-### PENDING
+| Value         | Description                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| **PENDING**   | Initial status when an async action is created but not yet processed. Default status for new actions. |
+| **COMPLETED** | Status set when an action has been successfully processed. Final success status.                      |
+| **FAILED**    | Status set when an action has failed and cannot be retried. Final failure status.                     |
+| **CANCELED**  | Status set when an action has been manually canceled. No further processing will occur.               |
 
-Initial status when an async action is created but not yet processed.
-
-**Characteristics:**
-
--   Default status for new actions
--   Indicates action is queued for processing
--   Triggers processing when conditions are met
-
-### IN_PROGRESS
-
-Status set when an action is currently being processed.
-
-**Characteristics:**
-
--   Prevents duplicate processing
--   Indicates active processing state
--   Temporary status during execution
-
-### COMPLETED
-
-Status set when an action has been successfully processed.
-
-**Characteristics:**
-
--   Final success status
--   No further processing required
--   Audit trail for completed work
-
-### FAILED
-
-Status set when an action has failed and cannot be retried.
-
-**Characteristics:**
-
--   Final failure status
--   Error details logged
--   Requires manual intervention
-
-### RETRY
-
-Status set when an action has failed but will be retried.
-
-**Characteristics:**
-
--   Temporary failure status
--   Will be reprocessed automatically
--   Retry count tracked separately
-
-## Usage in Processors
+## Usage in Tests
 
 ```apex
-// Setting status during processing
-for (AsyncAction__c action : actions) {
-    action.Status__c = AsyncActions.Status.IN_PROGRESS.name();
+@IsTest
+static void shouldProcessActions() {
+    // Create test processor and actions
+    AsyncActionProcessor__mdt settings = AsyncActionTestUtils.createProcessor('TestProcessor');
+    AsyncAction__c action = AsyncActions.initAction(settings, null, 'test data');
+    insert action;
 
-    try {
-        // Process the action
-        processAction(action);
-        action.Status__c = AsyncActions.Status.COMPLETED.name();
-    } catch (Exception e) {
-        action.Status__c = AsyncActions.Status.FAILED.name();
-    }
+    Test.startTest();
+    // Process the action
+    MyProcessor processor = new MyProcessor();
+    processor.process(settings, new List<AsyncAction__c>{action});
+    Test.stopTest();
+
+    // Verify the action was completed
+    action = [SELECT Status__c FROM AsyncAction__c WHERE Id = :action.Id];
+    Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Wrong Status');
 }
-```
-
-## Status Transitions
-
-Valid status transitions:
-
--   PENDING → IN_PROGRESS
--   IN_PROGRESS → COMPLETED
--   IN_PROGRESS → FAILED
--   IN_PROGRESS → RETRY
--   RETRY → IN_PROGRESS
--   RETRY → FAILED
-
-## Querying by Status
-
-```apex
-// Find pending actions
-List<AsyncAction__c> pendingActions = [
-    SELECT Id, Status__c
-    FROM AsyncAction__c
-    WHERE Status__c = :AsyncActions.Status.PENDING.name()
-];
-
-// Find failed actions needing attention
-List<AsyncAction__c> failedActions = [
-    SELECT Id, Status__c, ErrorMessage__c
-    FROM AsyncAction__c
-    WHERE Status__c = :AsyncActions.Status.FAILED.name()
-];
 ```
 
 ## See Also

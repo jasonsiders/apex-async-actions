@@ -20,7 +20,7 @@ public class AccountFollowupProcessor implements AsyncActions.Processor {
 		Set<Id> accountIds = new Set<Id>();
 		for (AsyncAction__c action : actions) {
 			if (action.RelatedRecordId__c != null) {
-				accountIds.add(action.RelatedRecordId__c);
+				accountIds.add((Id) action.RelatedRecordId__c);
 			}
 		}
 
@@ -36,15 +36,10 @@ public class AccountFollowupProcessor implements AsyncActions.Processor {
 		// Process each action
 		List<Task> tasksToInsert = new List<Task>();
 		for (AsyncAction__c action : actions) {
-			try {
-				Task newTask = this.createTaskForAction(action, accountMap);
-				if (newTask != null) {
-					tasksToInsert.add(newTask);
-					action.Status__c = 'Completed';
-				}
-			} catch (Exception error) {
-				// Handle individual action failures
-				new AsyncActions.Failure(settings).fail(action, 'Failed to create task: ' + error.getMessage());
+			Task newTask = this.createTaskForAction(action, accountMap);
+			if (newTask != null) {
+				tasksToInsert.add(newTask);
+				action.Status__c = 'Completed';
 			}
 		}
 
@@ -105,7 +100,7 @@ public class AccountFollowupProcessor implements AsyncActions.Processor {
 			Database.SaveResult result = results[i];
 			if (!result.isSuccess()) {
 				// Find the corresponding action and mark it as failed
-				AsyncAction__c failedAction = this.findActionForTaskIndex(i, actions);
+				AsyncAction__c failedAction = tasks?.get(i);
 				if (failedAction != null) {
 					String errorMsg = 'Task creation failed: ' + result.getErrors()[0].getMessage();
 					new AsyncActions.Failure(settings).fail(failedAction, errorMsg);
@@ -157,11 +152,11 @@ Navigate to **Setup → Custom Metadata Types → Async Action Processor → Man
 
 ### Test 1: Basic Functionality
 
-Create a simple test action in Developer Console:
+Create a simple test action:
 
 ```apex
 // Get the processor configuration
-AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Account_Followup_Processor');
+AsyncActionProcessor__mdt settings = AsyncActionTestUtils.createProcessor('Account_Followup_Processor');
 
 // Get an account to test with
 Account testAccount = [SELECT Id FROM Account LIMIT 1];
@@ -231,86 +226,35 @@ WHERE ProcessorName__c = 'Account_Followup_Processor'
 ORDER BY CreatedDate DESC
 ```
 
-## Step 5: Add Bulk Testing
+## Step 5: Add Unit Tests
 
-Test the processor with multiple actions:
+Create comprehensive test coverage for your processor:
 
 ```apex
-AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Account_Followup_Processor');
+@IsTest
+public class AccountFollowupProcessorTest {
+	@IsTest
+	static void testBasicProcessing() {
+		// Setup test data
+		Account testAccount = new Account(Name = 'Test Account');
+		insert testAccount;
 
-List<Account> accounts = [SELECT Id FROM Account LIMIT 10];
-List<AsyncAction__c> actions = new List<AsyncAction__c>();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.createProcessor('Account_Followup_Processor');
+		AsyncAction__c action = AsyncActions.initAction(settings, testAccount.Id);
+		insert action;
 
-for (Account acc : accounts) {
-    Map<String, Object> data = new Map<String, Object>{
-        'subject' => 'Bulk follow-up with {AccountName}',
-        'priority' => 'Normal',
-        'daysFromNow' => 5
-    };
+		// Test processing
+		Test.startTest();
+		new AccountFollowupProcessor().process(settings, new List<AsyncAction__c>{ action });
+		Test.stopTest();
 
-    AsyncAction__c action = AsyncActions.initAction(
-        settings,
-        acc.Id,
-        JSON.serialize(data)
-    );
-    actions.add(action);
+		// Verify results
+		action = [SELECT Status__c FROM AsyncAction__c WHERE Id = :action.Id];
+		System.assertEquals('Completed', action.Status__c);
+
+		List<Task> tasks = [SELECT Id, Subject FROM Task WHERE WhatId = :testAccount.Id];
+		System.assertEquals(1, tasks.size());
+		System.assert(tasks[0].Subject.contains('Test Account'));
+	}
 }
-
-insert actions;
 ```
-
-## Key Concepts Demonstrated
-
-This example illustrates several important patterns:
-
-### 1. Bulk Processing
-
--   Query all related data once (accounts)
--   Process actions in a loop
--   Perform DML operations in bulk
-
-### 2. Error Handling
-
--   Individual action failure handling
--   Bulk DML result processing
--   Graceful degradation when data parsing fails
-
-### 3. Data Context Usage
-
--   `RelatedRecordId__c` for linking to accounts
--   `Data__c` for custom configuration parameters
--   JSON serialization/deserialization patterns
-
-### 4. Resource Optimization
-
--   Single SOQL query for all accounts
--   Bulk insert for all tasks
--   Efficient error handling
-
-## Best Practices Illustrated
-
-1. **Defensive Programming**: Check for null values and handle exceptions
-2. **Bulk Operations**: Process multiple records efficiently
-3. **Clear Error Messages**: Provide meaningful error descriptions
-4. **Flexible Configuration**: Use JSON data for customizable behavior
-5. **Proper Status Management**: Update action status appropriately
-
-## Next Steps
-
-Now that you've built your first processor:
-
-1. **Add Unit Tests**: Create comprehensive test coverage for your processor
-2. **Explore Flow Processors**: Try implementing similar logic using Flows
-3. **Advanced Error Handling**: Learn about different retry behaviors
-4. **Scheduling**: Set up scheduled processing for accumulated actions
-5. **Monitoring**: Create reports and dashboards for operational visibility
-
-## Common Enhancements
-
-Consider these improvements for production use:
-
--   **Logging**: Add detailed logging for troubleshooting
--   **Validation**: Validate input data more thoroughly
--   **Configuration**: Use custom settings for processor-specific configuration
--   **Notifications**: Send notifications when actions fail
--   **Metrics**: Track processing performance and success rates
