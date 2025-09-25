@@ -25,6 +25,7 @@
 -   [AsyncActions.Processor](./The-AsyncActions.Processor-Interface)
 -   [AsyncActions.RetryBehavior](./The-AsyncActions.RetryBehavior-Enum)
 -   [AsyncActions.Status](./The-AsyncActions.Status-Enum)
+-   [AsyncActionLogger.Adapter](./The-AsyncActionLogger.Adapter-Interface)
 
 ## Flows
 
