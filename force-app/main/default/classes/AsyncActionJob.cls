@@ -2,7 +2,7 @@
  * @description Responsible for processing Async Actions via a Queueable job.
  * The actual logic of each action is handled by the `AsyncActions.Processor` interface.
  */
-public virtual without sharing class AsyncActionJob implements System.Queueable, System.Finalizer {
+public virtual without sharing class AsyncActionJob implements Database.AllowsCallouts, System.Queueable, System.Finalizer {
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 
