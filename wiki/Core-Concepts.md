@@ -21,27 +21,13 @@ AsyncAction__c Records → AsyncActionJob → Processor Implementation
 
 Every async action follows a predictable lifecycle:
 
-### 1. Creation
-
-```apex
-AsyncAction__c action = AsyncActions.initAction(settings, recordId, data);
-insert action;  // Status: "Pending"
-```
-
-### 2. Processing
-
--   The `AsyncActionJob` queries for pending actions
--   Actions are processed in batches according to configuration
--   Your processor implementation receives the batch and executes business logic
-
-### 3. Completion
-
-Actions end in one of four states:
-
--   **Completed** - Successfully processed
--   **Failed** - Permanently failed (no retries remaining)
--   **Canceled** - Manually canceled by a user
--   **Pending** - Still awaiting processing or retry
+-   **1. Creation**: An Async Action record represents a single work item to be processed by the framework. You can create valid Async Action records using the [`AsyncActions.initAction`](./The-AsyncActions-Class#initaction) method in Apex, or the [`Init Async Action`](./The-Init-Async-Action-Invocable-Action) invocable action in Flows.
+-   **2. Processing**: The `AsyncActionJob` queries for pending actions and processes them in batches according to configuration. Your processor implementation receives the batch and executes the business logic.
+-   **3. Completion**: Actions end in one of four states:
+    -   `Completed`: Successfully processed.
+    -   `Failed`: Permanently failed with no retries remaining.
+    -   `Canceled`: Manually canceled by a user.
+    -   `Pending`: Still awaiting processing (or retry).
 
 ## Processor Types
 
@@ -63,20 +49,13 @@ public class MyProcessor implements AsyncActions.Processor {
 }
 ```
 
-**Requirements:**
-
--   Must implement `AsyncActions.Processor`
--   Must have a public no-argument constructor
--   Framework uses `Type.forName()` for dynamic instantiation
+Apex processors must implement the `AsyncActions.Processor` interface and have a public no-argument constructor. The framework uses `Type.forName()` for dynamic instantiation.
 
 ### Flow Processors
 
-Flow processors use Salesforce Flows for business logic:
+Flow processors use Salesforce Flows for business logic. Use the included [Flow Template](./The-Template-Async-Action-Flow) as a starting point; this includes the required inputs/outputs needed to function properly.
 
--   The framework uses `AsyncActionFlowProcessor` as a wrapper
--   Flows must have specific input/output variables
--   Uses `Invocable.Action` for automatic bulkification
--   Ideal for declarative logic and non-developers
+The framework uses `AsyncActionFlowProcessor` as a wrapper and flows must have specific input/output variables. Flow processors use `Invocable.Action` for automatic bulkification, making them ideal for declarative logic and non-developers.
 
 ## Data Context and Relationships
 
@@ -125,40 +104,27 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 All processor behavior is controlled through `AsyncActionProcessor__mdt` records:
 
-| Field           | Purpose                               |
-| --------------- | ------------------------------------- |
-| `Processor`     | Class name or Flow API name           |
-| `ProcessorType` | "Apex" or "Flow"                      |
-| `Enabled`       | Controls whether the processor runs   |
-| `BatchSize`     | Number of actions per execution       |
-| `Retries`       | Default retry count for new actions   |
-| `RetryInterval` | Minutes between retry attempts        |
-| `RunOnInsert`   | Auto-process when actions are created |
+| Field            | Purpose                               |
+| ---------------- | ------------------------------------- |
+| `Processor`      | Class name or Flow API name           |
+| `Processor Type` | "Apex" or "Flow"                      |
+| `Enabled`        | Controls whether the processor runs   |
+| `Batch Size`     | Number of actions per execution       |
+| `Retries`        | Default retry count for new actions   |
+| `Retry Interval` | Minutes between retry attempts        |
+| `Run On Insert`  | Auto-process when actions are created |
 
 ## Job Execution Patterns
 
-The framework supports three primary patterns for initiating async job processing, each suited to different operational scenarios.
+The framework supports three primary patterns for initiating async job processing, each suited to different operational scenarios:
 
-#### Immediate Execution
-
-When `RunOnInsert` is enabled:
-
-```
-insert AsyncAction__c → Trigger → AsyncActionJob queued → Processing
-```
-
-#### Scheduled Execution
-
-Using `AsyncActionScheduledJob__mdt`:
-
-```
-Scheduled Job → AsyncActionSchedulable → AsyncActionJob → Processing
-```
-
-#### Manual Execution
-
-Using `AsyncActionLauncher`:
+-   **Immediate Execution**: When `Run On Insert` is enabled, an instance of the processor job will start moments after the Async Action record is inserted. If any actions fail, they can still be retried through scheduled jobs.
+-   **Scheduled Execution**: Use the [AsyncActionScheduledJob\_\_mdt](./The-AsyncActionScheduledJob__mdt-Custom-Metadata-Type) to configure scheduled jobs to run at some regular interval (hourly, semi-hourly, or using a custom cron expression). You can completely customize which async action processors are run by associating [AsyncActionScheduledJobItem\_\_mdt](./The-AsyncActionScheduledJobItem__mdt-Custom-Metadata-Type) records with a scheduled job record.
+-   **Manual Execution**: Manually invoke a processor job at any time using the [AsyncActionLauncher](./The-AsyncActionLauncher-Class) class:
 
 ```apex
-Id jobId = new AsyncActionLauncher().launch(someSettings);
+AsyncActionProcessor__mdt job = AsyncActionProcessor__mdt.getInstance('Some_Job');
+Id jobId = new AsyncActionLauncher().launch(job);
 ```
+
+In each of the above cases, the job will _only_ ever process [Async Action](./The-AsyncAction__c-Object.md) records with a _Status_ of "Pending", and a _Next Eligible At_ value in the past.

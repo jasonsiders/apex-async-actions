@@ -1,4 +1,4 @@
-The `AsyncActions` class serves as the central namespace and entry point for the async actions framework. It provides utility methods for creating async actions and contains essential inner classes and interfaces.
+The `AsyncActions` class serves as the central namespace and entry point for the async actions framework. It provides utility methods for creating async actions and contains essential inner classes and interfaces, which are documented elsewhere in this wiki.
 
 ## Methods
 
@@ -6,11 +6,19 @@ The `AsyncActions` class serves as the central namespace and entry point for the
 
 Creates a new AsyncAction\_\_c record configured with the specified processor settings and context information.
 
-The framework provides multiple overloads to accommodate different initialization scenarios:
-
--   Full specification with processor settings, related record ID, and custom data
--   Using SObject references instead of Ids
--   Variations with or without custom data
--   Simple initialization with just processor settings
+-   `AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId, String data)`
+-   `AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record, String data)`
+-   `AsyncAction__c initAction(AsyncActionProcessor__mdt settings, Id relatedRecordId)`
+-   `AsyncAction__c initAction(AsyncActionProcessor__mdt settings, SObject record)`
+-   `AsyncAction__c initAction(AsyncActionProcessor__mdt settings)`
 
 All overloads initialize the action with "Pending" status, set NextEligibleAt\_\_c to current time for immediate processing, and apply configuration from processor settings.
+
+## Inner Types
+
+This class contains several inner types that provide core framework functionality:
+
+-   [AsyncActions.Failure](./The-AsyncActions.Failure-Class) - Standardized error handling and retry logic
+-   [AsyncActions.Processor](./The-AsyncActions.Processor-Interface) - Interface that all processors must implement
+-   [AsyncActions.RetryBehavior](./The-AsyncActions.RetryBehavior-Enum) - Enum defining retry behavior options
+-   [AsyncActions.Status](./The-AsyncActions.Status-Enum) - Enum defining action status values

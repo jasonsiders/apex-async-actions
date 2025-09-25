@@ -8,4 +8,10 @@ global interface Processor {
 
 ## Methods
 
-### `process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions)`
+### `process`
+
+The core method that contains your business logic for processing async actions.
+
+-   `void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions)`
+
+This method receives a batch of pending actions and the processor configuration. Your implementation should process all actions in the batch, update their status appropriately, and handle any errors using the framework's failure handling mechanisms.

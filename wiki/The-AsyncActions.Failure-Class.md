@@ -2,36 +2,28 @@ The `AsyncActions.Failure` inner class provides standardized error handling and 
 
 ## Constructors
 
-### `Failure(AsyncActionProcessor__mdt settings, AsyncActions.RetryBehavior behavior)`
+Creates a new Failure handler with processor settings and retry behavior configuration. The single-parameter constructor uses default `ALLOW_RETRY` behavior.
 
-Creates a new Failure handler with specific processor settings and retry behavior.
-
-**Parameters:**
-
--   `settings` - The processor configuration metadata
--   `behavior` - The retry behavior to apply when handling failures
-
-### `Failure(AsyncActionProcessor__mdt settings)`
-
-Creates a new Failure handler with specific processor settings and default ALLOW_RETRY behavior.
-
-**Parameters:**
-
--   `settings` - The processor configuration metadata
+-   `Failure(AsyncActionProcessor__mdt settings, AsyncActions.RetryBehavior behavior)`
+-   `Failure(AsyncActionProcessor__mdt settings)`
 
 ## Methods
 
 ### `fail`
 
-Marks the provided async actions as failed and handles retry logic according to the specified retry behavior. All failures are automatically logged through the framework's logging system.
+Marks the provided async actions as failed and handles retry logic according to the specified retry behavior.
+
+-   `void fail(List<AsyncAction__c> actions, Object error)`
+-   `void fail(AsyncAction__c action, Object error)`
+
+All failures are automatically logged through the framework's logging system.
 
 ```apex
 try {
     // Processing logic that might fail
     processRecords(actions);
 } catch (Exception e) {
-    new AsyncActions.Failure(settings, AsyncActions.RetryBehavior.ALLOW_RETRY)
-        .fail(actions, e);
+    new AsyncActions.Failure(settings).fail(actions, e);
     return;
 }
 ```

@@ -4,22 +4,14 @@ The Template Async Action Flow is a pre-built Flow template that demonstrates th
 
 This template flow provides the correct input/output variable structure and basic processing logic required for Flow processors. You can clone and customize it to create your own Flow-based async action processors without writing Apex code.
 
-## Input/Output Variables
+## Variables
 
 The template includes the required variables that the framework expects:
 
-### Input Variables
-
-| Variable Name | Data Type                   | Required | Description                             |
-| ------------- | --------------------------- | -------- | --------------------------------------- |
-| `asyncAction` | AsyncAction\_\_c            | Yes      | The async action record being processed |
-| `settings`    | AsyncActionProcessor\_\_mdt | Yes      | Processor configuration settings        |
-
-### Output Variables
-
-| Variable Name | Data Type        | Required | Description                                         |
-| ------------- | ---------------- | -------- | --------------------------------------------------- |
-| `asyncAction` | AsyncAction\_\_c | Yes      | Updated async action record with processing results |
+| Variable Name | Data Type                   | Input          | Output | Description                                     |
+| ------------- | --------------------------- | -------------- | ------ | ----------------------------------------------- |
+| `asyncAction` | AsyncAction\_\_c            | Yes [Required] | Yes    | The async action record being processed/updated |
+| `settings`    | AsyncActionProcessor\_\_mdt | Yes [Required] | No     | Processor configuration settings                |
 
 ## Flow Structure
 

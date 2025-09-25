@@ -10,7 +10,7 @@ Async Action Processor records define:
 2. **Execution Control** - Determines when and how the processor runs
 3. **Performance Settings** - Controls batch sizes and processing limits
 4. **Error Handling** - Configures retry behavior and failure management
-5. **Operational Parameters** - Sets intervals, timeouts, and other operational aspects
+5. **Operational Parameters** - Sets intervals, retries, and other operational aspects
 
 ## Field Reference
 

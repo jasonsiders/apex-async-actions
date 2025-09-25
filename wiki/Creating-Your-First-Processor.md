@@ -1,13 +1,8 @@
-This tutorial walks you through creating a complete async action processor from start to finish. We'll build a processor that creates follow-up tasks for accounts, demonstrating common patterns and best practices.
+This tutorial walks you through creating your first async action processor. We'll build a simple processor that creates follow-up tasks for accounts, demonstrating the basic framework pattern.
 
 ## Scenario
 
-Let's create an "Account Follow-up Processor" that:
-
--   Creates a follow-up task for each account
--   Uses custom data to set task priorities and subjects
--   Handles errors gracefully with retry logic
--   Demonstrates both success and failure scenarios
+Let's create an "Account Follow-up Processor" that creates a follow-up task for each account. This example focuses on simplicity to show how easy it is to get started with the framework.
 
 ## Step 1: Create the Processor Class
 
@@ -16,61 +11,43 @@ Create a new Apex class called `AccountFollowupProcessor`:
 ```apex
 public class AccountFollowupProcessor implements AsyncActions.Processor {
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-		try {
-			// Collect account IDs
-			Set<Id> accountIds = new Set<Id>();
-			for (AsyncAction__c action : actions) {
-				if (action.RelatedRecordId__c != null) {
-					accountIds.add((Id) action.RelatedRecordId__c);
-				}
+		// Get account IDs from the actions
+		Set<Id> accountIds = new Set<Id>();
+		for (AsyncAction__c action : actions) {
+			accountIds.add(action.RelatedRecordId__c);
+		}
+
+		// Query the accounts we need
+		Map<Id, Account> accountMap = new Map<Id, Account>(
+			[
+				SELECT Id, Name, OwnerId
+				FROM Account
+				WHERE Id IN :accountIds
+			]
+		);
+
+		// Create tasks for each action
+		List<Task> tasksToInsert = new List<Task>();
+		for (AsyncAction__c action : actions) {
+			Account account = accountMap.get(action.RelatedRecordId__c);
+			if (account != null) {
+				tasksToInsert.add(
+					new Task(
+						WhatId = account.Id,
+						OwnerId = account.OwnerId,
+						Subject = 'Follow up with ' + account.Name,
+						Priority = 'Normal',
+						Status = 'Not Started',
+						ActivityDate = Date.today().addDays(7)
+					)
+				);
+				action.Status__c = 'Completed';
 			}
+		}
 
-			// Query accounts
-			Map<Id, Account> accountMap = new Map<Id, Account>(
-				[SELECT Id, Name, OwnerId FROM Account WHERE Id IN :accountIds]
-			);
-
-			// Create tasks
-			List<Task> tasksToInsert = new List<Task>();
-			for (AsyncAction__c action : actions) {
-				Id accountId = (Id) action.RelatedRecordId__c;
-				Account account = accountMap.get(accountId);
-
-				if (account != null) {
-					// Parse custom data with defaults
-					String subject = 'Follow up with ' + account.Name;
-					String priority = 'Normal';
-					Integer daysFromNow = 7;
-
-					if (String.isNotBlank(action.Data__c)) {
-						Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(action.Data__c);
-						subject = (String) data.get('subject') ?? subject;
-						priority = (String) data.get('priority') ?? priority;
-						daysFromNow = (Integer) data.get('daysFromNow') ?? daysFromNow;
-					}
-
-					// Create task
-					tasksToInsert.add(
-						new Task(
-							WhatId = account.Id,
-							OwnerId = account.OwnerId,
-							Subject = subject,
-							Priority = priority,
-							Status = 'Not Started',
-							ActivityDate = Date.today().addDays(daysFromNow)
-						)
-					);
-
-					action.Status__c = 'Completed';
-				}
-			}
-
-			// Insert tasks
-			if (!tasksToInsert.isEmpty()) {
-				insert tasksToInsert;
-			}
-		} catch (Exception e) {
-			new AsyncActions.Failure(settings).fail(actions, e);
+		// Insert all tasks at once
+		if (!tasksToInsert.isEmpty()) {
+			insert tasksToInsert;
 		}
 	}
 }
@@ -89,17 +66,15 @@ Navigate to **Setup → Custom Metadata Types → Async Action Processor → Man
 -   **Retries**: 3
 -   **Retry Interval**: 10
 -   **Run On Insert**: ✓ (checked)
--   **Description**: Creates follow-up tasks for accounts with customizable priorities and subjects
+-   **Description**: Creates follow-up tasks for accounts
 
 ## Step 3: Test the Processor
-
-### Test 1: Basic Functionality
 
 Create a simple test action:
 
 ```apex
 // Get the processor configuration
-AsyncActionProcessor__mdt settings = AsyncActionTestUtils.createProcessor('Account_Followup_Processor');
+AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Account_Followup_Processor');
 
 // Get an account to test with
 Account testAccount = [SELECT Id FROM Account LIMIT 1];
@@ -110,43 +85,6 @@ insert action;
 
 // Check the result after a few seconds
 System.debug('Action Status: ' + [SELECT Status__c FROM AsyncAction__c WHERE Id = :action.Id].Status__c);
-```
-
-### Test 2: Custom Data
-
-Test with custom followup data:
-
-```apex
-AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Account_Followup_Processor');
-Account testAccount = [SELECT Id FROM Account LIMIT 1];
-
-// Create custom followup data
-Map<String, Object> followupData = new Map<String, Object>{
-    'subject' => 'High priority follow-up with {AccountName}',
-    'priority' => 'High',
-    'daysFromNow' => 3
-};
-
-AsyncAction__c action = AsyncActions.initAction(
-    settings,
-    testAccount.Id,
-    JSON.serialize(followupData)
-);
-insert action;
-```
-
-### Test 3: Error Handling
-
-Test error scenarios by creating an action with an invalid account ID:
-
-```apex
-AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Account_Followup_Processor');
-
-// Use a fake account ID to trigger an error
-AsyncAction__c action = AsyncActions.initAction(settings, '001000000000000');
-insert action;
-
-// This should result in a failed action with retry behavior
 ```
 
 ## Step 4: Monitor and Verify
@@ -171,7 +109,7 @@ ORDER BY CreatedDate DESC
 
 ## Step 5: Add Unit Tests
 
-Create comprehensive test coverage for your processor:
+Create test coverage for your processor:
 
 ```apex
 @IsTest
@@ -182,9 +120,8 @@ public class AccountFollowupProcessorTest {
 		Account testAccount = new Account(Name = 'Test Account');
 		insert testAccount;
 
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.createProcessor('Account_Followup_Processor');
+		AsyncActionProcessor__mdt settings = AsyncActionProcessor__mdt.getInstance('Account_Followup_Processor');
 		AsyncAction__c action = AsyncActions.initAction(settings, testAccount.Id);
-		insert action;
 
 		// Test processing
 		Test.startTest();
@@ -192,7 +129,6 @@ public class AccountFollowupProcessorTest {
 		Test.stopTest();
 
 		// Verify results
-		action = [SELECT Status__c FROM AsyncAction__c WHERE Id = :action.Id];
 		System.assertEquals('Completed', action.Status__c);
 
 		List<Task> tasks = [SELECT Id, Subject FROM Task WHERE WhatId = :testAccount.Id];
@@ -201,3 +137,5 @@ public class AccountFollowupProcessorTest {
 	}
 }
 ```
+
+That's it! You've created your first async action processor. This simple example shows the basic pattern: implement the interface, process the actions in bulk, and mark them as completed.
