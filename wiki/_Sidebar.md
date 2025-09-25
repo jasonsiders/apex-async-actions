@@ -12,20 +12,20 @@
 
 ## Objects
 
--   [AsyncAction\_\_c](./The-AsyncAction__c-Object)
--   [AsyncActionProcessor\_\_mdt](./The-AsyncActionProcessor__mdt-Custom-Metadata-Type)
--   [AsyncActionGlobalSetting\_\_mdt](./The-AsyncActionGlobalSetting__mdt-Custom-Metadata-Type)
--   [AsyncActionScheduledJob\_\_mdt](./The-AsyncActionScheduledJob__mdt-Custom-Metadata-Type)
--   [AsyncActionScheduledJobItem\_\_mdt](./The-AsyncActionScheduledJobItem__mdt-Custom-Metadata-Type)
+-   [The AsyncAction\_\_c Object](./The-AsyncAction__c-Object)
+-   [The AsyncActionProcessor\_\_mdt Custom Metadata Type](./The-AsyncActionProcessor__mdt-Custom-Metadata-Type)
+-   [The AsyncActionGlobalSetting\_\_mdt Custom Metadata Type](./The-AsyncActionGlobalSetting__mdt-Custom-Metadata-Type)
+-   [The AsyncActionScheduledJob\_\_mdt Custom Metadata Type](./The-AsyncActionScheduledJob__mdt-Custom-Metadata-Type)
+-   [The AsyncActionScheduledJobItem\_\_mdt Custom Metadata Type](./The-AsyncActionScheduledJobItem__mdt-Custom-Metadata-Type)
 
 ## Classes
 
--   [**AsyncActions**](./The-AsyncActions-Class)
-    -   [AsyncActions.Failure](./The-AsyncActions.Failure-Class)
-    -   [AsyncActions.Processor](./The-AsyncActions.Processor-Interface)
-    -   [AsyncActions.RetryBehavior](./The-AsyncActions.RetryBehavior-Enum)
-    -   [AsyncActions.Status](./The-AsyncActions.Status-Enum)
+-   [**The AsyncActions Class**](./The-AsyncActions-Class)
+    -   [The AsyncActions.Failure Class](./The-AsyncActions.Failure-Class)
+    -   [The AsyncActions.Processor Interface](./The-AsyncActions.Processor-Interface)
+    -   [The AsyncActions.RetryBehavior Enum](./The-AsyncActions.RetryBehavior-Enum)
+    -   [The AsyncActions.Status Enum](./The-AsyncActions.Status-Enum)
 
 ## Flows
 
--   [Template: Async Action Flow](./The-Template-Async-Action-Flow)
+-   [The Template Async Action Flow](./The-Template-Async-Action-Flow)
