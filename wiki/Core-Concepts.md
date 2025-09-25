@@ -127,4 +127,4 @@ AsyncActionProcessor__mdt job = AsyncActionProcessor__mdt.getInstance('Some_Job'
 Id jobId = new AsyncActionLauncher().launch(job);
 ```
 
-In each of the above cases, the job will _only_ ever process [Async Action](./The-AsyncAction__c-Object.md) records with a _Status_ of "Pending", and a _Next Eligible At_ value in the past.
+In each of the above cases, the job will _only_ ever process [Async Action](./The-AsyncAction__c-Object) records with a _Status_ of "Pending", and a _Next Eligible At_ value in the past.

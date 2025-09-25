@@ -1,4 +1,4 @@
-The `AsyncActions.RetryBehavior` enum defines the available retry strategies for failed async actions. Use this enum in conjunction with the [`AsyncActions.Failure Class](./The-AsyncActions.Failure-Class).
+The `AsyncActions.RetryBehavior` enum defines the available retry strategies for failed async actions. Use this enum in conjunction with the [AsyncActions.Failure Class](./The-AsyncActions.Failure-Class).
 
 ```apex
 try {
