@@ -3,13 +3,14 @@
  * Its `launch` methods will result in a new queueable job if the provided AsyncActionProcessor__mdt object
  * is active, valid, and has pending AsyncAction__c records associated to it.
  */
-public without sharing class AsyncActionLauncher {
+@SuppressWarnings('PMD.AvoidGlobalModifier')
+global without sharing class AsyncActionLauncher {
 	/**
 	 * @description Launches AsyncActionJob queueables for each processor that has pending actions.
 	 * @param settingsList List of processor configurations to check for pending actions
 	 * @return Map of processor names to their corresponding launched job IDs
 	 */
-	public Map<String, Id> launch(List<AsyncActionProcessor__mdt> settingsList) {
+	global Map<String, Id> launch(List<AsyncActionProcessor__mdt> settingsList) {
 		Map<String, Id> results = new Map<String, Id>{};
 		for (PendingAction result : this.queryPendingActions(settingsList)) {
 			String processorName = result?.processorName;
@@ -24,7 +25,7 @@ public without sharing class AsyncActionLauncher {
 	 * @param settings The processor configuration to launch a job for
 	 * @return The ID of the launched job, or null if no job was launched
 	 */
-	public Id launch(AsyncActionProcessor__mdt settings) {
+	global Id launch(AsyncActionProcessor__mdt settings) {
 		String processorName = settings?.DeveloperName;
 		return this.launch(new List<AsyncActionProcessor__mdt>{ settings })?.get(processorName);
 	}
@@ -33,7 +34,7 @@ public without sharing class AsyncActionLauncher {
 	 * @description Launches AsyncActionJob queueables for all available processor configurations.
 	 * @return Map of processor names to their corresponding launched job IDs
 	 */
-	public Map<String, Id> launchAll() {
+	global Map<String, Id> launchAll() {
 		List<AsyncActionProcessor__mdt> all = AsyncActionProcessorService.getAll()?.values();
 		return this.launch(all);
 	}
