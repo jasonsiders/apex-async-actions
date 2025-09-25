@@ -82,53 +82,27 @@ Flow processors use Salesforce Flows for business logic:
 
 AsyncAction records can carry context information to your processors:
 
-### RelatedRecordId\_\_c
-
-Links the action to any Salesforce record:
-
-```apex
-AsyncAction__c action = AsyncActions.initAction(settings, accountId);
-// Later in processor:
-Id accountId = (Id) action.RelatedRecordId__c;
-```
-
-### Data\_\_c
-
-Stores custom serialized data structures:
+-   **RelatedRecordId\_\_c**: Links the action to any Salesforce record
+-   **Data\_\_c**: Stores custom serialized data structures
 
 ```apex
 Map<String, Object> customData = new Map<String, Object>{
     'amount' => 1000,
     'type' => 'premium'
 };
-AsyncAction__c action = AsyncActions.initAction(settings, recordId, JSON.serialize(customData));
-
+AsyncAction__c action = AsyncActions.initAction(
+    settings,
+    someAccountId,
+    JSON.serialize(customData)
+);
 // Later in processor:
+Id accountId = (Id) action.RelatedRecordId__c;
 Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(action.Data__c);
 ```
 
 ## Error Handling and Retry Logic
 
-The framework provides sophisticated error handling through the `AsyncActions.Failure` class:
-
-### Retry Behaviors
-
-1. **ALLOW_RETRY** (default)
-
-    - Actions retry until retries are exhausted
-    - Then marked as "Failed"
-
-2. **KEEP_ALIVE**
-
-    - Actions never fail permanently
-    - Continue retrying indefinitely
-    - Use with caution
-
-3. **SUDDEN_DEATH**
-    - Actions fail immediately
-    - No retries regardless of configuration
-
-### Error Handling Example
+The framework provides sophisticated error handling using the [`AsyncActions.Failure`](./The-AsyncActions.Failure-Class) class and the [`AsyncActions.RetryBehavior`](./The-AsyncActions.RetryBehavior-Enum) enum.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
@@ -147,32 +121,25 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 }
 ```
 
-## Batch Processing
-
-The framework processes actions in configurable batches:
-
--   **Batch Size** controls how many actions are processed per job execution
--   Larger batches = better efficiency but higher risk of hitting limits
--   Smaller batches = more granular but more job executions
--   Default recommendation: Start with 200+ actions per batch, then adjust based on processing requirements
-
 ## Configuration Through Metadata
 
 All processor behavior is controlled through `AsyncActionProcessor__mdt` records:
 
-| Field             | Purpose                               |
-| ----------------- | ------------------------------------- |
-| **Processor**     | Class name or Flow API name           |
-| **ProcessorType** | "Apex" or "Flow"                      |
-| **Enabled**       | Controls whether the processor runs   |
-| **BatchSize**     | Number of actions per execution       |
-| **Retries**       | Default retry count for new actions   |
-| **RetryInterval** | Minutes between retry attempts        |
-| **RunOnInsert**   | Auto-process when actions are created |
+| Field            | Purpose                               |
+| ---------------- | ------------------------------------- |
+| `Processor\*\*   | Class name or Flow API name           |
+| `ProcessorType`  | "Apex" or "Flow"                      |
+| `Enabled\*\*     | Controls whether the processor runs   |
+| `BatchSize\*\*   | Number of actions per execution       |
+| `Retries\*\*     | Default retry count for new actions   |
+| `RetryInterval`  | Minutes between retry attempts        |
+| `RunOnInsert\*\* | Auto-process when actions are created |
 
 ## Job Execution Patterns
 
-### Immediate Execution
+The framework supports three primary patterns for initiating async job processing, each suited to different operational scenarios.
+
+#### Immediate Execution
 
 When `RunOnInsert` is enabled:
 
@@ -180,7 +147,7 @@ When `RunOnInsert` is enabled:
 insert AsyncAction__c → Trigger → AsyncActionJob queued → Processing
 ```
 
-### Scheduled Execution
+#### Scheduled Execution
 
 Using `AsyncActionScheduledJob__mdt`:
 
@@ -188,48 +155,10 @@ Using `AsyncActionScheduledJob__mdt`:
 Scheduled Job → AsyncActionSchedulable → AsyncActionJob → Processing
 ```
 
-### Manual Execution
+#### Manual Execution
 
 Using `AsyncActionLauncher`:
 
 ```apex
-AsyncActionLauncher launcher = new AsyncActionLauncher();
-Id jobId = launcher.launch(settings);
+Id jobId = new AsyncActionLauncher().launch(someSettings);
 ```
-
-## Platform Event Integration
-
-The framework includes `AsyncActionStart__e` platform events for:
-
--   Triggering processing from external systems
--   Bulk action creation
--   Cross-org communication
-
-## Best Practices
-
-### Design Principles
-
-1. **Idempotent Operations** - Ensure processors can safely retry
-2. **Bulk-Friendly Logic** - Design for batch processing from the start
-3. **Graceful Degradation** - Handle partial failures appropriately
-4. **Proper Error Handling** - Use the `Failure` class for custom error logic
-
-### Performance Considerations
-
-1. **Governor Limits** - Design for Salesforce's execution limits
-2. **Batch Size Tuning** - Start with larger batches (200+) and adjust based on processing requirements
-
-### Monitoring and Observability
-
-1. **Status Tracking** - Always update action status appropriately
-2. **Error Logging** - Use the built-in logging framework
-3. **Custom Monitoring** - Build dashboards and reports for operational visibility
-4. **Performance Metrics** - Track processing times and failure rates
-
-## Next Steps
-
-Now that you understand the core concepts:
-
-1. [Create Your First Processor](./Creating-Your-First-Processor) - Hands-on implementation guide
-2. [Object Documentation](./AsyncAction-Custom-Object) - Detailed field-level information
-3. [Class Documentation](./AsyncActions-Class) - Complete API reference

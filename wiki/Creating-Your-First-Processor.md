@@ -16,119 +16,62 @@ Create a new Apex class called `AccountFollowupProcessor`:
 ```apex
 public class AccountFollowupProcessor implements AsyncActions.Processor {
 	public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-		// Collect all account IDs from the actions
-		Set<Id> accountIds = new Set<Id>();
-		for (AsyncAction__c action : actions) {
-			if (action.RelatedRecordId__c != null) {
-				accountIds.add((Id) action.RelatedRecordId__c);
-			}
-		}
-
-		// Query account information we need
-		Map<Id, Account> accountMap = new Map<Id, Account>(
-			[
-				SELECT Id, Name, OwnerId
-				FROM Account
-				WHERE Id IN :accountIds
-			]
-		);
-
-		// Process each action
-		List<Task> tasksToInsert = new List<Task>();
-		for (AsyncAction__c action : actions) {
-			Task newTask = this.createTaskForAction(action, accountMap);
-			if (newTask != null) {
-				tasksToInsert.add(newTask);
-				action.Status__c = 'Completed';
-			}
-		}
-
-		// Insert all tasks at once for efficiency
-		if (!tasksToInsert.isEmpty()) {
-			List<Database.SaveResult> results = Database.insert(tasksToInsert, false);
-			this.handleInsertResults(results, actions, settings);
-		}
-	}
-
-	private Task createTaskForAction(AsyncAction__c action, Map<Id, Account> accountMap) {
-		Id accountId = action.RelatedRecordId__c;
-		Account account = accountMap.get(accountId);
-
-		if (account == null) {
-			throw new IllegalArgumentException('Account not found: ' + accountId);
-		}
-
-		// Parse custom data if provided
-		FollowupData followupData = this.parseFollowupData(action.Data__c);
-
-		// Create the task
-		Task followupTask = new Task();
-		followupTask.WhatId = accountId;
-		followupTask.OwnerId = account.OwnerId;
-		followupTask.Subject = followupData.subject.replace('{AccountName}', account.Name);
-		followupTask.Priority = followupData.priority;
-		followupTask.Status = 'Not Started';
-		followupTask.ActivityDate = Date.today().addDays(followupData.daysFromNow);
-
-		return followupTask;
-	}
-
-	private FollowupData parseFollowupData(String dataJson) {
-		FollowupData data = new FollowupData();
-
-		if (String.isNotBlank(dataJson)) {
-			try {
-				Map<String, Object> dataMap = (Map<String, Object>) JSON.deserializeUntyped(dataJson);
-				data.subject = (String) dataMap.get('subject');
-				data.priority = (String) dataMap.get('priority');
-				data.daysFromNow = (Integer) dataMap.get('daysFromNow');
-			} catch (Exception e) {
-				// Use defaults if JSON parsing fails
-				System.debug('Failed to parse action data, using defaults: ' + e.getMessage());
-			}
-		}
-
-		return data;
-	}
-
-	private void handleInsertResults(
-		List<Database.SaveResult> results,
-		List<AsyncAction__c> actions,
-		AsyncActionProcessor__mdt settings
-	) {
-		for (Integer i = 0; i < results.size(); i++) {
-			Database.SaveResult result = results[i];
-			if (!result.isSuccess()) {
-				// Find the corresponding action and mark it as failed
-				AsyncAction__c failedAction = tasks?.get(i);
-				if (failedAction != null) {
-					String errorMsg = 'Task creation failed: ' + result.getErrors()[0].getMessage();
-					new AsyncActions.Failure(settings).fail(failedAction, errorMsg);
+		try {
+			// Collect account IDs
+			Set<Id> accountIds = new Set<Id>();
+			for (AsyncAction__c action : actions) {
+				if (action.RelatedRecordId__c != null) {
+					accountIds.add((Id) action.RelatedRecordId__c);
 				}
 			}
-		}
-	}
 
-	private AsyncAction__c findActionForTaskIndex(Integer taskIndex, List<AsyncAction__c> actions) {
-		// In this simple implementation, task order matches action order
-		// In more complex scenarios, you might need a more sophisticated mapping
-		Integer actionIndex = 0;
-		for (AsyncAction__c action : actions) {
-			if (action.Status__c == 'Completed') {
-				if (actionIndex == taskIndex) {
-					return action;
+			// Query accounts
+			Map<Id, Account> accountMap = new Map<Id, Account>(
+				[SELECT Id, Name, OwnerId FROM Account WHERE Id IN :accountIds]
+			);
+
+			// Create tasks
+			List<Task> tasksToInsert = new List<Task>();
+			for (AsyncAction__c action : actions) {
+				Id accountId = (Id) action.RelatedRecordId__c;
+				Account account = accountMap.get(accountId);
+
+				if (account != null) {
+					// Parse custom data with defaults
+					String subject = 'Follow up with ' + account.Name;
+					String priority = 'Normal';
+					Integer daysFromNow = 7;
+
+					if (String.isNotBlank(action.Data__c)) {
+						Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(action.Data__c);
+						subject = (String) data.get('subject') ?? subject;
+						priority = (String) data.get('priority') ?? priority;
+						daysFromNow = (Integer) data.get('daysFromNow') ?? daysFromNow;
+					}
+
+					// Create task
+					tasksToInsert.add(
+						new Task(
+							WhatId = account.Id,
+							OwnerId = account.OwnerId,
+							Subject = subject,
+							Priority = priority,
+							Status = 'Not Started',
+							ActivityDate = Date.today().addDays(daysFromNow)
+						)
+					);
+
+					action.Status__c = 'Completed';
 				}
-				actionIndex++;
 			}
-		}
-		return null;
-	}
 
-	// Helper class for parsing custom data
-	private class FollowupData {
-		public String subject = 'Follow up with {AccountName}';
-		public String priority = 'Normal';
-		public Integer daysFromNow = 7;
+			// Insert tasks
+			if (!tasksToInsert.isEmpty()) {
+				insert tasksToInsert;
+			}
+		} catch (Exception e) {
+			new AsyncActions.Failure(settings).fail(actions, e);
+		}
 	}
 }
 ```
