@@ -27,8 +27,8 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "ver 3.1.0",
-			"versionNumber": "3.1.0.NEXT",
+			"versionName": "ver 3.2.1",
+			"versionNumber": "3.2.1.NEXT",
 			"versionDescription": "Added new Data & Description AsyncActionProcessor__mdt fields"
 		}
 	],
