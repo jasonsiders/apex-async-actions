@@ -125,15 +125,15 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 All processor behavior is controlled through `AsyncActionProcessor__mdt` records:
 
-| Field            | Purpose                               |
-| ---------------- | ------------------------------------- |
-| `Processor\*\*   | Class name or Flow API name           |
-| `ProcessorType`  | "Apex" or "Flow"                      |
-| `Enabled\*\*     | Controls whether the processor runs   |
-| `BatchSize\*\*   | Number of actions per execution       |
-| `Retries\*\*     | Default retry count for new actions   |
-| `RetryInterval`  | Minutes between retry attempts        |
-| `RunOnInsert\*\* | Auto-process when actions are created |
+| Field           | Purpose                               |
+| --------------- | ------------------------------------- |
+| `Processor`     | Class name or Flow API name           |
+| `ProcessorType` | "Apex" or "Flow"                      |
+| `Enabled`       | Controls whether the processor runs   |
+| `BatchSize`     | Number of actions per execution       |
+| `Retries`       | Default retry count for new actions   |
+| `RetryInterval` | Minutes between retry attempts        |
+| `RunOnInsert`   | Auto-process when actions are created |
 
 ## Job Execution Patterns
 
