@@ -17,6 +17,24 @@ private class AsyncActionScheduledJobUtilsTest {
 		Assert.areEqual(0, AsyncActionScheduledJobUtilsTest.getJobs(jobName)?.size(), 'Wrong # of remaining jobs');
 	}
 
+	@IsTest
+	static void shouldAbortScheduledJobByCronTrigger() {
+		String jobName = 'Test_Job_456';
+		System.schedule(jobName, '0 0 * * * ?', new MySchedulable());
+		CronTrigger ct = [
+			SELECT Id, CronJobDetail.Name
+			FROM CronTrigger
+			WHERE CronJobDetail.Name = :jobName
+			WITH SYSTEM_MODE
+		];
+
+		Test.startTest();
+		AsyncActionScheduledJobUtils.abortJobs(ct);
+		Test.stopTest();
+
+		Assert.areEqual(0, AsyncActionScheduledJobUtilsTest.getJobs(jobName)?.size(), 'Wrong # of remaining jobs');
+	}
+
 	/**
 	 * @description Helper method to retrieve AsyncApexJob records by job name
 	 * @param jobName The name of the scheduled job to search for

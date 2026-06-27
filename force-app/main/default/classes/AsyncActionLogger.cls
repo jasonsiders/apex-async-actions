@@ -43,12 +43,15 @@ global abstract class AsyncActionLogger {
 		try {
 			AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
 			adapterName = settings?.LoggerPlugin__c;
-			AsyncActionLogger.Adapter adapter = (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
-			return adapter ?? new AsyncActionLogger.DefaultLogger();
+			if (String.isNotBlank(adapterName)) {
+				return (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance() ??
+					new AsyncActionLogger.DefaultLogger();
+			}
 		} catch (Exception error) {
 			System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
 			return new AsyncActionLogger.DefaultLogger();
 		}
+		return new AsyncActionLogger.DefaultLogger();
 	}
 
 	// **** INNER **** //
