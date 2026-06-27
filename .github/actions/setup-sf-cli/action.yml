@@ -15,7 +15,8 @@ runs:
               node-version: "22"
 
         - name: Install SF CLI
-          uses: patrykacc/sf-cli-setup@v1.1.0
+          shell: bash
+          run: npm install -g @salesforce/cli
 
         - name: Cache SF CLI Plugins
           if: ${{ inputs.install-plugins == 'true' }}
