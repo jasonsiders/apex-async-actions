@@ -70,6 +70,21 @@ global without sharing class AsyncActionLauncher {
 	}
 
 	/**
+	 * @description Gets the delay in minutes before enqueueing a job for the given processor.
+	 * Processor-level setting takes priority over global setting; defaults to 0.
+	 * @param settings The processor configuration to check for delay setting
+	 * @return Delay in minutes to use when enqueueing the job
+	 */
+	@TestVisible
+	private Integer getDelayInMinutes(AsyncActionProcessor__mdt settings) {
+		if (settings?.DelayInMinutes__c != null) {
+			return settings.DelayInMinutes__c.intValue();
+		}
+		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionGlobalSettingService.getSettings();
+		return (globalSettings?.DelayInMinutes__c)?.intValue() ?? 0;
+	}
+
+	/**
 	 * @description Gets the maximum stack depth value from processor settings
 	 * @param settings The processor configuration containing stack depth setting
 	 * @return Maximum stack depth value, defaults to 5 if not specified
@@ -83,7 +98,7 @@ global without sharing class AsyncActionLauncher {
 	/**
 	 * @description Initializes AsyncOptions for enqueueing AsyncActionJob
 	 * @param settings The processor configuration to configure async options for
-	 * @return Configured AsyncOptions with duplicate signature and stack depth
+	 * @return Configured AsyncOptions with duplicate signature, stack depth, and delay
 	 */
 	private System.AsyncOptions initAsyncOptions(AsyncActionProcessor__mdt settings) {
 		// This method defines the AsyncOptions used to enqueue an AsyncActionJob
@@ -92,6 +107,8 @@ global without sharing class AsyncActionLauncher {
 		options.DuplicateSignature = this.buildDuplicateSignature(settings);
 		// Set a stack depth using the value defined in the job settings
 		options.MaximumQueueableStackDepth = this.getMaxStackDepth(settings);
+		// Always specify a delay to avoid being affected by org-wide default delay settings
+		options.minimumQueueableDelayInMinutes = this.getDelayInMinutes(settings);
 		return options;
 	}
 

@@ -114,6 +114,48 @@ private class AsyncActionLauncherTest {
 		Assert.isNull(jobId2, 'Duplicate job was launched');
 	}
 
+	@IsTest
+	static void shouldDefaultToZeroDelay() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		// No DelayInMinutes__c set on processor or global settings
+
+		Test.startTest();
+		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
+		Test.stopTest();
+
+		Assert.areEqual(0, delay, 'Expected default delay of 0');
+	}
+
+	@IsTest
+	static void shouldUseProcessorLevelDelay() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.DelayInMinutes__c = 5;
+		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionTestUtils.initGlobalSettings();
+		globalSettings.DelayInMinutes__c = 10;
+		AsyncActionTestUtils.mockGlobalSettings(globalSettings);
+
+		Test.startTest();
+		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
+		Test.stopTest();
+
+		Assert.areEqual(5, delay, 'Expected processor-level delay of 5, not global');
+	}
+
+	@IsTest
+	static void shouldFallBackToGlobalDelay() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		// No processor-level DelayInMinutes__c
+		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionTestUtils.initGlobalSettings();
+		globalSettings.DelayInMinutes__c = 3;
+		AsyncActionTestUtils.mockGlobalSettings(globalSettings);
+
+		Test.startTest();
+		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
+		Test.stopTest();
+
+		Assert.areEqual(3, delay, 'Expected global-level delay of 3');
+	}
+
 	// **** HELPER **** //
 	private static Integer getNumAsyncJobs() {
 		return [

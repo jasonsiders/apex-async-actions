@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DelayInMinutes__c</fullName>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText>The default number of minutes to delay before enqueueing new jobs across all processors.
+Individual processors may override this via AsyncActionProcessor__mdt.DelayInMinutes__c.
+Set to 0 to enqueue immediately, bypassing any org-wide default delay.
+When left blank, defaults to 0.</inlineHelpText>
+    <label>Delay (Minutes)</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>
