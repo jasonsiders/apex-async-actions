@@ -30,6 +30,19 @@ Async Action Processor records define:
 | `Data__c`           | Data             | Long Text Area | No       | -       | Custom configuration data for the processor                         |
 | `Description__c`    | Description      | Long Text Area | No       | -       | Documentation about the processor's purpose                         |
 
+## Delay Configuration
+
+The `DelayInMinutes__c` field controls the delay before enqueueing queueable jobs for this specific processor:
+
+- **Default**: When blank, inherits the value from `AsyncActionGlobalSetting__mdt.DelayInMinutes__c`
+- **Override**: Set to `0` for immediate execution, or a specific number of minutes to delay
+- **Purpose**: Ensures the processor controls its own timing instead of inheriting org-wide defaults
+
+This setting is particularly useful when:
+- Your org has configured org-wide default delays for queueable jobs
+- You need different timing behavior for different processors
+- You want to prioritize certain processors over others
+
 ## Best Practices
 
 -   **Start with larger batch sizes (200+)** - Begin with higher batch sizes and adjust based on processing requirements
@@ -38,6 +51,7 @@ Async Action Processor records define:
 -   **Consider Complexity** - Reduce batch size for processor-intensive operations
 -   **Appropriate Retries** - Set retry counts based on expected failure patterns
 -   **Reasonable Intervals** - Allow enough time for transient issues to resolve
+-   **Delay Configuration** - Set to `0` for time-sensitive processors, or use a delay for lower-priority background work
 
 ## Related Objects
 
