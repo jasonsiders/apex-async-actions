@@ -6,10 +6,12 @@
 // Global modifier and debug statements are required for subscriber extensibility; empty save() block is an intentional no-op
 @SuppressWarnings('PMD.AvoidDebugStatements,PMD.AvoidGlobalModifier,PMD.EmptyStatementBlock')
 global abstract class AsyncActionLogger {
+	/** @description Shared fallback so DefaultLogger is only constructed once regardless of which code path triggers it **/
+	private static final AsyncActionLogger.Adapter DEFAULT_LOGGER = new AsyncActionLogger.DefaultLogger();
+
 	/** @description Cached once at class load to avoid repeated metadata queries per transaction **/
 	@TestVisible
-	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance() ??
-		new AsyncActionLogger.DefaultLogger();
+	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance() ?? DEFAULT_LOGGER;
 
 	/**
 	 * @description Delegates to the configured adapter so call sites are decoupled from the adapter implementation
@@ -37,12 +39,12 @@ global abstract class AsyncActionLogger {
 			AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
 			adapterName = settings?.LoggerPlugin__c;
 			AsyncActionLogger.Adapter adapter = String.isBlank(adapterName)
-				? new AsyncActionLogger.DefaultLogger()
+				? DEFAULT_LOGGER
 				: (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
-			return adapter ?? new AsyncActionLogger.DefaultLogger();
+			return adapter ?? DEFAULT_LOGGER;
 		} catch (Exception error) {
 			System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
-			return new AsyncActionLogger.DefaultLogger();
+			return DEFAULT_LOGGER;
 		}
 	}
 
