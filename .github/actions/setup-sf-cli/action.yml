@@ -9,8 +9,14 @@ inputs:
 runs:
     using: "composite"
     steps:
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+              node-version: "20"
+
         - name: Install SF CLI
-          uses: patrykacc/sf-cli-setup@v1.1.0
+          shell: bash
+          run: npm install -g @salesforce/cli@2.109.0
 
         - name: Cache SF CLI Plugins
           if: ${{ inputs.install-plugins == 'true' }}

@@ -1,7 +1,10 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionScheduleEnforcerTest {
+	/** @description Cron expression firing nightly at 12:00 AM **/
 	private static final String NIGHTLY_AT_MIDNIGHT = '0 0 0 * * ?';
+
+	/** @description Cron expression firing nightly at 1:00 AM; used to simulate a misconfigured job **/
 	private static final String NIGHTLY_AT_1AM = '0 0 1 * * ?';
 
 	@IsTest
@@ -131,21 +134,24 @@ private class AsyncActionScheduleEnforcerTest {
 		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.CronExpression__c = NIGHTLY_AT_MIDNIGHT;
 		jobSetting.Type__c = 'Custom';
-		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, jobSetting?.CronExpression__c);
+		Id cronTriggerId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(
+			jobSetting,
+			jobSetting?.CronExpression__c
+		);
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(jobId, job?.CronTriggerId, 'Did not use pre-existing job');
+		Assert.areEqual(cronTriggerId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
 	@IsTest
 	static void shouldDoNothingIfValidHourlyJobExists() {
 		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
 		jobSetting.Type__c = 'Hourly';
-		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(
+		Id cronTriggerId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(
 			jobSetting,
 			AsyncActionScheduledJobUtils.HOURLY_CRON_EXP
 		);
@@ -155,7 +161,7 @@ private class AsyncActionScheduleEnforcerTest {
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(jobId, job?.CronTriggerId, 'Did not use pre-existing job');
+		Assert.areEqual(cronTriggerId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
 	@IsTest
@@ -166,17 +172,21 @@ private class AsyncActionScheduleEnforcerTest {
 		Integer interval = jobSetting?.Interval__c?.intValue();
 		Integer nextMin = DateTime.now().addMinutes(interval)?.minute();
 		String cron = '0 ' + nextMin + ' * * * ?';
-		Id jobId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, cron);
+		Id cronTriggerId = AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, cron);
 
 		new AsyncActionScheduleEnforcer().enforce();
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
 		AsyncApexJob job = jobs?.get(0);
-		Assert.areEqual(jobId, job?.CronTriggerId, 'Did not use pre-existing job');
+		Assert.areEqual(cronTriggerId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
 	// **** HELPER **** //
+	/**
+	 * @description Returns all AsyncApexJob records for AsyncActionSchedulable that are currently active
+	 * @return List of active scheduled AsyncApexJob records
+	 */
 	static List<AsyncApexJob> getActiveScheduledJobs() {
 		return [
 			SELECT
@@ -195,14 +205,22 @@ private class AsyncActionScheduleEnforcerTest {
 		];
 	}
 
+	/**
+	 * @description Provisions an active scheduled job setting; AsyncActionTestUtils defaults to inactive
+	 * @return An enabled AsyncActionScheduledJob__mdt record
+	 */
 	static AsyncActionScheduledJob__mdt initActiveJobSettings() {
-		// The AsyncActionTestUtils initializes inactive scheduled job settings by default
-		// Use this method to automatically provision *active* scheduled jobs
 		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSetting.Enabled__c = true;
 		return jobSetting;
 	}
 
+	/**
+	 * @description Schedules a job using the framework naming convention so enforce() will recognize it
+	 * @param jobSetting The scheduled job settings to use for naming
+	 * @param cron The cron expression to schedule the job with
+	 * @return The Id of the created CronTrigger
+	 */
 	static Id scheduleExistingJob(AsyncActionScheduledJob__mdt jobSetting, String cron) {
 		String jobName = AsyncActionScheduledJobUtils.SCHEDULED_JOB_PREFIX + jobSetting?.DeveloperName;
 		return System.schedule(jobName, cron, new AsyncActionSchedulable(jobSetting));
