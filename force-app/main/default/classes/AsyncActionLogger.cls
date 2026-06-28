@@ -38,9 +38,9 @@ global abstract class AsyncActionLogger {
 		try {
 			AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
 			adapterName = settings?.LoggerPlugin__c;
-			AsyncActionLogger.Adapter adapter = String.isBlank(adapterName)
-				? DEFAULT_LOGGER
-				: (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance();
+			AsyncActionLogger.Adapter adapter = String.isNotBlank(adapterName)
+				? (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance()
+				: DEFAULT_LOGGER;
 			return adapter ?? DEFAULT_LOGGER;
 		} catch (Exception error) {
 			System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
