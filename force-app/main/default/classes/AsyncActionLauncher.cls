@@ -73,14 +73,8 @@ global without sharing class AsyncActionLauncher {
 	 */
 	@TestVisible
 	private Integer getDelayInMinutes(AsyncActionProcessor__mdt settings) {
-		Integer delay;
-		if (settings?.DelayInMinutes__c != null) {
-			delay = settings.DelayInMinutes__c.intValue();
-		} else {
-			AsyncActionGlobalSetting__mdt globalSettings = AsyncActionGlobalSettingService.getSettings();
-			delay = (globalSettings?.DelayInMinutes__c)?.intValue() ?? 0;
-		}
-		return delay;
+		Decimal delay = settings?.DelayInMinutes__c ?? AsyncActionGlobalSettingService.getSettings()?.DelayInMinutes__c;
+		return delay?.intValue() ?? 0;
 	}
 
 	/**
