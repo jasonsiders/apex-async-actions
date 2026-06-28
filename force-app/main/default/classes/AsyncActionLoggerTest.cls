@@ -50,6 +50,25 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
+	static void shouldUseDefaultLogAdapterIfNotAnAdapter() {
+		// Use a real class that exists but doesn't implement AsyncActionLogger.Adapter.
+		// Type.forName() will succeed and newInstance() will return an object, but the
+		// cast to Adapter throws a TypeException, which exercises the catch block in getInstance().
+		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		settings.LoggerPlugin__c = 'InvocableInitAsyncAction';
+
+		Test.startTest();
+		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
+		Test.stopTest();
+
+		Assert.isInstanceOfType(
+			logger,
+			AsyncActionLogger.DefaultLogger.class,
+			'Wrong adapter type: ' + AsyncActionLogger.INSTANCE
+		);
+	}
+
+	@IsTest
 	static void shouldUseDefualtLogAdapterIfNone() {
 		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		settings.LoggerPlugin__c = null;
