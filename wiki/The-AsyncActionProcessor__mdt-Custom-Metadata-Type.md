@@ -14,20 +14,21 @@ Async Action Processor records define:
 
 ## Field Reference
 
-| Field API Name     | Label           | Data Type      | Required | Default | Description                                            |
-| ------------------ | --------------- | -------------- | -------- | ------- | ------------------------------------------------------ | ------------------------- |
-| `DeveloperName`    | API Name        | Text(40)       | Yes      | -       | Unique identifier for the processor configuration      |
-| `MasterLabel`      | Label           | Text(40)       | Yes      | -       | Human-readable name for the processor                  |
-| `Processor__c`     | Processor       | Text(255)      | Yes      | -       | Fully qualified name of the Apex class or Flow         |
-| `ProcessorType__c` | Processor Type  | Picklist       | Yes      | Apex    | Whether the processor is implemented in Apex or Flow   |
-| `Enabled__c`       | Enabled         | Checkbox       | No       | true    | Controls whether this processor can execute            |
-| `BatchSize__c`     | Batch Size      | Number(18,0)   | Yes      | 200     | Number of AsyncAction records to process per execution |
-| `Retries__c`       | Retries         | Number(18,0)   | No       | 0       | Default number of retry attempts for new actions       |
-| `RetryInterval__c` | Retry Interval  | Number(18,0)   | No       | 5       | Minutes to wait between retry attempts                 |
-| `RunOnInsert__c`   | Run On Insert   | Checkbox       | No       | false   | Whether to automatically process actions when inserted |
-| `MaxStackDepth__c` | Max Stack Depth | Number(18,0)   | No       | 1       | Maximum recursion depth for chained processing         |
-| `Data__c`          | Data            | Long Text Area | No       | -       | Custom configuration data for the processor            |
-| `Description__c`   | Description     | Long Text Area | No       | -       | Documentation about the processor's purpose            | Operational documentation |
+| Field API Name      | Label            | Data Type      | Required | Default | Description                                                         |
+| ------------------- | ---------------- | -------------- | -------- | ------- | ------------------------------------------------------------------- |
+| `DeveloperName`     | API Name         | Text(40)       | Yes      | -       | Unique identifier for the processor configuration                   |
+| `MasterLabel`       | Label            | Text(40)       | Yes      | -       | Human-readable name for the processor                               |
+| `Processor__c`      | Processor        | Text(255)      | Yes      | -       | Fully qualified name of the Apex class or Flow                      |
+| `ProcessorType__c`  | Processor Type   | Picklist       | Yes      | Apex    | Whether the processor is implemented in Apex or Flow                |
+| `Enabled__c`        | Enabled          | Checkbox       | No       | true    | Controls whether this processor can execute                         |
+| `BatchSize__c`      | Batch Size       | Number(18,0)   | Yes      | 200     | Number of AsyncAction records to process per execution              |
+| `Retries__c`        | Retries          | Number(18,0)   | No       | 0       | Default number of retry attempts for new actions                    |
+| `RetryInterval__c`  | Retry Interval   | Number(18,0)   | No       | 5       | Minutes to wait between retry attempts                              |
+| `RunOnInsert__c`    | Run On Insert    | Checkbox       | No       | false   | Whether to automatically process actions when inserted              |
+| `MaxStackDepth__c`  | Max Stack Depth  | Number(18,0)   | No       | 1       | Maximum recursion depth for chained processing                      |
+| `DelayInMinutes__c` | Delay In Minutes | Number(2,0)    | No       | -       | Override delay in minutes before enqueueing jobs (overrides global) |
+| `Data__c`           | Data             | Long Text Area | No       | -       | Custom configuration data for the processor                         |
+| `Description__c`    | Description      | Long Text Area | No       | -       | Documentation about the processor's purpose                         |
 
 ## Best Practices
 

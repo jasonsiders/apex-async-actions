@@ -2,11 +2,12 @@ The `AsyncActionGlobalSetting__mdt` custom metadata type defines package-wide be
 
 ## Field Reference
 
-| Field API Name    | Label         | Data Type | Required | Default | Description                                          |
-| ----------------- | ------------- | --------- | -------- | ------- | ---------------------------------------------------- |
-| `DeveloperName`   | API Name      | Text(40)  | Yes      | -       | Unique identifier for the global settings            |
-| `MasterLabel`     | Label         | Text(40)  | Yes      | -       | Human-readable name for the settings                 |
-| `LoggerPlugin__c` | Logger Plugin | Text(255) | No       | -       | Fully qualified name of custom logger implementation |
+| Field API Name      | Label            | Data Type   | Required | Default | Description                                          |
+| ------------------- | ---------------- | ----------- | -------- | ------- | ---------------------------------------------------- |
+| `DeveloperName`     | API Name         | Text(40)    | Yes      | -       | Unique identifier for the global settings            |
+| `MasterLabel`       | Label            | Text(40)    | Yes      | -       | Human-readable name for the settings                 |
+| `LoggerPlugin__c`   | Logger Plugin    | Text(255)   | No       | -       | Fully qualified name of custom logger implementation |
+| `DelayInMinutes__c` | Delay In Minutes | Number(2,0) | No       | 0       | Default delay in minutes before enqueueing jobs      |
 
 ## Configuration
 
