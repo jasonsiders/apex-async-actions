@@ -50,6 +50,22 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
+	static void shouldUseDefaultLogAdapterIfNotAnAdapter() {
+		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
+		settings.LoggerPlugin__c = 'InvocableInitAsyncAction';
+
+		Test.startTest();
+		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
+		Test.stopTest();
+
+		Assert.isInstanceOfType(
+			logger,
+			AsyncActionLogger.DefaultLogger.class,
+			'Wrong adapter type: ' + AsyncActionLogger.INSTANCE
+		);
+	}
+
+	@IsTest
 	static void shouldUseDefualtLogAdapterIfNone() {
 		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
 		settings.LoggerPlugin__c = null;
