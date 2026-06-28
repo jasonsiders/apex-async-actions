@@ -3,27 +3,48 @@
  * Contains utilities for job management, scheduling, and cron expression handling.
  */
 public without sharing abstract class AsyncActionScheduledJobUtils {
-	/**
-	 * @description Hourly cron expression constant
-	 */
+	// **** CONSTANTS **** //
+
+	/** @description Standard hourly cron expression; used as the default for hourly job types **/
 	public static final String HOURLY_CRON_EXP = '0 0 * * * ?';
 
-	/**
-	 * @description Prefix used for scheduled job names
-	 */
+	/** @description Prefix applied to all scheduled job names to distinguish framework-owned jobs **/
 	public static final String SCHEDULED_JOB_PREFIX = AsyncActionSchedulable.class?.getName() + ': ';
 
-	/**
-	 * @description Default interval in minutes for scheduled jobs
-	 */
+	/** @description Fallback interval in minutes when none is configured **/
 	private static final Integer DEFAULT_INTERVAL = 60;
+
+	// **** PUBLIC **** //
+
+	/**
+	 * @description Aborts the given CronTriggers.
+	 * @param cronTriggers List of CronTrigger records to abort
+	 */
+	public static void abortJobs(List<CronTrigger> cronTriggers) {
+		for (CronTrigger ct : cronTriggers) {
+			String jobName = ct?.CronJobDetail?.Name;
+			Id jobId = ct?.Id;
+			if (jobId != null) {
+				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
+				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+				System.abortJob(jobId);
+			}
+		}
+	}
+
+	/**
+	 * @description Aborts a single CronTrigger.
+	 * @param cronTrigger The CronTrigger record to abort
+	 */
+	public static void abortJobs(CronTrigger cronTrigger) {
+		AsyncActionScheduledJobUtils.abortJobs(new List<CronTrigger>{ cronTrigger });
+	}
 
 	/**
 	 * @description Aborts the given AsyncApexJobs.
 	 * @param jobs List of AsyncApexJob records to abort
 	 */
 	public static void abortJobs(List<AsyncApexJob> jobs) {
-		// Aborts the given AsyncApexJobs
 		for (AsyncApexJob job : jobs) {
 			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
 			Id jobId = job?.CronTriggerId;
@@ -49,7 +70,6 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	 * @return The unique job name with prefix
 	 */
 	public static String getJobName(AsyncActionScheduledJob__mdt jobSettings) {
-		// Returns the unique name of the current scheduled job
 		return SCHEDULED_JOB_PREFIX + jobSettings?.DeveloperName;
 	}
 
@@ -59,7 +79,6 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	 * @return ID of the scheduled job, or null if the job is disabled
 	 */
 	public static Id scheduleNewJob(AsyncActionScheduledJob__mdt jobSettings) {
-		// Schedules a new instance of the current job, unless it's disabled
 		if (jobSettings?.Enabled__c == true) {
 			String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
 			String cronExp = AsyncActionScheduledJobUtils.getCronExpression(jobSettings);
@@ -75,22 +94,20 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 		}
 	}
 
+	// **** PRIVATE **** //
+
 	/**
-	 * @description Generates a cron expression based on the scheduled job's configuration
+	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
 	 * @param jobSettings The scheduled job configuration metadata
 	 * @return The generated cron expression
 	 */
 	private static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
-		// Generate a Cron Expression based on the current scheduled job's configuration
 		if (jobSettings?.Type__c == 'Custom') {
-			// Use the provided Cron Expression
 			return jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
 		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
-			// Run the job every X minutes, starting X minutes from now
-			Integer interval = jobSettings?.Interval__c?.intValue() ?? 60;
+			Integer interval = jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
 			return new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
 		} else {
-			// Default to Hourly
 			return HOURLY_CRON_EXP;
 		}
 	}
@@ -100,42 +117,29 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	 * @description Internal class for manipulating cron expressions
 	 */
 	private class Cron {
-		/**
-		 * @description Seconds component of cron expression
-		 */
+		/** @description Seconds component **/
 		private String seconds;
 
-		/**
-		 * @description Minutes component of cron expression
-		 */
+		/** @description Minutes component; mutated by minutesFromNow **/
 		private String minutes;
 
-		/**
-		 * @description Hours component of cron expression
-		 */
+		/** @description Hours component **/
 		private String hours;
 
-		/**
-		 * @description Day of month component of cron expression
-		 */
+		/** @description Day-of-month component **/
 		private String dayOfMonth;
 
-		/**
-		 * @description Month component of cron expression
-		 */
+		/** @description Month component **/
 		private String month;
 
-		/**
-		 * @description Day of week component of cron expression
-		 */
+		/** @description Day-of-week component **/
 		private String dayOfWeek;
 
 		/**
-		 * @description Constructor that parses a cron expression string
-		 * @param exp The cron expression string to parse
+		 * @description Parses a valid 6-part Salesforce cron expression into its components
+		 * @param exp A valid Salesforce cron string (6 space-separated parts)
 		 */
 		private Cron(String exp) {
-			// Expsting exp to be a valid Cron string
 			List<String> parts = exp?.split(' ');
 			this.seconds = parts?.get(0);
 			this.minutes = parts?.get(1);
@@ -162,12 +166,11 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 		}
 
 		/**
-		 * @description Modifies the minutes component to be X minutes from now
-		 * @param minsInFuture Number of minutes in the future to set
+		 * @description Shifts the minutes component to fire X minutes from now
+		 * @param minsInFuture Number of minutes in the future
 		 * @return This Cron instance for method chaining
 		 */
 		public Cron minutesFromNow(Integer minsInFuture) {
-			// Alter the minutes value to be X minutes from now
 			Integer newMins = DateTime.now().addMinutes(minsInFuture).minute();
 			this.minutes = String.valueOf(newMins);
 			return this;
