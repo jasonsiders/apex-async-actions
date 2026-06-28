@@ -1,3 +1,4 @@
+/** @description Tests for AsyncActionLauncher covering launch conditions, duplicate prevention, and delay resolution **/
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionLauncherTest {
@@ -33,7 +34,7 @@ private class AsyncActionLauncherTest {
 
 	@IsTest
 	static void shouldNotLaunchInvalidJob() {
-		Type fakeProcessorType = Account.class; // Obv not a real processor!
+		Type fakeProcessorType = Account.class;
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(fakeProcessorType);
 		AsyncAction__c action = AsyncActions.initAction(settings);
@@ -71,13 +72,11 @@ private class AsyncActionLauncherTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 
 		Test.startTest();
-		// Spin up a bunch of queueable jobs, until the limit is met
 		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
 		for (Integer i = 0; i < Limits.getLimitQueueableJobs(); i++) {
 			AsyncActionJob job = new AsyncActionJob(factory);
 			System.enqueueJob(job);
 		}
-		// NOW try to launch the job
 		Id jobId = new AsyncActionLauncher()?.launch(settings);
 		Test.stopTest();
 
@@ -117,7 +116,6 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldDefaultToZeroDelay() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		// No DelayInMinutes__c set on processor or global settings
 
 		Test.startTest();
 		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
@@ -144,7 +142,6 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldFallBackToGlobalDelay() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		// No processor-level DelayInMinutes__c
 		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionTestUtils.initGlobalSettings();
 		globalSettings.DelayInMinutes__c = 3;
 		AsyncActionTestUtils.mockGlobalSettings(globalSettings);
@@ -156,7 +153,7 @@ private class AsyncActionLauncherTest {
 		Assert.areEqual(3, delay, 'Expected global-level delay of 3');
 	}
 
-	// **** HELPER **** //
+	// **** PRIVATE **** //
 	private static Integer getNumAsyncJobs() {
 		return [
 			SELECT COUNT()

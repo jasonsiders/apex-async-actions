@@ -1,10 +1,8 @@
-/**
- * @description Responsible for constructing and launching AsyncActionJob queueables.
- * Its `launch` methods will result in a new queueable job if the provided AsyncActionProcessor__mdt object
- * is active, valid, and has pending AsyncAction__c records associated to it.
- */
+/** @description Responsible for constructing and launching AsyncActionJob queueables. Its `launch` methods will result in a new queueable job if the provided AsyncActionProcessor__mdt is active, valid, and has pending AsyncAction__c records. **/
+// Unlocked package public API requires global visibility for external subscriber access
 @SuppressWarnings('PMD.AvoidGlobalModifier')
 global without sharing class AsyncActionLauncher {
+	// **** PUBLIC **** //
 	/**
 	 * @description Launches AsyncActionJob queueables for each processor that has pending actions.
 	 * @param settingsList List of processor configurations to check for pending actions
@@ -46,8 +44,7 @@ global without sharing class AsyncActionLauncher {
 	 * @return A QueueableDuplicateSignature based on the processor's developer name
 	 */
 	private System.QueueableDuplicateSignature buildDuplicateSignature(AsyncActionProcessor__mdt settings) {
-		// Build a QueueableDuplicateSigntuare to prevent launching duplicate Queueable jobs
-		// Note: Max size of QueueableDuplicateSignature is 32 bytes; hash the processor value to prevent exceeding this value
+		// Max size of QueueableDuplicateSignature is 32 bytes; hash the processor name to stay within that limit
 		Blob hashBlob = Crypto.generateDigest('SHA-256', Blob.valueOf(settings?.DeveloperName));
 		String hashHex = EncodingUtil.convertToHex(hashBlob);
 		String hashedSignature = hashHex?.substring(0, 32);
@@ -60,7 +57,6 @@ global without sharing class AsyncActionLauncher {
 	 * @return Set of developer names from the processor configurations
 	 */
 	private Set<String> extractDeveloperNamesFrom(List<AsyncActionProcessor__mdt> settingsList) {
-		// Extract the DeveloperName from the
 		Set<String> results = new Set<String>{};
 		for (AsyncActionProcessor__mdt settings : settingsList) {
 			String developerName = settings?.DeveloperName;
@@ -77,11 +73,14 @@ global without sharing class AsyncActionLauncher {
 	 */
 	@TestVisible
 	private Integer getDelayInMinutes(AsyncActionProcessor__mdt settings) {
+		Integer delay;
 		if (settings?.DelayInMinutes__c != null) {
-			return settings.DelayInMinutes__c.intValue();
+			delay = settings.DelayInMinutes__c.intValue();
+		} else {
+			AsyncActionGlobalSetting__mdt globalSettings = AsyncActionGlobalSettingService.getSettings();
+			delay = (globalSettings?.DelayInMinutes__c)?.intValue() ?? 0;
 		}
-		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionGlobalSettingService.getSettings();
-		return (globalSettings?.DelayInMinutes__c)?.intValue() ?? 0;
+		return delay;
 	}
 
 	/**
@@ -90,8 +89,7 @@ global without sharing class AsyncActionLauncher {
 	 * @return Maximum stack depth value, defaults to 5 if not specified
 	 */
 	private Integer getMaxStackDepth(AsyncActionProcessor__mdt settings) {
-		// Returns the maximum stack depth value defined in the settings
-		// Defaults to 5 if none found; this matches the current Queueable defaults
+		// Defaults to 5 to match the Salesforce Queueable platform default
 		return (settings?.MaxStackDepth__c)?.intValue() ?? 5;
 	}
 
@@ -101,13 +99,11 @@ global without sharing class AsyncActionLauncher {
 	 * @return Configured AsyncOptions with duplicate signature, stack depth, and delay
 	 */
 	private System.AsyncOptions initAsyncOptions(AsyncActionProcessor__mdt settings) {
-		// This method defines the AsyncOptions used to enqueue an AsyncActionJob
 		System.AsyncOptions options = new System.AsyncOptions();
-		// Use QueueableDuplicateSignature to prevent multiple instances of the same processor job
+		// DuplicateSignature prevents multiple instances of the same processor from running concurrently
 		options.DuplicateSignature = this.buildDuplicateSignature(settings);
-		// Set a stack depth using the value defined in the job settings
 		options.MaximumQueueableStackDepth = this.getMaxStackDepth(settings);
-		// Always specify a delay to avoid being affected by org-wide default delay settings
+		// Always specify a delay to avoid being buffered by org-wide default delay settings
 		options.minimumQueueableDelayInMinutes = this.getDelayInMinutes(settings);
 		return options;
 	}
@@ -118,18 +114,14 @@ global without sharing class AsyncActionLauncher {
 	 * @return ID of the launched job, or null if launch failed
 	 */
 	private Id launchJobToProcess(String processorName) {
-		// The main/underlying processing method; attempts to launch an AsyncActionJob for the specified processor
 		try {
 			AsyncActionProcessor__mdt settings = AsyncActionProcessorService.get(processorName);
-			// Check that the job is active & valid, and that a queueable can be launched
 			this.validateQueueableLimits();
 			this.validateProcessorSettings(settings);
-			// Construct and launch the job
 			System.AsyncOptions options = this.initAsyncOptions(settings);
 			AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
 			AsyncActionJob job = new AsyncActionJob(factory);
 			Id jobId = System.enqueueJob(job, options);
-			// Inspect and return the resulting jobId
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, processorName + ': launch() -> ' + jobId);
 			return jobId;
 		} catch (Exception error) {
@@ -145,7 +137,6 @@ global without sharing class AsyncActionLauncher {
 	 * @return List of PendingAction objects representing processors with pending work
 	 */
 	private List<PendingAction> queryPendingActions(List<AsyncActionProcessor__mdt> settingsList) {
-		// Retrieves a list of processors w/open actions, in FIFO order
 		List<AggregateResult> results = [
 			SELECT ProcessorName__c processorName
 			FROM AsyncAction__c
@@ -158,8 +149,8 @@ global without sharing class AsyncActionLauncher {
 			HAVING COUNT(Id) > 0
 			ORDER BY MAX(NextEligibleAt__c) ASC // first in, first out!
 		];
-		// Convert & return the query results in a common format
-		return (List<PendingAction>) JSON.deserialize(JSON.serialize(results), List<PendingAction>.class);
+		String serialized = JSON.serialize(results);
+		return (List<PendingAction>) JSON.deserialize(serialized, List<PendingAction>.class);
 	}
 
 	/**
@@ -167,31 +158,22 @@ global without sharing class AsyncActionLauncher {
 	 * @param settings The processor configuration to validate
 	 */
 	private void validateProcessorSettings(AsyncActionProcessor__mdt settings) {
-		// Throws an exception if the current job is disabled
 		if (settings?.Enabled__c != true) {
 			throw new System.AsyncException(settings?.DeveloperName + ' is disabled');
 		}
 	}
 
-	/**
-	 * @description Validates that queueable job limits have not been reached
-	 */
+	/** @description Validates that queueable job limits have not been reached **/
 	private void validateQueueableLimits() {
-		// Throws an exception if Queueable limits have been reached
 		if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
 			throw new System.AsyncException('Reached Queueable job limit: ' + Limits.getQueueableJobs());
 		}
 	}
 
 	// **** INNER **** //
-	/**
-	 * @description Factory class used to construct AsyncActionJob instances.
-	 * This pattern forces callers to use the `launch` methods to create & launch jobs.
-	 */
+	/** @description Factory class used to construct AsyncActionJob instances. Callers must use the `launch` methods rather than constructing jobs directly. **/
 	public class Factory {
-		/**
-		 * @description The processor settings associated with this factory
-		 */
+		/** @description The processor settings associated with this factory **/
 		private AsyncActionProcessor__mdt settings;
 
 		/**
@@ -212,14 +194,9 @@ global without sharing class AsyncActionLauncher {
 		}
 	}
 
-	/**
-	 * @description Used to store aggregate query results for processors with pending actions.
-	 * Its `processorName` points to an AsyncActionProcessor__mdt with related/open Async Actions.
-	 */
+	/** @description Wraps aggregate query results for processors with pending actions. Its `processorName` maps to an AsyncActionProcessor__mdt with open AsyncAction__c records. **/
 	private class PendingAction {
-		/**
-		 * @description Name of the processor that has pending actions
-		 */
+		/** @description Name of the processor that has pending actions **/
 		public String processorName { get; private set; }
 	}
 }
