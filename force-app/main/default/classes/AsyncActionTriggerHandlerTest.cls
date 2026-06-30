@@ -50,18 +50,10 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
-		String expectedJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE
-				ApexClass.Name = :AsyncActionSchedulable.class.getName()
-				AND CronTrigger.CronJobDetail.Name = :expectedJobName
-				AND Status = 'Queued'
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
-		Assert.isFalse(jobs?.isEmpty(), 'Enabled Scheduled Job was not created');
+		Assert.isFalse(
+			AsyncActionTriggerHandlerTest.getScheduledJobs(jobSettings)?.isEmpty(),
+			'Enabled Scheduled Job was not created'
+		);
 	}
 
 	@IsTest
@@ -74,18 +66,10 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
-		String expectedJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE
-				ApexClass.Name = :AsyncActionSchedulable.class.getName()
-				AND CronTrigger.CronJobDetail.Name = :expectedJobName
-				AND Status = 'Queued'
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
-		Assert.isTrue(jobs?.isEmpty(), 'Disabled Scheduled Job was created');
+		Assert.isTrue(
+			AsyncActionTriggerHandlerTest.getScheduledJobs(jobSettings)?.isEmpty(),
+			'Disabled Scheduled Job was created'
+		);
 	}
 
 	@IsTest
@@ -130,5 +114,20 @@ private class AsyncActionTriggerHandlerTest {
 
 		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];
 		Assert.areEqual(3, action?.Retries__c, 'Wrong # of Retries');
+	}
+
+	// **** HELPER **** //
+	static List<AsyncApexJob> getScheduledJobs(AsyncActionScheduledJob__mdt jobSettings) {
+		String expectedJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
+		return [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE
+				ApexClass.Name = :AsyncActionSchedulable.class.getName()
+				AND CronTrigger.CronJobDetail.Name = :expectedJobName
+				AND Status = 'Queued'
+			WITH SYSTEM_MODE
+			LIMIT 1
+		];
 	}
 }
