@@ -50,10 +50,14 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
+		String expectedJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionSchedulable.class.getName()
+			WHERE
+				ApexClass.Name = :AsyncActionSchedulable.class.getName()
+				AND CronTrigger.CronJobDetail.Name = :expectedJobName
+				AND Status = 'Queued'
 			WITH SYSTEM_MODE
 			LIMIT 1
 		];
@@ -70,10 +74,14 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
+		String expectedJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
 		List<AsyncApexJob> jobs = [
 			SELECT Id
 			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionSchedulable.class.getName()
+			WHERE
+				ApexClass.Name = :AsyncActionSchedulable.class.getName()
+				AND CronTrigger.CronJobDetail.Name = :expectedJobName
+				AND Status = 'Queued'
 			WITH SYSTEM_MODE
 			LIMIT 1
 		];
