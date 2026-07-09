@@ -4,7 +4,6 @@
  */
 public without sharing abstract class AsyncActionScheduledJobUtils {
 	// **** CONSTANTS **** //
-
 	/** @description Standard hourly cron expression; used as the default for hourly job types **/
 	public static final String HOURLY_CRON_EXP = '0 0 * * * ?';
 
@@ -13,6 +12,9 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 
 	/** @description Fallback interval in minutes when none is configured **/
 	private static final Integer DEFAULT_INTERVAL = 60;
+
+	@TestVisible
+	private static JobTerminator terminator = new JobTerminator();
 
 	// **** PUBLIC **** //
 
@@ -92,9 +94,6 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 
 	// **** PRIVATE **** //
 
-	@TestVisible
-	private static JobTerminator terminator = new JobTerminator();
-
 	/**
 	 * @description Attempts to abort a single job by its CronTrigger ID; logs and continues if the job is locked.
 	 * @param jobId The CronTrigger ID to abort
@@ -137,6 +136,10 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	 */
 	@TestVisible
 	private virtual class JobTerminator {
+		/**
+		 * @description Aborts the scheduled job identified by the given CronTrigger ID.
+		 * @param jobId The CronTrigger ID to abort
+		 */
 		public virtual void abortJob(Id jobId) {
 			System.abortJob(jobId);
 		}
