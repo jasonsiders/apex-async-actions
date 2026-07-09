@@ -103,6 +103,9 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
 			System.abortJob(jobId);
 		} catch (System.StringException error) {
+			// Note: System.abortJob() throws StringException (not a more specific type) when the
+			// target job is currently executing. A locked job will finish on its own and can
+			// be cleaned up on the next enforcement cycle — safe to log and continue.
 			String msg = 'Could not abort job (likely processing): ' + jobName + ' [' + jobId + ']';
 			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
 		}
