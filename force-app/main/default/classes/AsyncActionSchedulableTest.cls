@@ -121,11 +121,16 @@ private class AsyncActionSchedulableTest {
 	}
 
 	static Map<String, AsyncApexJob> getAsyncJobs() {
+		String schedulableJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
 		Map<String, AsyncApexJob> jobsByClassName = new Map<String, AsyncApexJob>{};
 		for (AsyncApexJob job : [
 			SELECT ApexClass.Name, JobType, CronTrigger.NextFireTime
 			FROM AsyncApexJob
-			WHERE ApexClass.Name IN (:AsyncActionJob.class.getName(), :AsyncActionSchedulable.class.getName())
+			WHERE
+				ApexClass.Name = :AsyncActionJob.class.getName()
+				OR (ApexClass.Name = :AsyncActionSchedulable.class.getName()
+				AND CronTrigger.CronJobDetail.Name = :schedulableJobName
+				AND Status = 'Queued')
 			WITH SYSTEM_MODE
 			LIMIT 50000
 		]) {
