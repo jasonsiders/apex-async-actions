@@ -25,9 +25,7 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String jobName = ct?.CronJobDetail?.Name;
 			Id jobId = ct?.Id;
 			if (jobId != null) {
-				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
-				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-				System.abortJob(jobId);
+				AsyncActionScheduledJobUtils.tryAbortJob(jobId, jobName);
 			}
 		}
 	}
@@ -49,9 +47,7 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
 			Id jobId = job?.CronTriggerId;
 			if (jobId != null) {
-				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
-				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-				System.abortJob(jobId);
+				AsyncActionScheduledJobUtils.tryAbortJob(jobId, jobName);
 			}
 		}
 	}
@@ -95,6 +91,22 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	}
 
 	// **** PRIVATE **** //
+
+	/**
+	 * @description Attempts to abort a single job by its CronTrigger ID; logs and continues if the job is locked.
+	 * @param jobId The CronTrigger ID to abort
+	 * @param jobName The job name used for log messages
+	 */
+	private static void tryAbortJob(Id jobId, String jobName) {
+		try {
+			String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+			System.abortJob(jobId);
+		} catch (System.StringException error) {
+			String msg = 'Could not abort job (likely processing): ' + jobName + ' [' + jobId + ']';
+			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
+		}
+	}
 
 	/**
 	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
