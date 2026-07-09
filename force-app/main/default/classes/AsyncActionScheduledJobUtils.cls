@@ -92,6 +92,9 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 
 	// **** PRIVATE **** //
 
+	@TestVisible
+	private static JobTerminator terminator = new JobTerminator();
+
 	/**
 	 * @description Attempts to abort a single job by its CronTrigger ID; logs and continues if the job is locked.
 	 * @param jobId The CronTrigger ID to abort
@@ -101,7 +104,7 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 		try {
 			String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-			System.abortJob(jobId);
+			terminator.abortJob(jobId);
 		} catch (System.StringException error) {
 			// Note: System.abortJob() throws StringException (not a more specific type) when the
 			// target job is currently executing. A locked job will finish on its own and can
@@ -128,6 +131,17 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	}
 
 	// **** INNER **** //
+
+	/**
+	 * @description Virtual wrapper around System.abortJob() to allow test substitution.
+	 */
+	@TestVisible
+	private virtual class JobTerminator {
+		public virtual void abortJob(Id jobId) {
+			System.abortJob(jobId);
+		}
+	}
+
 	/**
 	 * @description Internal class for manipulating cron expressions
 	 */
