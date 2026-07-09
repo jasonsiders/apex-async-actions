@@ -49,6 +49,27 @@ private class AsyncActionScheduledJobUtilsTest {
 		];
 	}
 
+	@IsTest
+	static void shouldHandleLockedJobGracefully() {
+		AsyncActionScheduledJobUtils.terminator = new LockedJobSimulator();
+		String jobName = 'Test_Job_789';
+		System.schedule(jobName, '0 0 * * * ?', new MySchedulable());
+		CronTrigger ct = [
+			SELECT Id, CronJobDetail.Name
+			FROM CronTrigger
+			WHERE CronJobDetail.Name = :jobName
+			WITH SYSTEM_MODE
+		];
+
+		Test.startTest();
+		AsyncActionScheduledJobUtils.abortJobs(ct);
+		Test.stopTest();
+
+		// The job should still exist because abort was blocked by the lock
+		List<AsyncApexJob> remainingJobs = AsyncActionScheduledJobUtilsTest.getJobs(jobName);
+		Assert.areEqual(1, remainingJobs?.size(), 'Locked job should not have been aborted');
+	}
+
 	// **** INNER **** //
 	/**
 	 * @description Test schedulable class used for testing scheduled job functionality
@@ -60,6 +81,15 @@ private class AsyncActionScheduledJobUtilsTest {
 		 */
 		public void execute(System.SchedulableContext context) {
 			// Nothing needed here
+		}
+	}
+
+	/**
+	 * @description Mock terminator that simulates a locked job by throwing StringException
+	 */
+	private class LockedJobSimulator extends AsyncActionScheduledJobUtils.JobTerminator {
+		public override void abortJob(Id jobId) {
+			throw new System.StringException('Job object is locked and currently processing.');
 		}
 	}
 }

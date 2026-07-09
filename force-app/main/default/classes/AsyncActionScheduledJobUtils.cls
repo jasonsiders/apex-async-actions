@@ -4,7 +4,6 @@
  */
 public without sharing abstract class AsyncActionScheduledJobUtils {
 	// **** CONSTANTS **** //
-
 	/** @description Standard hourly cron expression; used as the default for hourly job types **/
 	public static final String HOURLY_CRON_EXP = '0 0 * * * ?';
 
@@ -13,6 +12,9 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 
 	/** @description Fallback interval in minutes when none is configured **/
 	private static final Integer DEFAULT_INTERVAL = 60;
+
+	@TestVisible
+	private static JobTerminator terminator = new JobTerminator();
 
 	// **** PUBLIC **** //
 
@@ -25,9 +27,7 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String jobName = ct?.CronJobDetail?.Name;
 			Id jobId = ct?.Id;
 			if (jobId != null) {
-				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
-				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-				System.abortJob(jobId);
+				AsyncActionScheduledJobUtils.tryAbortJob(jobId, jobName);
 			}
 		}
 	}
@@ -49,9 +49,7 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String jobName = job?.CronTrigger?.CronJobDetail?.Name;
 			Id jobId = job?.CronTriggerId;
 			if (jobId != null) {
-				String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
-				AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-				System.abortJob(jobId);
+				AsyncActionScheduledJobUtils.tryAbortJob(jobId, jobName);
 			}
 		}
 	}
@@ -97,6 +95,25 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	// **** PRIVATE **** //
 
 	/**
+	 * @description Attempts to abort a single job by its CronTrigger ID; logs and continues if the job is locked.
+	 * @param jobId The CronTrigger ID to abort
+	 * @param jobName The job name used for log messages
+	 */
+	private static void tryAbortJob(Id jobId, String jobName) {
+		try {
+			String msg = 'Aborting job: ' + jobName + ' [' + jobId + ']';
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+			terminator.abortJob(jobId);
+		} catch (System.StringException error) {
+			// Note: System.abortJob() throws StringException (not a more specific type) when the
+			// target job is currently executing. A locked job will finish on its own and can
+			// be cleaned up on the next enforcement cycle — safe to log and continue.
+			String msg = 'Could not abort job (likely processing): ' + jobName + ' [' + jobId + ']';
+			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
+		}
+	}
+
+	/**
 	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
 	 * @param jobSettings The scheduled job configuration metadata
 	 * @return The generated cron expression
@@ -113,6 +130,21 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	}
 
 	// **** INNER **** //
+
+	/**
+	 * @description Virtual wrapper around System.abortJob() to allow test substitution.
+	 */
+	@TestVisible
+	private virtual class JobTerminator {
+		/**
+		 * @description Aborts the scheduled job identified by the given CronTrigger ID.
+		 * @param jobId The CronTrigger ID to abort
+		 */
+		public virtual void abortJob(Id jobId) {
+			System.abortJob(jobId);
+		}
+	}
+
 	/**
 	 * @description Internal class for manipulating cron expressions
 	 */

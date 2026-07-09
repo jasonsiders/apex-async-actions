@@ -1,3 +1,7 @@
+rules:
+    regex:
+        NoMixedIndentation:
+            disabled: true
 engines:
     eslint:
         disable_engine: true
