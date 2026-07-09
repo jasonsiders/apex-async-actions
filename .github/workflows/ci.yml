@@ -47,6 +47,7 @@ jobs:
                   install-plugins: "true"
 
             - name: Get Changed Files
+              id: get-changes
               run: |
                   # Ensure this check only runs against changed files in the current PR; not the entire codebase
                   set -euo pipefail
@@ -54,9 +55,16 @@ jobs:
                   sf sgd source delta --generate-delta --from "HEAD^" --to "HEAD" --output-dir "$CHANGES_DIR"/ --source-dir "force-app/"
                   echo "Changed files:"
                   ls "$CHANGES_DIR"
+                  if find "$CHANGES_DIR" -name "*.cls" -o -name "*.trigger" | grep -q .; then
+                    echo "has_apex=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has_apex=false" >> "$GITHUB_OUTPUT"
+                    echo "No Apex files in delta — skipping scan."
+                  fi
 
             - name: Scan
               id: scan
+              if: ${{ steps.get-changes.outputs.has_apex == 'true' }}
               run: |
                   # Perform the scanning logic, via a .py script that creates various artifacts:
                   export PATH="$HOME/sf/bin:$PATH"
@@ -70,6 +78,7 @@ jobs:
                   cat "$SCAN_OUTPUTS" >> $GITHUB_OUTPUT
 
             - name: Summarize
+              if: ${{ steps.get-changes.outputs.has_apex == 'true' }}
               run: |
                   # Add the .md Summary to a PR Review, and the Step Summary;
                   SUMMARY=$(cat "$SCAN_SUMMARY")
@@ -77,6 +86,7 @@ jobs:
                   gh pr review "$PR_NUMBER" --body "$SUMMARY" --comment
 
             - name: Upload Artifacts
+              if: ${{ steps.get-changes.outputs.has_apex == 'true' }}
               uses: actions/upload-artifact@v4
               with:
                   name: Raw Results
@@ -84,7 +94,7 @@ jobs:
                       ${{ env.SFCA_RESULTS }}
 
             - name: Report Violations
-              if: ${{ steps.scan.outputs.num-violations-above-threshold > 0 }}
+              if: ${{ steps.get-changes.outputs.has_apex == 'true' && steps.scan.outputs.num-violations-above-threshold > 0 }}
               run: |
                   # If any violations above the specified threshold, post the results to the PR and fail the check:
                   NUM_VIOLATIONS=${{ steps.scan.outputs.num-violations-above-threshold}}
