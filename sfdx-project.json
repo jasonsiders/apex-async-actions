@@ -23,7 +23,8 @@
 		"apex-async-actions@3.2.2-3": "04tDn000000nHkSIAU",
 		"apex-async-actions@3.2.3-1": "04tDn000000nHkXIAU",
 		"apex-async-actions@3.2.4-1": "04tDn000000nHkcIAE",
-		"apex-async-actions@3.2.5-1": "04tDn000000nHkmIAE"
+		"apex-async-actions@3.2.5-1": "04tDn000000nHkmIAE",
+		"apex-async-actions@3.2.6-1": "04tDn000000nHkwIAE"
 	},
 	"packageDirectories": [
 		{
@@ -31,8 +32,8 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "v3.2.5",
-			"versionNumber": "3.2.5.NEXT",
+			"versionName": "v3.2.6",
+			"versionNumber": "3.2.6.NEXT",
 			"versionDescription": "Added new Data & Description AsyncActionProcessor__mdt fields"
 		}
 	],
