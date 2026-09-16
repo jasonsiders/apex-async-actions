@@ -69,6 +69,26 @@ private class AsyncActionProcessorServiceTest {
 	}
 
 	@IsTest
+	static void shouldOnlyQueryProcessorsOnce() {
+		// The processors map is a transaction-scoped cache; repeated calls should not re-query the database.
+		// Note: This test must use real data, since the service does not query the database otherwise.
+		AsyncActionProcessorService.useRealData = true;
+
+		// Note: Limits must be measured before Test.stopTest(), which resets the governor limit counters.
+		Test.startTest();
+		AsyncActionProcessorService.getAll();
+		Integer queriesAfterFirstCall = Limits.getQueries();
+		for (Integer i = 0; i < 200; i++) {
+			AsyncActionProcessorService.getAll();
+		}
+		Integer queriesAfterAllCalls = Limits.getQueries();
+		Test.stopTest();
+
+		Assert.areEqual(queriesAfterFirstCall, queriesAfterAllCalls, 'Processors were re-queried instead of cached');
+		Assert.isNotNull(AsyncActionProcessorService.processors, 'The processors cache was never populated');
+	}
+
+	@IsTest
 	static void shouldMapByDeveloperName() {
 		Set<String> processorNames = new Set<String>{ 'processor_1', 'processor_2', 'processor_3' };
 		List<AsyncActionProcessor__mdt> testSettings = new List<AsyncActionProcessor__mdt>{};
