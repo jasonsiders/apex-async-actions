@@ -12,11 +12,14 @@ public abstract without sharing class AsyncActionProcessorService {
 
 	/**
 	 * @description Returns a map of all AsyncActionProcessor__mdt records by their DeveloperName values.
+	 * The results are cached for the remainder of the transaction, to avoid repeated queries.
+	 * Note: Callers should not modify the returned map, since it is shared by all callers in the transaction.
 	 * @return Map of AsyncActionProcessor__mdt records keyed by DeveloperName
 	 */
 	public static Map<String, AsyncActionProcessor__mdt> getAll() {
 		// Returns a map of AsyncActionProcessor__mdt records by their "DeveloperName" values
-		return processors ?? AsyncActionProcessorService.retrieve();
+		processors = processors ?? AsyncActionProcessorService.retrieve();
+		return processors;
 	}
 
 	/**
