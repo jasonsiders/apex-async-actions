@@ -124,4 +124,157 @@ private class AsyncActionsTest {
 		Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Action was not marked as failed');
 		Assert.isNotNull(action?.Error__c, 'Missing Error details');
 	}
+
+	@IsTest
+	static void shouldGroupActionsByRelatedRecord() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		Id userId = UserInfo.getUserId();
+		Id profileId = UserInfo.getProfileId();
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{
+			AsyncActions.initAction(settings, userId),
+			AsyncActions.initAction(settings, userId),
+			AsyncActions.initAction(settings, profileId)
+		};
+
+		Test.startTest();
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		Test.stopTest();
+
+		Assert.areEqual(new Set<Id>{ userId, profileId }, groups?.getRecordIds(), 'Wrong record Ids');
+		Assert.areEqual(2, groups?.getActions(userId)?.size(), 'Duplicates should share a group');
+		Assert.areEqual(1, groups?.getActions(profileId)?.size(), 'Wrong # of actions for the profile');
+		for (AsyncAction__c action : actions) {
+			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Grouping should not change status');
+		}
+	}
+
+	@IsTest
+	static void shouldFailActionsWithoutAValidRecordId() {
+		// Bad text can reach the field through DML or data loads, and must not throw for the rest of the batch
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c blank = AsyncActions.initAction(settings);
+		AsyncAction__c invalid = AsyncActions.initAction(settings);
+		invalid.RelatedRecordId__c = 'not-an-id';
+		AsyncAction__c valid = AsyncActions.initAction(settings, UserInfo.getUserId());
+
+		Test.startTest();
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
+			settings,
+			new List<AsyncAction__c>{ blank, invalid, valid }
+		);
+		Test.stopTest();
+
+		Assert.areEqual(new Set<Id>{ UserInfo.getUserId() }, groups?.getRecordIds(), 'Wrong record Ids');
+		for (AsyncAction__c action : new List<AsyncAction__c>{ blank, invalid }) {
+			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Should fail without retries');
+			Assert.isTrue(action?.Error__c?.contains('valid record Id'), 'Wrong error: ' + action?.Error__c);
+		}
+		Assert.areEqual(AsyncActions.Status.PENDING.name(), valid?.Status__c, 'A valid action should not fail');
+	}
+
+	@IsTest
+	static void shouldFailDuplicateActionsWhenConfigured() {
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncAction__c duplicate = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncActions.DuplicateBehavior behavior = AsyncActions.DuplicateBehavior.FAIL_DUPLICATES;
+
+		Test.startTest();
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
+			settings,
+			new List<AsyncAction__c>{ first, duplicate },
+			behavior
+		);
+		Test.stopTest();
+
+		Assert.areEqual(
+			new List<AsyncAction__c>{ first },
+			groups?.getActions(UserInfo.getUserId()),
+			'Should keep the first action'
+		);
+		Assert.areEqual(AsyncActions.Status.PENDING.name(), first?.Status__c, 'The first action should not fail');
+		Assert.areEqual(AsyncActions.Status.FAILED.name(), duplicate?.Status__c, 'Should fail without retries');
+		Assert.isTrue(duplicate?.Error__c?.contains('Duplicate'), 'Wrong error: ' + duplicate?.Error__c);
+	}
+
+	@IsTest
+	static void shouldCompleteEveryActionForARecord() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncAction__c second = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncAction__c other = AsyncActions.initAction(settings, UserInfo.getProfileId());
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
+			settings,
+			new List<AsyncAction__c>{ first, second, other }
+		);
+
+		Test.startTest();
+		groups?.complete(UserInfo.getUserId());
+		Test.stopTest();
+
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), first?.Status__c, 'First action not completed');
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), second?.Status__c, 'Second action not completed');
+		Assert.areEqual(AsyncActions.Status.PENDING.name(), other?.Status__c, 'Another record should be untouched');
+	}
+
+	@IsTest
+	static void shouldCancelEveryActionForARecord() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncAction__c second = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
+			settings,
+			new List<AsyncAction__c>{ first, second }
+		);
+
+		Test.startTest();
+		groups?.cancel(UserInfo.getUserId());
+		Test.stopTest();
+
+		Assert.areEqual(AsyncActions.Status.CANCELED.name(), first?.Status__c, 'First action not canceled');
+		Assert.areEqual(AsyncActions.Status.CANCELED.name(), second?.Status__c, 'Second action not canceled');
+	}
+
+	@IsTest
+	static void shouldFailEveryActionForARecordWithRetries() {
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncAction__c second = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
+			settings,
+			new List<AsyncAction__c>{ first, second }
+		);
+
+		Test.startTest();
+		groups?.fail(UserInfo.getUserId(), new System.DmlException());
+		Test.stopTest();
+
+		for (AsyncAction__c action : new List<AsyncAction__c>{ first, second }) {
+			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Should stay pending to retry');
+			Assert.areEqual(settings?.Retries__c - 1, action?.Retries__c, 'Should spend a retry');
+			Assert.isNotNull(action?.Error__c, 'Missing Error details');
+		}
+	}
+
+	@IsTest
+	static void shouldIgnoreRecordsOutsideTheBatch() {
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c action = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, new List<AsyncAction__c>{ action });
+		Id outsideId = UserInfo.getProfileId();
+
+		Test.startTest();
+		groups?.complete(outsideId);
+		groups?.cancel(outsideId);
+		groups?.fail(outsideId, 'Should not apply');
+		Test.stopTest();
+
+		Assert.isTrue(groups?.getActions(outsideId)?.isEmpty(), 'Should have no actions for the record');
+		Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Should not touch other actions');
+		Assert.isNull(action?.Error__c, 'Should not fail other actions');
+	}
 }

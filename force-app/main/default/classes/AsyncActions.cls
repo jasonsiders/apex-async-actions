@@ -69,6 +69,171 @@ global abstract class AsyncActions {
 
 	// **** INNER **** //
 	/**
+	 * @description Groups a processor's actions by the record each one names, so the processor can query each record once
+	 * and give every action for that record the same outcome. Fails actions that name no valid record, without retries,
+	 * since no retry could fix them.
+	 */
+	global class ActionGroups {
+		private Map<Id, List<AsyncAction__c>> actionsByRecordId;
+		private AsyncActions.DuplicateBehavior behavior;
+		private AsyncActionProcessor__mdt settings;
+
+		/**
+		 * @description Groups the actions, failing any that name no valid record or that the behavior rejects as duplicates.
+		 * @param settings The processor configuration metadata
+		 * @param actions The actions to group
+		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
+		 */
+		global ActionGroups(
+			AsyncActionProcessor__mdt settings,
+			List<AsyncAction__c> actions,
+			AsyncActions.DuplicateBehavior behavior
+		) {
+			this.actionsByRecordId = new Map<Id, List<AsyncAction__c>>();
+			this.behavior = behavior;
+			this.settings = settings;
+			for (AsyncAction__c action : actions) {
+				this.track(action);
+			}
+		}
+
+		/**
+		 * @description Groups the actions, so that actions naming the same record share an outcome.
+		 * @param settings The processor configuration metadata
+		 * @param actions The actions to group
+		 */
+		global ActionGroups(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
+			this(settings, actions, AsyncActions.DuplicateBehavior.GROUP_DUPLICATES);
+		}
+
+		/**
+		 * @description Cancels every action for the record, as when the record no longer needs processing.
+		 * @param recordId The related record
+		 */
+		global void cancel(Id recordId) {
+			this.setStatus(recordId, AsyncActions.Status.CANCELED);
+		}
+
+		/**
+		 * @description Completes every action for the record.
+		 * @param recordId The related record
+		 */
+		global void complete(Id recordId) {
+			this.setStatus(recordId, AsyncActions.Status.COMPLETED);
+		}
+
+		/**
+		 * @description Fails every action for the record, which retries per the processor's settings.
+		 * @param recordId The related record
+		 * @param error The error object that caused the failure
+		 */
+		global void fail(Id recordId, Object error) {
+			List<AsyncAction__c> actions = this.getActions(recordId);
+			new AsyncActions.Failure(this.settings)?.fail(actions, error);
+		}
+
+		/**
+		 * @description Returns an empty list for a record outside the batch, so callers can loop without a null check.
+		 * @param recordId The related record
+		 * @return The actions that name the record
+		 */
+		global List<AsyncAction__c> getActions(Id recordId) {
+			return this.actionsByRecordId?.get(recordId) ?? new List<AsyncAction__c>();
+		}
+
+		/**
+		 * @description Returns the records the grouped actions name, for one bulk query.
+		 * @return The related record Ids
+		 */
+		global Set<Id> getRecordIds() {
+			return this.actionsByRecordId?.keySet();
+		}
+
+		/**
+		 * @description Adds the action to its record's group, starting the group if needed.
+		 * @param recordId The related record
+		 * @param action The action to add
+		 */
+		private void add(Id recordId, AsyncAction__c action) {
+			List<AsyncAction__c> actions = this.getActions(recordId);
+			actions?.add(action);
+			this.actionsByRecordId?.put(recordId, actions);
+		}
+
+		/**
+		 * @description Fails an action that no retry could fix.
+		 * @param action The action to fail
+		 * @param message Why the action cannot succeed
+		 */
+		private void failWithoutRetry(AsyncAction__c action, String message) {
+			AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
+			new AsyncActions.Failure(this.settings, suddenDeath)?.fail(action, message);
+		}
+
+		/**
+		 * @description Only the first action for a record survives when duplicates fail.
+		 * @param recordId The related record
+		 * @return Whether the action should fail as a duplicate
+		 */
+		private Boolean isRejectedDuplicate(Id recordId) {
+			Boolean failsDuplicates = (this.behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES);
+			return failsDuplicates && this.actionsByRecordId?.containsKey(recordId) == true;
+		}
+
+		/**
+		 * @description RelatedRecordId__c is a text field, and assigning invalid text to an Id throws.
+		 * @param action The action to read
+		 * @return The related record Id, or null when the field is blank or not a valid Id
+		 */
+		private Id parseRecordId(AsyncAction__c action) {
+			String value = action?.RelatedRecordId__c;
+			try {
+				return String.isBlank(value) ? null : Id.valueOf(value);
+			} catch (System.StringException error) {
+				return null;
+			}
+		}
+
+		/**
+		 * @description Records an outcome that needs no failure handling on every action for the record.
+		 * @param recordId The related record
+		 * @param status The outcome to record
+		 */
+		private void setStatus(Id recordId, AsyncActions.Status status) {
+			for (AsyncAction__c action : this.getActions(recordId)) {
+				action.Status__c = status?.name();
+			}
+		}
+
+		/**
+		 * @description Groups a valid action, or fails one that can never succeed.
+		 * @param action The action to track
+		 */
+		private void track(AsyncAction__c action) {
+			Id recordId = this.parseRecordId(action);
+			if (recordId == null) {
+				this.failWithoutRetry(
+					action,
+					'RelatedRecordId__c must be a valid record Id: ' + action?.RelatedRecordId__c
+				);
+			} else if (this.isRejectedDuplicate(recordId)) {
+				this.failWithoutRetry(action, 'Duplicate action for record ' + recordId);
+			} else {
+				this.add(recordId, action);
+			}
+		}
+	}
+
+	/**
+	 * @description Whether ActionGroups lets actions that name the same record share an outcome, or fails all but the first.
+	 * Fail duplicates when each action carries its own Data__c, since grouping would treat them as one request.
+	 */
+	global enum DuplicateBehavior {
+		GROUP_DUPLICATES,
+		FAIL_DUPLICATES
+	}
+
+	/**
 	 * @description Handles failure scenarios for async actions, implementing retry logic and error handling.
 	 */
 	global class Failure {
