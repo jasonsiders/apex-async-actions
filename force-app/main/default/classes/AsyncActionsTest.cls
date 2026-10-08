@@ -153,20 +153,22 @@ private class AsyncActionsTest {
 		// Bad text can reach the field through DML or data loads, and must not throw for the rest of the batch
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		Id userId = UserInfo.getUserId();
+		AsyncAction__c missing = AsyncActions.initAction(settings);
 		AsyncAction__c blank = AsyncActions.initAction(settings);
+		blank.RelatedRecordId__c = ' ';
 		AsyncAction__c invalid = AsyncActions.initAction(settings);
 		invalid.RelatedRecordId__c = 'not-an-id';
-		AsyncAction__c valid = AsyncActions.initAction(settings, UserInfo.getUserId());
+		AsyncAction__c valid = AsyncActions.initAction(settings, userId);
+		List<AsyncAction__c> rejected = new List<AsyncAction__c>{ missing, blank, invalid };
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ missing, blank, invalid, valid };
 
 		Test.startTest();
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
-			settings,
-			new List<AsyncAction__c>{ blank, invalid, valid }
-		);
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
 		Test.stopTest();
 
-		Assert.areEqual(new Set<Id>{ UserInfo.getUserId() }, groups?.getRecordIds(), 'Wrong record Ids');
-		for (AsyncAction__c action : new List<AsyncAction__c>{ blank, invalid }) {
+		Assert.areEqual(new Set<Id>{ userId }, groups?.getRecordIds(), 'Wrong record Ids');
+		for (AsyncAction__c action : rejected) {
 			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Should fail without retries');
 			Assert.isTrue(action?.Error__c?.contains('valid record Id'), 'Wrong error: ' + action?.Error__c);
 		}
@@ -177,23 +179,18 @@ private class AsyncActionsTest {
 	static void shouldFailDuplicateActionsWhenConfigured() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncAction__c duplicate = AsyncActions.initAction(settings, UserInfo.getUserId());
+		Id userId = UserInfo.getUserId();
+		AsyncAction__c first = AsyncActions.initAction(settings, userId);
+		AsyncAction__c duplicate = AsyncActions.initAction(settings, userId);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, duplicate };
 		AsyncActions.DuplicateBehavior behavior = AsyncActions.DuplicateBehavior.FAIL_DUPLICATES;
 
 		Test.startTest();
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
-			settings,
-			new List<AsyncAction__c>{ first, duplicate },
-			behavior
-		);
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions, behavior);
 		Test.stopTest();
 
-		Assert.areEqual(
-			new List<AsyncAction__c>{ first },
-			groups?.getActions(UserInfo.getUserId()),
-			'Should keep the first action'
-		);
+		List<AsyncAction__c> kept = new List<AsyncAction__c>{ first };
+		Assert.areEqual(kept, groups?.getActions(userId), 'Should keep the first action');
 		Assert.areEqual(AsyncActions.Status.PENDING.name(), first?.Status__c, 'The first action should not fail');
 		Assert.areEqual(AsyncActions.Status.FAILED.name(), duplicate?.Status__c, 'Should fail without retries');
 		Assert.isTrue(duplicate?.Error__c?.contains('Duplicate'), 'Wrong error: ' + duplicate?.Error__c);
@@ -202,16 +199,16 @@ private class AsyncActionsTest {
 	@IsTest
 	static void shouldCompleteEveryActionForARecord() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncAction__c second = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncAction__c other = AsyncActions.initAction(settings, UserInfo.getProfileId());
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
-			settings,
-			new List<AsyncAction__c>{ first, second, other }
-		);
+		Id userId = UserInfo.getUserId();
+		Id profileId = UserInfo.getProfileId();
+		AsyncAction__c first = AsyncActions.initAction(settings, userId);
+		AsyncAction__c second = AsyncActions.initAction(settings, userId);
+		AsyncAction__c other = AsyncActions.initAction(settings, profileId);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, second, other };
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
 
 		Test.startTest();
-		groups?.complete(UserInfo.getUserId());
+		groups?.complete(userId);
 		Test.stopTest();
 
 		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), first?.Status__c, 'First action not completed');
@@ -222,15 +219,14 @@ private class AsyncActionsTest {
 	@IsTest
 	static void shouldCancelEveryActionForARecord() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncAction__c second = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
-			settings,
-			new List<AsyncAction__c>{ first, second }
-		);
+		Id userId = UserInfo.getUserId();
+		AsyncAction__c first = AsyncActions.initAction(settings, userId);
+		AsyncAction__c second = AsyncActions.initAction(settings, userId);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, second };
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
 
 		Test.startTest();
-		groups?.cancel(UserInfo.getUserId());
+		groups?.cancel(userId);
 		Test.stopTest();
 
 		Assert.areEqual(AsyncActions.Status.CANCELED.name(), first?.Status__c, 'First action not canceled');
@@ -241,18 +237,18 @@ private class AsyncActionsTest {
 	static void shouldFailEveryActionForARecordWithRetries() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c first = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncAction__c second = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
-			settings,
-			new List<AsyncAction__c>{ first, second }
-		);
+		Id userId = UserInfo.getUserId();
+		AsyncAction__c first = AsyncActions.initAction(settings, userId);
+		AsyncAction__c second = AsyncActions.initAction(settings, userId);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, second };
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		Exception error = new System.DmlException();
 
 		Test.startTest();
-		groups?.fail(UserInfo.getUserId(), new System.DmlException());
+		groups?.fail(userId, error);
 		Test.stopTest();
 
-		for (AsyncAction__c action : new List<AsyncAction__c>{ first, second }) {
+		for (AsyncAction__c action : actions) {
 			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Should stay pending to retry');
 			Assert.areEqual(settings?.Retries__c - 1, action?.Retries__c, 'Should spend a retry');
 			Assert.isNotNull(action?.Error__c, 'Missing Error details');
@@ -263,9 +259,11 @@ private class AsyncActionsTest {
 	static void shouldIgnoreRecordsOutsideTheBatch() {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c action = AsyncActions.initAction(settings, UserInfo.getUserId());
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, new List<AsyncAction__c>{ action });
+		Id userId = UserInfo.getUserId();
 		Id outsideId = UserInfo.getProfileId();
+		AsyncAction__c action = AsyncActions.initAction(settings, userId);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ action };
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
 
 		Test.startTest();
 		groups?.complete(outsideId);
@@ -276,5 +274,21 @@ private class AsyncActionsTest {
 		Assert.isTrue(groups?.getActions(outsideId)?.isEmpty(), 'Should have no actions for the record');
 		Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Should not touch other actions');
 		Assert.isNull(action?.Error__c, 'Should not fail other actions');
+	}
+
+	@IsTest
+	static void shouldNotLetCallersChangeTheGroups() {
+		// Map.keySet() is a live view, so a caller's removeAll() on it would silently drop whole groups
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		Id userId = UserInfo.getUserId();
+		AsyncAction__c action = AsyncActions.initAction(settings, userId);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ action };
+		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+
+		Test.startTest();
+		groups?.getRecordIds()?.clear();
+		Test.stopTest();
+
+		Assert.areEqual(new Set<Id>{ userId }, groups?.getRecordIds(), 'Callers should not be able to remove groups');
 	}
 }

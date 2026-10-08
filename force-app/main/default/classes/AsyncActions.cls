@@ -74,8 +74,11 @@ global abstract class AsyncActions {
 	 * since no retry could fix them.
 	 */
 	global class ActionGroups {
+		/** @description Each record's actions, keyed by the record they name **/
 		private Map<Id, List<AsyncAction__c>> actionsByRecordId;
+		/** @description Whether actions that name the same record share an outcome **/
 		private AsyncActions.DuplicateBehavior behavior;
+		/** @description Processor metadata controlling retry behavior **/
 		private AsyncActionProcessor__mdt settings;
 
 		/**
@@ -89,12 +92,10 @@ global abstract class AsyncActions {
 			List<AsyncAction__c> actions,
 			AsyncActions.DuplicateBehavior behavior
 		) {
-			this.actionsByRecordId = new Map<Id, List<AsyncAction__c>>();
+			this.actionsByRecordId = new Map<Id, List<AsyncAction__c>>{};
 			this.behavior = behavior;
 			this.settings = settings;
-			for (AsyncAction__c action : actions) {
-				this.track(action);
-			}
+			this.track(actions);
 		}
 
 		/**
@@ -138,15 +139,15 @@ global abstract class AsyncActions {
 		 * @return The actions that name the record
 		 */
 		global List<AsyncAction__c> getActions(Id recordId) {
-			return this.actionsByRecordId?.get(recordId) ?? new List<AsyncAction__c>();
+			return this.actionsByRecordId?.get(recordId) ?? new List<AsyncAction__c>{};
 		}
 
 		/**
-		 * @description Returns the records the grouped actions name, for one bulk query.
-		 * @return The related record Ids
+		 * @description Returns a copy, since Map.keySet() is a live view and a caller's removeAll() would drop groups.
+		 * @return The related record Ids, for one bulk query
 		 */
 		global Set<Id> getRecordIds() {
-			return this.actionsByRecordId?.keySet();
+			return this.actionsByRecordId?.keySet()?.clone();
 		}
 
 		/**
@@ -186,12 +187,14 @@ global abstract class AsyncActions {
 		 * @return The related record Id, or null when the field is blank or not a valid Id
 		 */
 		private Id parseRecordId(AsyncAction__c action) {
-			String value = action?.RelatedRecordId__c;
+			Id recordId;
 			try {
-				return String.isBlank(value) ? null : Id.valueOf(value);
+				recordId = action?.RelatedRecordId__c;
 			} catch (System.StringException error) {
-				return null;
+				// Blank or malformed text: treated the same as a missing Id
+				recordId = null;
 			}
+			return recordId;
 		}
 
 		/**
@@ -206,10 +209,20 @@ global abstract class AsyncActions {
 		}
 
 		/**
+		 * @description Fails or groups every action up front, so each one ends the batch with an outcome.
+		 * @param actions The actions to track
+		 */
+		private void track(List<AsyncAction__c> actions) {
+			for (AsyncAction__c action : actions) {
+				this.trackAction(action);
+			}
+		}
+
+		/**
 		 * @description Groups a valid action, or fails one that can never succeed.
 		 * @param action The action to track
 		 */
-		private void track(AsyncAction__c action) {
+		private void trackAction(AsyncAction__c action) {
 			Id recordId = this.parseRecordId(action);
 			if (recordId == null) {
 				this.failWithoutRetry(
