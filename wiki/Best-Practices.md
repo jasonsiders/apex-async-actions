@@ -61,9 +61,18 @@ Validate input data early and fail gracefully for invalid data. [AsyncActions.Ac
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
     // Actions with a blank or invalid RelatedRecordId__c have already failed
     AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
-    for (Id recordId : groups.getRecordIds()) {
-        processRecord(recordId);
-        groups.complete(recordId);
+    Set<Id> accountIds = groups.getRecordIds();
+    // One query for the whole batch, never one per record:
+    Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, Name FROM Account WHERE Id IN :accountIds]);
+    for (Id accountId : accountIds) {
+        Account account = accounts.get(accountId);
+        if (account != null) {
+            processAccount(account);
+            groups.complete(accountId);
+        } else {
+            // The record was deleted, so no retry could help
+            groups.cancel(accountId);
+        }
     }
 }
 ```

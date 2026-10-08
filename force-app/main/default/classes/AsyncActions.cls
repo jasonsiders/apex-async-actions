@@ -129,17 +129,17 @@ global abstract class AsyncActions {
 		 * @param error The error object that caused the failure
 		 */
 		global void fail(Id recordId, Object error) {
-			List<AsyncAction__c> actions = this.getActions(recordId);
+			List<AsyncAction__c> actions = this.findActions(recordId);
 			new AsyncActions.Failure(this.settings)?.fail(actions, error);
 		}
 
 		/**
-		 * @description Returns an empty list for a record outside the batch, so callers can loop without a null check.
+		 * @description Returns a copy, so a caller's remove() cannot drop an action from its group and leave it Pending.
 		 * @param recordId The related record
-		 * @return The actions that name the record
+		 * @return The actions that name the record, or an empty list for a record outside the batch
 		 */
 		global List<AsyncAction__c> getActions(Id recordId) {
-			return this.actionsByRecordId?.get(recordId) ?? new List<AsyncAction__c>{};
+			return this.findActions(recordId)?.clone();
 		}
 
 		/**
@@ -156,7 +156,7 @@ global abstract class AsyncActions {
 		 * @param action The action to add
 		 */
 		private void add(Id recordId, AsyncAction__c action) {
-			List<AsyncAction__c> actions = this.getActions(recordId);
+			List<AsyncAction__c> actions = this.findActions(recordId);
 			actions?.add(action);
 			this.actionsByRecordId?.put(recordId, actions);
 		}
@@ -169,6 +169,15 @@ global abstract class AsyncActions {
 		private void failWithoutRetry(AsyncAction__c action, String message) {
 			AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
 			new AsyncActions.Failure(this.settings, suddenDeath)?.fail(action, message);
+		}
+
+		/**
+		 * @description Reads the group itself, which only this class may change.
+		 * @param recordId The related record
+		 * @return The record's actions, or a new empty list for a record outside the batch
+		 */
+		private List<AsyncAction__c> findActions(Id recordId) {
+			return this.actionsByRecordId?.get(recordId) ?? new List<AsyncAction__c>{};
 		}
 
 		/**
@@ -203,7 +212,7 @@ global abstract class AsyncActions {
 		 * @param status The outcome to record
 		 */
 		private void setStatus(Id recordId, AsyncActions.Status status) {
-			for (AsyncAction__c action : this.getActions(recordId)) {
+			for (AsyncAction__c action : this.findActions(recordId)) {
 				action.Status__c = status?.name();
 			}
 		}

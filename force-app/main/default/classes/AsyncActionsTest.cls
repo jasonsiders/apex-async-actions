@@ -287,8 +287,11 @@ private class AsyncActionsTest {
 
 		Test.startTest();
 		groups?.getRecordIds()?.clear();
+		groups?.getActions(userId)?.clear();
+		groups?.complete(userId);
 		Test.stopTest();
 
 		Assert.areEqual(new Set<Id>{ userId }, groups?.getRecordIds(), 'Callers should not be able to remove groups');
+		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Callers should not empty a group');
 	}
 }
