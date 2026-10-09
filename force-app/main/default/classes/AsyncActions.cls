@@ -3,7 +3,6 @@
  * This class acts as a pseudo-namespace, providing a central location for all global types and methods,
  * with the exception of the built-in logging framework.
  */
-// CognitiveComplexity sums every inner type into this class's total; no single method nears the per-method limit
 @SuppressWarnings('PMD.AvoidGlobalModifier,PMD.CognitiveComplexity')
 global abstract class AsyncActions {
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
