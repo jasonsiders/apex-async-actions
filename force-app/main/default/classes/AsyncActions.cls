@@ -25,17 +25,16 @@ global abstract class AsyncActions {
 		AsyncActions.DuplicateBehavior behavior
 	) {
 		Map<Id, AsyncActions.RecordGroup> groups = new Map<Id, AsyncActions.RecordGroup>{};
-		AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
 		for (AsyncAction__c action : actions) {
 			try {
 				// Blank means no related record, which is valid; only text that is not an Id throws
-				Id recordId = String.isBlank(action?.RelatedRecordId__c) ? null : action?.RelatedRecordId__c;
+				Id recordId = String.isNotBlank(action?.RelatedRecordId__c) ? action?.RelatedRecordId__c : null;
 				AsyncActions.RecordGroup recordGroup = groups?.get(recordId) ??
 					new AsyncActions.RecordGroup(settings, recordId);
 				recordGroup?.add(action, behavior);
 				groups?.put(recordId, recordGroup);
 			} catch (System.StringException error) {
-				new AsyncActions.Failure(settings, suddenDeath)?.fail(action, error);
+				new AsyncActions.Failure(settings, AsyncActions.RetryBehavior.SUDDEN_DEATH)?.fail(action, error);
 			}
 		}
 		return groups;
