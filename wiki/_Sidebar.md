@@ -23,10 +23,10 @@
 
 - [The AsyncActionLauncher](./The-AsyncActionLauncher-Class)
 - [The AsyncActions](./The-AsyncActions-Class)
-- [AsyncActions.ActionGroups](./The-AsyncActions.ActionGroups-Class)
 - [AsyncActions.DuplicateBehavior](./The-AsyncActions.DuplicateBehavior-Enum)
 - [AsyncActions.Failure](./The-AsyncActions.Failure-Class)
 - [AsyncActions.Processor](./The-AsyncActions.Processor-Interface)
+- [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class)
 - [AsyncActions.RetryBehavior](./The-AsyncActions.RetryBehavior-Enum)
 - [AsyncActions.Status](./The-AsyncActions.Status-Enum)
 - [AsyncActionLogger.Adapter](./The-AsyncActionLogger.Adapter-Interface)

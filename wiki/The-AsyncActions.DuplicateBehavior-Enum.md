@@ -1,11 +1,8 @@
-The `AsyncActions.DuplicateBehavior` enum sets what [AsyncActions.ActionGroups](./The-AsyncActions.ActionGroups-Class) does when two actions in a batch name the same record.
+The `AsyncActions.DuplicateBehavior` enum sets what [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) does when two actions in a batch name the same record.
 
 ```apex
-AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(
-    settings,
-    actions,
-    AsyncActions.DuplicateBehavior.FAIL_DUPLICATES
-);
+AsyncActions.DuplicateBehavior behavior = AsyncActions.DuplicateBehavior.FAIL_DUPLICATES;
+Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions, behavior);
 ```
 
 ## Values

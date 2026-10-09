@@ -28,7 +28,7 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ### Action List Management
 
-Avoid modifying the original `actions` List parameter, as this may interfere with the framework's error detection. Instead, work with a copy or Map. For actions that each name a record, [AsyncActions.ActionGroups](./The-AsyncActions.ActionGroups-Class) does this for you.
+Avoid modifying the original `actions` List parameter, as this may interfere with the framework's error detection. Instead, work with a copy or Map. For actions that each name a record, [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) does this for you.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
@@ -55,23 +55,23 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ### Data Validation
 
-Validate input data early and fail gracefully for invalid data. [AsyncActions.ActionGroups](./The-AsyncActions.ActionGroups-Class) fails any action without a valid `RelatedRecordId__c` with `SUDDEN_DEATH`, and groups the rest by record.
+Validate input data early and fail gracefully for invalid data. [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) fails any action without a valid `RelatedRecordId__c` with `SUDDEN_DEATH`, and groups the rest by record.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
     // Actions with a blank or invalid RelatedRecordId__c have already failed
-    AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
-    Set<Id> accountIds = groups.getRecordIds();
+    Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
+    Set<Id> accountIds = groups.keySet();
     // One query for the whole batch, never one per record:
     Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, Name FROM Account WHERE Id IN :accountIds]);
-    for (Id accountId : accountIds) {
-        Account account = accounts.get(accountId);
+    for (AsyncActions.RecordGroup recordGroup : groups.values()) {
+        Account account = accounts.get(recordGroup.getRecordId());
         if (account != null) {
             processAccount(account);
-            groups.complete(accountId);
+            recordGroup.complete();
         } else {
             // The record was deleted, so no retry could help
-            groups.cancel(accountId);
+            recordGroup.cancel();
         }
     }
 }
