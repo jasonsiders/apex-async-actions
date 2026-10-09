@@ -55,25 +55,13 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ### Data Validation
 
-Validate input data early and fail gracefully for invalid data. [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) fails any action without a valid `RelatedRecordId__c` with `SUDDEN_DEATH`, and groups the rest by record.
+Validate input data early and fail gracefully for invalid data. [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) fails any action without a valid `RelatedRecordId__c` with `SUDDEN_DEATH`, and groups the rest by record. See [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class) for a full example.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
     // Actions with a blank or invalid RelatedRecordId__c have already failed
     Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
-    Set<Id> accountIds = groups.keySet();
-    // One query for the whole batch, never one per record:
-    Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, Name FROM Account WHERE Id IN :accountIds]);
-    for (AsyncActions.RecordGroup recordGroup : groups.values()) {
-        Account account = accounts.get(recordGroup.getRecordId());
-        if (account != null) {
-            processAccount(account);
-            recordGroup.complete();
-        } else {
-            // The record was deleted, so no retry could help
-            recordGroup.cancel();
-        }
-    }
+    // ...query groups.keySet() once, then complete, cancel or fail each group
 }
 ```
 
