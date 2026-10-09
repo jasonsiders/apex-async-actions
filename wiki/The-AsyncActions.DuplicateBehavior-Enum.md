@@ -7,7 +7,7 @@ Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, 
 
 ## Values
 
-| Value              | Description                                                                                                                                                                                  |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GROUP_DUPLICATES` | The default. Every action for the record joins one group and gets the same outcome. Use it when an action means only "process this record".                                                  |
-| `FAIL_DUPLICATES`  | Keeps the first action for the record, and fails the rest with `SUDDEN_DEATH`. Use it when actions for one record store different `Data__c`, since grouping would treat them as one request. |
+| Value              | Description                                                                                                                                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GROUP_DUPLICATES` | The default. Every action for the record joins one group and gets the same outcome. Use it when an action means only "process this record".                                                                                                       |
+| `FAIL_DUPLICATES`  | Keeps the first action for the record, and fails the rest with `SUDDEN_DEATH`. Actions with no related record are never duplicates. Use it when actions for one record store different `Data__c`, since grouping would treat them as one request. |

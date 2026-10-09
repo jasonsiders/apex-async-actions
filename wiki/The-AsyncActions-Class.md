@@ -9,7 +9,7 @@ Groups a processor's actions by their `RelatedRecordId__c`, into one [AsyncActio
 - `Map<Id, AsyncActions.RecordGroup> groupByRecord(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions, AsyncActions.DuplicateBehavior behavior)`
 - `Map<Id, AsyncActions.RecordGroup> groupByRecord(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions)`
 
-An action whose `RelatedRecordId__c` is blank, or is text that is not a valid record Id, fails right away with `SUDDEN_DEATH`, since no retry could fix it, and joins no group. The rest of the batch is unaffected.
+Actions with a blank `RelatedRecordId__c` share the group under the `null` key. An action whose `RelatedRecordId__c` is text that is not a valid record Id fails right away with `SUDDEN_DEATH`, since no retry could fix it, and joins no group. The rest of the batch is unaffected.
 
 The two-parameter overload uses `GROUP_DUPLICATES`. See [AsyncActions.DuplicateBehavior](./The-AsyncActions.DuplicateBehavior-Enum) for when to fail duplicates instead.
 

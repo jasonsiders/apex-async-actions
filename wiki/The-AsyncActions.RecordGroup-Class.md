@@ -1,6 +1,6 @@
 The `AsyncActions.RecordGroup` inner class contains a record's Id and every action in the batch with that Id in `RelatedRecordId__c`. Each method acts on all of the group's actions, so they share one outcome.
 
-Groups come from [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord), keyed by record Id:
+Groups come from [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord), keyed by record Id. Actions with no related record share the group under the `null` key:
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
@@ -49,6 +49,6 @@ Returns a copy of the group's actions. Use it to read each action's `Data__c`.
 
 ### `getRecordId`
 
-Returns the Id of the record the actions name.
+Returns the Id of the record the actions name, or `null` for the group of actions with no related record.
 
 - `Id getRecordId()`

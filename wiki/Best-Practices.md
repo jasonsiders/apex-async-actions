@@ -55,11 +55,11 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ### Data Validation
 
-Validate input data early and fail gracefully for invalid data. [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) fails any action without a valid `RelatedRecordId__c` with `SUDDEN_DEATH`, and groups the rest by record. See [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class) for a full example.
+Validate input data early and fail gracefully for invalid data. [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) fails any action whose `RelatedRecordId__c` is not a valid Id with `SUDDEN_DEATH`, and groups the rest by record. See [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class) for a full example.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-    // Actions with a blank or invalid RelatedRecordId__c have already failed
+    // Actions with an invalid RelatedRecordId__c have already failed; blank ones are under the null key
     Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
     // ...query groups.keySet() once, then complete, cancel or fail each group
 }
