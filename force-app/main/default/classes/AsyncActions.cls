@@ -50,8 +50,7 @@ global abstract class AsyncActions {
 		AsyncActionProcessor__mdt settings,
 		List<AsyncAction__c> actions
 	) {
-		AsyncActions.DuplicateBehavior behavior = AsyncActions.DuplicateBehavior.GROUP_DUPLICATES;
-		return AsyncActions.groupByRecord(settings, actions, behavior);
+		return AsyncActions.groupByRecord(settings, actions, AsyncActions.DuplicateBehavior.GROUP_DUPLICATES);
 	}
 
 	/**
@@ -284,9 +283,8 @@ global abstract class AsyncActions {
 		 */
 		private void add(AsyncAction__c action, AsyncActions.DuplicateBehavior behavior) {
 			if (this.isRejectedDuplicate(behavior)) {
-				AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
-				new AsyncActions.Failure(this.settings, suddenDeath)
-					?.fail(action, 'Duplicate action for record ' + this.recordId);
+				String msg = 'Duplicate action for record ' + this.recordId;
+				new AsyncActions.Failure(this.settings, AsyncActions.RetryBehavior.SUDDEN_DEATH)?.fail(action, msg);
 			} else {
 				this.actions?.add(action);
 			}
@@ -299,8 +297,9 @@ global abstract class AsyncActions {
 		 * @return Whether the next action should fail as a duplicate
 		 */
 		private Boolean isRejectedDuplicate(AsyncActions.DuplicateBehavior behavior) {
-			Boolean failsDuplicates = (behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES);
-			return failsDuplicates && this.recordId != null && this.actions?.isEmpty() == false;
+			return (behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES &&
+			this.recordId != null &&
+			this.actions?.isEmpty() == false);
 		}
 
 		/**
