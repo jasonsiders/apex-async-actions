@@ -24,13 +24,14 @@ global abstract class AsyncActions {
 		AsyncActions.DuplicateBehavior behavior
 	) {
 		Map<Id, AsyncActions.RecordGroup> groups = new Map<Id, AsyncActions.RecordGroup>{};
-		List<AsyncAction__c> validActions = AsyncActions.rejectInvalidRecordIds(settings, actions);
-		for (AsyncAction__c action : validActions) {
-			Id recordId = action?.RelatedRecordId__c;
-			AsyncActions.RecordGroup recordGroup = groups?.get(recordId) ??
-				new AsyncActions.RecordGroup(settings, recordId);
-			recordGroup?.add(action, behavior);
-			groups?.put(recordId, recordGroup);
+		for (AsyncAction__c action : actions) {
+			if (AsyncActions.rejectInvalidRecordId(settings, action) == false) {
+				Id recordId = action?.RelatedRecordId__c;
+				AsyncActions.RecordGroup recordGroup = groups?.get(recordId) ??
+					new AsyncActions.RecordGroup(settings, recordId);
+				recordGroup?.add(action, behavior);
+				groups?.put(recordId, recordGroup);
+			}
 		}
 		return groups;
 	}
@@ -124,26 +125,19 @@ global abstract class AsyncActions {
 	}
 
 	/**
-	 * @description Fails, without retries, every action whose RelatedRecordId__c is blank or not a valid Id.
+	 * @description Fails the action, without retries, when its RelatedRecordId__c is blank or not a valid Id.
 	 * @param settings The processor configuration metadata
-	 * @param actions The actions to check
-	 * @return The actions with a valid RelatedRecordId__c
+	 * @param action The action to check
+	 * @return Whether the action was rejected
 	 */
-	private static List<AsyncAction__c> rejectInvalidRecordIds(
-		AsyncActionProcessor__mdt settings,
-		List<AsyncAction__c> actions
-	) {
-		List<AsyncAction__c> invalidActions = new List<AsyncAction__c>{};
-		List<AsyncAction__c> validActions = new List<AsyncAction__c>{};
-		for (AsyncAction__c action : actions) {
-			Id recordId = AsyncActions.parseRecordId(action);
-			List<AsyncAction__c> target = (recordId == null) ? invalidActions : validActions;
-			target?.add(action);
+	private static Boolean rejectInvalidRecordId(AsyncActionProcessor__mdt settings, AsyncAction__c action) {
+		Boolean isInvalid = (AsyncActions.parseRecordId(action) == null);
+		if (isInvalid) {
+			AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
+			String message = 'RelatedRecordId__c must be a valid record Id: ' + action?.RelatedRecordId__c;
+			new AsyncActions.Failure(settings, suddenDeath)?.fail(action, message);
 		}
-		AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
-		new AsyncActions.Failure(settings, suddenDeath)
-			?.fail(invalidActions, 'RelatedRecordId__c must be a valid record Id');
-		return validActions;
+		return isInvalid;
 	}
 
 	// **** INNER **** //
