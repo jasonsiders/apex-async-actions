@@ -137,12 +137,13 @@ private class AsyncActionsTest {
 		};
 
 		Test.startTest();
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
 		Test.stopTest();
 
-		Assert.areEqual(new Set<Id>{ userId, profileId }, groups?.getRecordIds(), 'Wrong record Ids');
-		Assert.areEqual(2, groups?.getActions(userId)?.size(), 'Duplicates should share a group');
-		Assert.areEqual(1, groups?.getActions(profileId)?.size(), 'Wrong # of actions for the profile');
+		Assert.areEqual(new Set<Id>{ userId, profileId }, groups?.keySet(), 'Wrong record Ids');
+		Assert.areEqual(userId, groups?.get(userId)?.getRecordId(), 'Wrong record Id for the group');
+		Assert.areEqual(2, groups?.get(userId)?.getActions()?.size(), 'Duplicates should share a group');
+		Assert.areEqual(1, groups?.get(profileId)?.getActions()?.size(), 'Wrong # of actions for the profile');
 		for (AsyncAction__c action : actions) {
 			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Grouping should not change status');
 		}
@@ -164,10 +165,10 @@ private class AsyncActionsTest {
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{ missing, blank, invalid, valid };
 
 		Test.startTest();
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
 		Test.stopTest();
 
-		Assert.areEqual(new Set<Id>{ userId }, groups?.getRecordIds(), 'Wrong record Ids');
+		Assert.areEqual(new Set<Id>{ userId }, groups?.keySet(), 'Wrong record Ids');
 		for (AsyncAction__c action : rejected) {
 			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Should fail without retries');
 			Assert.isTrue(action?.Error__c?.contains('valid record Id'), 'Wrong error: ' + action?.Error__c);
@@ -186,11 +187,11 @@ private class AsyncActionsTest {
 		AsyncActions.DuplicateBehavior behavior = AsyncActions.DuplicateBehavior.FAIL_DUPLICATES;
 
 		Test.startTest();
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions, behavior);
+		Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions, behavior);
 		Test.stopTest();
 
 		List<AsyncAction__c> kept = new List<AsyncAction__c>{ first };
-		Assert.areEqual(kept, groups?.getActions(userId), 'Should keep the first action');
+		Assert.areEqual(kept, groups?.get(userId)?.getActions(), 'Should keep the first action');
 		Assert.areEqual(AsyncActions.Status.PENDING.name(), first?.Status__c, 'The first action should not fail');
 		Assert.areEqual(AsyncActions.Status.FAILED.name(), duplicate?.Status__c, 'Should fail without retries');
 		Assert.isTrue(duplicate?.Error__c?.contains('Duplicate'), 'Wrong error: ' + duplicate?.Error__c);
@@ -205,10 +206,10 @@ private class AsyncActionsTest {
 		AsyncAction__c second = AsyncActions.initAction(settings, userId);
 		AsyncAction__c other = AsyncActions.initAction(settings, profileId);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, second, other };
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		AsyncActions.RecordGroup recordGroup = AsyncActions.groupByRecord(settings, actions)?.get(userId);
 
 		Test.startTest();
-		groups?.complete(userId);
+		recordGroup?.complete();
 		Test.stopTest();
 
 		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), first?.Status__c, 'First action not completed');
@@ -223,10 +224,10 @@ private class AsyncActionsTest {
 		AsyncAction__c first = AsyncActions.initAction(settings, userId);
 		AsyncAction__c second = AsyncActions.initAction(settings, userId);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, second };
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		AsyncActions.RecordGroup recordGroup = AsyncActions.groupByRecord(settings, actions)?.get(userId);
 
 		Test.startTest();
-		groups?.cancel(userId);
+		recordGroup?.cancel();
 		Test.stopTest();
 
 		Assert.areEqual(AsyncActions.Status.CANCELED.name(), first?.Status__c, 'First action not canceled');
@@ -241,11 +242,11 @@ private class AsyncActionsTest {
 		AsyncAction__c first = AsyncActions.initAction(settings, userId);
 		AsyncAction__c second = AsyncActions.initAction(settings, userId);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{ first, second };
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		AsyncActions.RecordGroup recordGroup = AsyncActions.groupByRecord(settings, actions)?.get(userId);
 		Exception error = new System.DmlException();
 
 		Test.startTest();
-		groups?.fail(userId, error);
+		recordGroup?.fail(error);
 		Test.stopTest();
 
 		for (AsyncAction__c action : actions) {
@@ -256,42 +257,19 @@ private class AsyncActionsTest {
 	}
 
 	@IsTest
-	static void shouldIgnoreRecordsOutsideTheBatch() {
-		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		Id userId = UserInfo.getUserId();
-		Id outsideId = UserInfo.getProfileId();
-		AsyncAction__c action = AsyncActions.initAction(settings, userId);
-		List<AsyncAction__c> actions = new List<AsyncAction__c>{ action };
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
-
-		Test.startTest();
-		groups?.complete(outsideId);
-		groups?.cancel(outsideId);
-		groups?.fail(outsideId, 'Should not apply');
-		Test.stopTest();
-
-		Assert.isTrue(groups?.getActions(outsideId)?.isEmpty(), 'Should have no actions for the record');
-		Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Should not touch other actions');
-		Assert.isNull(action?.Error__c, 'Should not fail other actions');
-	}
-
-	@IsTest
-	static void shouldNotLetCallersChangeTheGroups() {
-		// Map.keySet() is a live view, so a caller's removeAll() on it would silently drop whole groups
+	static void shouldNotLetCallersEmptyAGroup() {
+		// A caller's remove() on the group's own list would leave that action Pending
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		Id userId = UserInfo.getUserId();
 		AsyncAction__c action = AsyncActions.initAction(settings, userId);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{ action };
-		AsyncActions.ActionGroups groups = new AsyncActions.ActionGroups(settings, actions);
+		AsyncActions.RecordGroup recordGroup = AsyncActions.groupByRecord(settings, actions)?.get(userId);
 
 		Test.startTest();
-		groups?.getRecordIds()?.clear();
-		groups?.getActions(userId)?.clear();
-		groups?.complete(userId);
+		recordGroup?.getActions()?.clear();
+		recordGroup?.complete();
 		Test.stopTest();
 
-		Assert.areEqual(new Set<Id>{ userId }, groups?.getRecordIds(), 'Callers should not be able to remove groups');
 		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Callers should not empty a group');
 	}
 }
