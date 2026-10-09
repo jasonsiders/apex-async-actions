@@ -3,7 +3,7 @@
  * This class acts as a pseudo-namespace, providing a central location for all global types and methods,
  * with the exception of the built-in logging framework.
  */
-// CognitiveComplexity sums every inner type into this class's total; no single method scores above 1
+// CognitiveComplexity sums every inner type into this class's total; no single method nears the per-method limit
 @SuppressWarnings('PMD.AvoidGlobalModifier,PMD.CognitiveComplexity')
 global abstract class AsyncActions {
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
@@ -24,15 +24,14 @@ global abstract class AsyncActions {
 		AsyncActions.DuplicateBehavior behavior
 	) {
 		Map<Id, AsyncActions.RecordGroup> groups = new Map<Id, AsyncActions.RecordGroup>{};
-		for (AsyncAction__c action : actions) {
-			Id recordId = AsyncActions.parseRecordId(action);
+		List<AsyncAction__c> validActions = AsyncActions.rejectInvalidRecordIds(settings, actions);
+		for (AsyncAction__c action : validActions) {
+			Id recordId = action?.RelatedRecordId__c;
 			AsyncActions.RecordGroup recordGroup = groups?.get(recordId) ??
-				new AsyncActions.RecordGroup(settings, recordId, behavior);
-			recordGroup?.add(action);
+				new AsyncActions.RecordGroup(settings, recordId);
+			recordGroup?.add(action, behavior);
 			groups?.put(recordId, recordGroup);
 		}
-		// Note: add() fails every action without a valid Id, so the group under the null key is always empty
-		groups?.remove(null);
 		return groups;
 	}
 
@@ -108,6 +107,7 @@ global abstract class AsyncActions {
 		Id nullRecordId = null;
 		return AsyncActions.initAction(settings, nullRecordId);
 	}
+
 	/**
 	 * @description RelatedRecordId__c is a text field, and assigning invalid text to an Id throws.
 	 * @param action The action to read
@@ -118,10 +118,32 @@ global abstract class AsyncActions {
 		try {
 			recordId = action?.RelatedRecordId__c;
 		} catch (System.StringException error) {
-			// Blank or malformed text: treated the same as a missing Id
 			recordId = null;
 		}
 		return recordId;
+	}
+
+	/**
+	 * @description Fails, without retries, every action whose RelatedRecordId__c is blank or not a valid Id.
+	 * @param settings The processor configuration metadata
+	 * @param actions The actions to check
+	 * @return The actions with a valid RelatedRecordId__c
+	 */
+	private static List<AsyncAction__c> rejectInvalidRecordIds(
+		AsyncActionProcessor__mdt settings,
+		List<AsyncAction__c> actions
+	) {
+		List<AsyncAction__c> invalidActions = new List<AsyncAction__c>{};
+		List<AsyncAction__c> validActions = new List<AsyncAction__c>{};
+		for (AsyncAction__c action : actions) {
+			Id recordId = AsyncActions.parseRecordId(action);
+			List<AsyncAction__c> target = (recordId == null) ? invalidActions : validActions;
+			target?.add(action);
+		}
+		AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
+		new AsyncActions.Failure(settings, suddenDeath)
+			?.fail(invalidActions, 'RelatedRecordId__c must be a valid record Id');
+		return validActions;
 	}
 
 	// **** INNER **** //
@@ -234,8 +256,6 @@ global abstract class AsyncActions {
 	global class RecordGroup {
 		/** @description The actions that name the record **/
 		private List<AsyncAction__c> actions;
-		/** @description Whether actions that name the same record share an outcome **/
-		private AsyncActions.DuplicateBehavior behavior;
 		/** @description The record the actions name **/
 		private Id recordId;
 		/** @description Processor metadata controlling retry behavior **/
@@ -245,11 +265,9 @@ global abstract class AsyncActions {
 		 * @description Starts an empty group for the record.
 		 * @param settings The processor configuration metadata
 		 * @param recordId The record the actions name
-		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
 		 */
-		private RecordGroup(AsyncActionProcessor__mdt settings, Id recordId, AsyncActions.DuplicateBehavior behavior) {
+		private RecordGroup(AsyncActionProcessor__mdt settings, Id recordId) {
 			this.actions = new List<AsyncAction__c>{};
-			this.behavior = behavior;
 			this.recordId = recordId;
 			this.settings = settings;
 		}
@@ -293,38 +311,27 @@ global abstract class AsyncActions {
 		}
 
 		/**
-		 * @description Adds a valid action to the group, or fails one that can never succeed.
+		 * @description Adds the action to the group, or fails it without retries when the behavior rejects duplicates.
 		 * @param action The action to add
+		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
 		 */
-		private void add(AsyncAction__c action) {
-			if (this.recordId == null) {
-				this.failWithoutRetry(
-					action,
-					'RelatedRecordId__c must be a valid record Id: ' + action?.RelatedRecordId__c
-				);
-			} else if (this.isRejectedDuplicate()) {
-				this.failWithoutRetry(action, 'Duplicate action for record ' + this.recordId);
+		private void add(AsyncAction__c action, AsyncActions.DuplicateBehavior behavior) {
+			if (this.isRejectedDuplicate(behavior)) {
+				AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
+				new AsyncActions.Failure(this.settings, suddenDeath)
+					?.fail(action, 'Duplicate action for record ' + this.recordId);
 			} else {
 				this.actions?.add(action);
 			}
 		}
 
 		/**
-		 * @description Fails an action that no retry could fix.
-		 * @param action The action to fail
-		 * @param message Why the action cannot succeed
-		 */
-		private void failWithoutRetry(AsyncAction__c action, String message) {
-			AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
-			new AsyncActions.Failure(this.settings, suddenDeath)?.fail(action, message);
-		}
-
-		/**
 		 * @description Only the first action for a record survives when duplicates fail.
+		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
 		 * @return Whether the next action should fail as a duplicate
 		 */
-		private Boolean isRejectedDuplicate() {
-			Boolean failsDuplicates = (this.behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES);
+		private Boolean isRejectedDuplicate(AsyncActions.DuplicateBehavior behavior) {
+			Boolean failsDuplicates = (behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES);
 			return failsDuplicates && this.actions?.isEmpty() == false;
 		}
 
