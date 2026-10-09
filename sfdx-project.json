@@ -32,9 +32,9 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "v3.2.6",
-			"versionNumber": "3.2.6.NEXT",
-			"versionDescription": "Added new Data & Description AsyncActionProcessor__mdt fields"
+			"versionName": "v3.3.0",
+			"versionNumber": "3.3.0.NEXT",
+			"versionDescription": "Added AsyncActions.groupByRecord to group a batch by related record"
 		}
 	],
 	"sfdcLoginUrl": "https://login.salesforce.com",

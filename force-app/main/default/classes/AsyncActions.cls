@@ -3,11 +3,55 @@
  * This class acts as a pseudo-namespace, providing a central location for all global types and methods,
  * with the exception of the built-in logging framework.
  */
-@SuppressWarnings('PMD.AvoidGlobalModifier')
+@SuppressWarnings('PMD.AvoidGlobalModifier,PMD.CognitiveComplexity')
 global abstract class AsyncActions {
 	private static final Integer ERROR_FIELD_LENGTH = AsyncAction__c.Error__c.getDescribe()?.getLength();
 
 	// **** STATIC **** //
+	/**
+	 * @description Groups the actions by the record each one names, so the processor can query each record once and give
+	 * every action for that record the same outcome. Actions with a blank RelatedRecordId__c share the group under the null
+	 * key. Fails, without retries, actions whose RelatedRecordId__c is not a valid Id or that the behavior rejects as
+	 * duplicates, since no retry could fix them.
+	 * @param settings The processor configuration metadata
+	 * @param actions The actions to group
+	 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
+	 * @return Each record's group, keyed by the record's Id
+	 */
+	global static Map<Id, AsyncActions.RecordGroup> groupByRecord(
+		AsyncActionProcessor__mdt settings,
+		List<AsyncAction__c> actions,
+		AsyncActions.DuplicateBehavior behavior
+	) {
+		Map<Id, AsyncActions.RecordGroup> groups = new Map<Id, AsyncActions.RecordGroup>{};
+		for (AsyncAction__c action : actions) {
+			try {
+				// Blank means no related record, which is valid; only text that is not an Id throws
+				Id recordId = String.isNotBlank(action?.RelatedRecordId__c) ? action?.RelatedRecordId__c : null;
+				AsyncActions.RecordGroup recordGroup = groups?.get(recordId) ??
+					new AsyncActions.RecordGroup(settings, recordId);
+				recordGroup?.add(action, behavior);
+				groups?.put(recordId, recordGroup);
+			} catch (System.StringException error) {
+				new AsyncActions.Failure(settings, AsyncActions.RetryBehavior.SUDDEN_DEATH)?.fail(action, error);
+			}
+		}
+		return groups;
+	}
+
+	/**
+	 * @description Groups the actions by the record each one names, so that actions naming the same record share an outcome.
+	 * @param settings The processor configuration metadata
+	 * @param actions The actions to group
+	 * @return Each record's group, keyed by the record's Id
+	 */
+	global static Map<Id, AsyncActions.RecordGroup> groupByRecord(
+		AsyncActionProcessor__mdt settings,
+		List<AsyncAction__c> actions
+	) {
+		return AsyncActions.groupByRecord(settings, actions, AsyncActions.DuplicateBehavior.GROUP_DUPLICATES);
+	}
+
 	/**
 	 * @description Initializes a new AsyncAction__c record with the specified processor settings, related record ID, and data.
 	 * @param settings The processor configuration metadata to use for initializing the action
@@ -68,6 +112,15 @@ global abstract class AsyncActions {
 	}
 
 	// **** INNER **** //
+	/**
+	 * @description Whether groupByRecord lets actions that name the same record share an outcome, or fails all but the first.
+	 * Fail duplicates when each action carries its own Data__c, since grouping would treat them as one request.
+	 */
+	global enum DuplicateBehavior {
+		GROUP_DUPLICATES,
+		FAIL_DUPLICATES
+	}
+
 	/**
 	 * @description Handles failure scenarios for async actions, implementing retry logic and error handling.
 	 */
@@ -159,6 +212,104 @@ global abstract class AsyncActions {
 		 * @param actions List of AsyncAction__c records to be processed
 		 */
 		void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions);
+	}
+
+	/**
+	 * @description A record and every action in the batch that names it, so the processor can give them all one outcome.
+	 * The group under the null key holds the actions with no related record. Built by AsyncActions.groupByRecord().
+	 */
+	global class RecordGroup {
+		/** @description The actions that name the record **/
+		private List<AsyncAction__c> actions;
+		/** @description The record the actions name **/
+		private Id recordId;
+		/** @description Processor metadata controlling retry behavior **/
+		private AsyncActionProcessor__mdt settings;
+
+		/**
+		 * @description Starts an empty group for the record.
+		 * @param settings The processor configuration metadata
+		 * @param recordId The record the actions name
+		 */
+		private RecordGroup(AsyncActionProcessor__mdt settings, Id recordId) {
+			this.actions = new List<AsyncAction__c>{};
+			this.recordId = recordId;
+			this.settings = settings;
+		}
+
+		/**
+		 * @description Cancels every action for the record, as when the record no longer needs processing.
+		 */
+		global void cancel() {
+			this.setStatus(AsyncActions.Status.CANCELED);
+		}
+
+		/**
+		 * @description Completes every action for the record.
+		 */
+		global void complete() {
+			this.setStatus(AsyncActions.Status.COMPLETED);
+		}
+
+		/**
+		 * @description Fails every action for the record, which retries per the processor's settings.
+		 * @param error The error object that caused the failure
+		 */
+		global void fail(Object error) {
+			new AsyncActions.Failure(this.settings)?.fail(this.actions, error);
+		}
+
+		/**
+		 * @description Returns a copy, so a caller's remove() cannot drop an action from the group and leave it Pending.
+		 * @return The actions that name the record
+		 */
+		global List<AsyncAction__c> getActions() {
+			return this.actions?.clone();
+		}
+
+		/**
+		 * @description Returns the record the actions name.
+		 * @return The related record Id, or null for the actions with no related record
+		 */
+		global Id getRecordId() {
+			return this.recordId;
+		}
+
+		/**
+		 * @description Adds the action to the group, or fails it without retries when the behavior rejects duplicates.
+		 * @param action The action to add
+		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
+		 */
+		private void add(AsyncAction__c action, AsyncActions.DuplicateBehavior behavior) {
+			if (this.isRejectedDuplicate(behavior)) {
+				String msg = 'Duplicate action for record ' + this.recordId;
+				new AsyncActions.Failure(this.settings, AsyncActions.RetryBehavior.SUDDEN_DEATH)?.fail(action, msg);
+			} else {
+				this.actions?.add(action);
+			}
+		}
+
+		/**
+		 * @description Only the first action for a record survives when duplicates fail. Actions with no related record are
+		 * never duplicates of each other.
+		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
+		 * @return Whether the next action should fail as a duplicate
+		 */
+		private Boolean isRejectedDuplicate(AsyncActions.DuplicateBehavior behavior) {
+			return (behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES &&
+			this.recordId != null &&
+			this.actions?.isEmpty() == false);
+		}
+
+		/**
+		 * @description Records an outcome that needs no failure handling on every action for the record.
+		 * @param status The outcome to record
+		 */
+		private void setStatus(AsyncActions.Status status) {
+			for (AsyncAction__c action : this.actions) {
+				action.Status__c = status?.name();
+			}
+		}
 	}
 
 	/**

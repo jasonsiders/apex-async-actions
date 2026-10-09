@@ -28,7 +28,7 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ### Action List Management
 
-Avoid modifying the original `actions` List parameter, as this may interfere with the framework's error detection. Instead, work with a copy or Map.
+Avoid modifying the original `actions` List parameter, as this may interfere with the framework's error detection. Instead, work with a copy or Map. For actions that each name a record, [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) does this for you.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
@@ -55,31 +55,13 @@ public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> act
 
 ### Data Validation
 
-Validate input data early and fail gracefully for invalid data.
+Validate input data early and fail gracefully for invalid data. [AsyncActions.groupByRecord](./The-AsyncActions-Class#groupbyrecord) fails any action whose `RelatedRecordId__c` is not a valid Id with `SUDDEN_DEATH`, and groups the rest by record. See [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class) for a full example.
 
 ```apex
 public void process(AsyncActionProcessor__mdt settings, List<AsyncAction__c> actions) {
-    List<AsyncAction__c> validActions = new List<AsyncAction__c>();
-    List<AsyncAction__c> invalidActions = new List<AsyncAction__c>();
-
-    for (AsyncAction__c action : actions) {
-        if (action.RelatedRecordId__c == null) {
-            invalidActions.add(action);
-        } else {
-            validActions.add(action);
-        }
-    }
-
-    // Fail invalid actions immediately with SUDDEN_DEATH
-    if (!invalidActions.isEmpty()) {
-        new AsyncActions.Failure(settings, AsyncActions.RetryBehavior.SUDDEN_DEATH)
-            .fail(invalidActions, 'Missing required RelatedRecordId');
-    }
-
-    // Process valid actions
-    if (!validActions.isEmpty()) {
-        processValidActions(validActions);
-    }
+    // Actions with an invalid RelatedRecordId__c have already failed; blank ones are under the null key
+    Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
+    // ...query groups.keySet() once, then complete, cancel or fail each group
 }
 ```
 
