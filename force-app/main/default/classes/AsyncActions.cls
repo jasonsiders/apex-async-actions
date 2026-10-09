@@ -11,8 +11,9 @@ global abstract class AsyncActions {
 	// **** STATIC **** //
 	/**
 	 * @description Groups the actions by the record each one names, so the processor can query each record once and give
-	 * every action for that record the same outcome. Fails, without retries, actions that name no valid record or that the
-	 * behavior rejects as duplicates, since no retry could fix them.
+	 * every action for that record the same outcome. Actions with a blank RelatedRecordId__c share the group under the null
+	 * key. Fails, without retries, actions whose RelatedRecordId__c is not a valid Id or that the behavior rejects as
+	 * duplicates, since no retry could fix them.
 	 * @param settings The processor configuration metadata
 	 * @param actions The actions to group
 	 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
@@ -24,13 +25,17 @@ global abstract class AsyncActions {
 		AsyncActions.DuplicateBehavior behavior
 	) {
 		Map<Id, AsyncActions.RecordGroup> groups = new Map<Id, AsyncActions.RecordGroup>{};
+		AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
 		for (AsyncAction__c action : actions) {
-			if (AsyncActions.rejectInvalidRecordId(settings, action) == false) {
-				Id recordId = action?.RelatedRecordId__c;
+			try {
+				// Blank means no related record, which is valid; only text that is not an Id throws
+				Id recordId = String.isBlank(action?.RelatedRecordId__c) ? null : action?.RelatedRecordId__c;
 				AsyncActions.RecordGroup recordGroup = groups?.get(recordId) ??
 					new AsyncActions.RecordGroup(settings, recordId);
 				recordGroup?.add(action, behavior);
 				groups?.put(recordId, recordGroup);
+			} catch (System.StringException error) {
+				new AsyncActions.Failure(settings, suddenDeath)?.fail(action, error);
 			}
 		}
 		return groups;
@@ -107,37 +112,6 @@ global abstract class AsyncActions {
 	global static AsyncAction__c initAction(AsyncActionProcessor__mdt settings) {
 		Id nullRecordId = null;
 		return AsyncActions.initAction(settings, nullRecordId);
-	}
-
-	/**
-	 * @description RelatedRecordId__c is a text field, and assigning invalid text to an Id throws.
-	 * @param action The action to read
-	 * @return The related record Id, or null when the field is blank or not a valid Id
-	 */
-	private static Id parseRecordId(AsyncAction__c action) {
-		Id recordId;
-		try {
-			recordId = action?.RelatedRecordId__c;
-		} catch (System.StringException error) {
-			recordId = null;
-		}
-		return recordId;
-	}
-
-	/**
-	 * @description Fails the action, without retries, when its RelatedRecordId__c is blank or not a valid Id.
-	 * @param settings The processor configuration metadata
-	 * @param action The action to check
-	 * @return Whether the action was rejected
-	 */
-	private static Boolean rejectInvalidRecordId(AsyncActionProcessor__mdt settings, AsyncAction__c action) {
-		Boolean isInvalid = (AsyncActions.parseRecordId(action) == null);
-		if (isInvalid) {
-			AsyncActions.RetryBehavior suddenDeath = AsyncActions.RetryBehavior.SUDDEN_DEATH;
-			String message = 'RelatedRecordId__c must be a valid record Id: ' + action?.RelatedRecordId__c;
-			new AsyncActions.Failure(settings, suddenDeath)?.fail(action, message);
-		}
-		return isInvalid;
 	}
 
 	// **** INNER **** //
@@ -245,7 +219,7 @@ global abstract class AsyncActions {
 
 	/**
 	 * @description A record and every action in the batch that names it, so the processor can give them all one outcome.
-	 * Built by AsyncActions.groupByRecord().
+	 * The group under the null key holds the actions with no related record. Built by AsyncActions.groupByRecord().
 	 */
 	global class RecordGroup {
 		/** @description The actions that name the record **/
@@ -298,7 +272,7 @@ global abstract class AsyncActions {
 
 		/**
 		 * @description Returns the record the actions name.
-		 * @return The related record Id
+		 * @return The related record Id, or null for the actions with no related record
 		 */
 		global Id getRecordId() {
 			return this.recordId;
@@ -320,13 +294,14 @@ global abstract class AsyncActions {
 		}
 
 		/**
-		 * @description Only the first action for a record survives when duplicates fail.
+		 * @description Only the first action for a record survives when duplicates fail. Actions with no related record are
+		 * never duplicates of each other.
 		 * @param behavior Whether actions that name the same record share an outcome, or all but the first fail
 		 * @return Whether the next action should fail as a duplicate
 		 */
 		private Boolean isRejectedDuplicate(AsyncActions.DuplicateBehavior behavior) {
 			Boolean failsDuplicates = (behavior == AsyncActions.DuplicateBehavior.FAIL_DUPLICATES);
-			return failsDuplicates && this.actions?.isEmpty() == false;
+			return failsDuplicates && this.recordId != null && this.actions?.isEmpty() == false;
 		}
 
 		/**

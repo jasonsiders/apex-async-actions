@@ -150,29 +150,50 @@ private class AsyncActionsTest {
 	}
 
 	@IsTest
-	static void shouldFailActionsWithoutAValidRecordId() {
+	static void shouldGroupActionsWithoutARecordUnderNull() {
+		// Actions with no related record are valid, so they share a group rather than fail, even as duplicates
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncAction__c missing = AsyncActions.initAction(settings);
+		AsyncAction__c empty = AsyncActions.initAction(settings);
+		empty.RelatedRecordId__c = '';
+		AsyncAction__c blank = AsyncActions.initAction(settings);
+		blank.RelatedRecordId__c = ' ';
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ missing, empty, blank };
+		AsyncActions.DuplicateBehavior behavior = AsyncActions.DuplicateBehavior.FAIL_DUPLICATES;
+
+		Test.startTest();
+		Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions, behavior);
+		Test.stopTest();
+
+		Assert.areEqual(new Set<Id>{ null }, groups?.keySet(), 'Should group under the null key');
+		Assert.areEqual(actions, groups?.get(null)?.getActions(), 'Wrong actions without a record');
+		for (AsyncAction__c action : actions) {
+			Assert.areEqual(AsyncActions.Status.PENDING.name(), action?.Status__c, 'Should not fail');
+		}
+	}
+
+	@IsTest
+	static void shouldFailActionsWithAnInvalidRecordId() {
 		// Bad text can reach the field through DML or data loads, and must not throw for the rest of the batch
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		Id userId = UserInfo.getUserId();
-		AsyncAction__c missing = AsyncActions.initAction(settings);
-		AsyncAction__c blank = AsyncActions.initAction(settings);
-		blank.RelatedRecordId__c = ' ';
 		AsyncAction__c invalid = AsyncActions.initAction(settings);
 		invalid.RelatedRecordId__c = 'not-an-id';
 		AsyncAction__c valid = AsyncActions.initAction(settings, userId);
-		List<AsyncAction__c> rejected = new List<AsyncAction__c>{ missing, blank, invalid };
-		List<AsyncAction__c> actions = new List<AsyncAction__c>{ missing, blank, invalid, valid };
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ invalid, valid };
 
 		Test.startTest();
 		Map<Id, AsyncActions.RecordGroup> groups = AsyncActions.groupByRecord(settings, actions);
 		Test.stopTest();
 
 		Assert.areEqual(new Set<Id>{ userId }, groups?.keySet(), 'Wrong record Ids');
-		for (AsyncAction__c action : rejected) {
-			Assert.areEqual(AsyncActions.Status.FAILED.name(), action?.Status__c, 'Should fail without retries');
-			Assert.isTrue(action?.Error__c?.contains('valid record Id'), 'Wrong error: ' + action?.Error__c);
-		}
+		Assert.areEqual(AsyncActions.Status.FAILED.name(), invalid?.Status__c, 'Should fail without retries');
+		Assert.isTrue(
+			invalid?.Error__c?.contains('not-an-id'),
+			'Error should name the bad value: ' + invalid?.Error__c
+		);
 		Assert.areEqual(AsyncActions.Status.PENDING.name(), valid?.Status__c, 'A valid action should not fail');
 	}
 
