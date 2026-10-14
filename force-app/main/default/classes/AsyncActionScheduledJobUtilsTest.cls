@@ -70,6 +70,23 @@ private class AsyncActionScheduledJobUtilsTest {
 		Assert.areEqual(1, remainingJobs?.size(), 'Locked job should not have been aborted');
 	}
 
+	@IsTest
+	static void shouldHandleAlreadyScheduledJobGracefully() {
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
+		// Simulates a concurrent transaction that scheduled the same job after this one checked for it
+		System.schedule(jobName, AsyncActionScheduledJobUtils.HOURLY_CRON_EXP, new MySchedulable());
+
+		Test.startTest();
+		Id jobId = AsyncActionScheduledJobUtils.scheduleNewJob(jobSettings);
+		Test.stopTest();
+
+		Assert.isNull(jobId, 'Should not have scheduled a duplicate job');
+		List<AsyncApexJob> jobs = AsyncActionScheduledJobUtilsTest.getJobs(jobName);
+		Assert.areEqual(1, jobs?.size(), 'Existing job should remain scheduled');
+	}
+
 	// **** INNER **** //
 	/**
 	 * @description Test schedulable class used for testing scheduled job functionality
