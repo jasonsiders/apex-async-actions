@@ -74,17 +74,13 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	/**
 	 * @description Schedules a new instance of the job, unless it's disabled.
 	 * @param jobSettings The scheduled job configuration metadata
-	 * @return ID of the scheduled job, or null if the job is disabled
+	 * @return ID of the scheduled job, or null if the job is disabled or could not be scheduled
 	 */
 	public static Id scheduleNewJob(AsyncActionScheduledJob__mdt jobSettings) {
 		if (jobSettings?.Enabled__c == true) {
 			String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
 			String cronExp = AsyncActionScheduledJobUtils.getCronExpression(jobSettings);
-			System.Schedulable job = new AsyncActionSchedulable(jobSettings);
-			Id jobId = System.schedule(jobName, cronExp, job);
-			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
-			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-			return jobId;
+			return AsyncActionScheduledJobUtils.trySchedule(jobSettings, jobName, cronExp);
 		} else {
 			String msg = jobSettings?.DeveloperName + ' is not enabled';
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
@@ -110,6 +106,30 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			// be cleaned up on the next enforcement cycle — safe to log and continue.
 			String msg = 'Could not abort job (likely processing): ' + jobName + ' [' + jobId + ']';
 			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
+		}
+	}
+
+	/**
+	 * @description Attempts to schedule the job; logs and continues if it can't be scheduled.
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @param jobName The unique job name
+	 * @param cronExp The cron expression to schedule the job with
+	 * @return ID of the scheduled job, or null if it could not be scheduled
+	 */
+	private static Id trySchedule(AsyncActionScheduledJob__mdt jobSettings, String jobName, String cronExp) {
+		try {
+			System.Schedulable job = new AsyncActionSchedulable(jobSettings);
+			Id jobId = System.schedule(jobName, cronExp, job);
+			String msg = 'Scheduled new job: ' + jobId + '|' + jobName + '|' + cronExp;
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+			return jobId;
+		} catch (System.AsyncException error) {
+			// Note: A concurrent transaction (e.g., the job rescheduling itself) can schedule the same job
+			// between the caller's CronTrigger check and this call. Throwing would roll back the caller,
+			// often an AsyncAction__c insert. The job already exists, so it's safe to log and continue.
+			String msg = 'Could not schedule job: ' + jobName + ': ' + error.getMessage();
+			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
+			return null;
 		}
 	}
 
