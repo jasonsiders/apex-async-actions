@@ -25,7 +25,8 @@
 		"apex-async-actions@3.2.4-1": "04tDn000000nHkcIAE",
 		"apex-async-actions@3.2.5-1": "04tDn000000nHkmIAE",
 		"apex-async-actions@3.2.6-1": "04tDn000000nHkwIAE",
-		"apex-async-actions@3.3.0-1": "04tDn000000nHl6IAE"
+		"apex-async-actions@3.3.0-1": "04tDn000000nHl6IAE",
+		"apex-async-actions@3.3.1-1": "04tDn000000nHlBIAU"
 	},
 	"packageDirectories": [
 		{
@@ -33,8 +34,8 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "v3.3.0",
-			"versionNumber": "3.3.0.NEXT",
+			"versionName": "v3.3.1",
+			"versionNumber": "3.3.1.NEXT",
 			"versionDescription": "Added AsyncActions.groupByRecord to group a batch by related record"
 		}
 	],
