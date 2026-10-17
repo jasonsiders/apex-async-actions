@@ -139,6 +139,87 @@ private class AsyncActionJobTest {
 		}
 	}
 
+	@IsTest
+	static void shouldSkipActionsLockedByAnotherJob() {
+		// When another job holds the actions past the lock wait, this job does nothing; the other job re-launches
+		AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new JobWithLockTimeout(factory);
+		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		AsyncActionJob.allowRecursion = true;
+		// Fails the test if the processor is called with an empty batch
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.THROW_ERROR;
+
+		Test.startTest();
+		Id jobId = System.enqueueJob(job);
+		Test.stopTest();
+
+		List<AsyncApexJob> relaunchedJobs = [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName() AND Id != :jobId
+		];
+		Assert.areEqual(true, relaunchedJobs?.isEmpty(), 'Locked out job was relaunched');
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
+			String expectedStatus = AsyncActions.Status.PENDING?.name();
+			Assert.areEqual(expectedStatus, action?.Status__c, 'Locked out job processed an action');
+		}
+	}
+
+	@IsTest
+	static void shouldNotFailActionsHandledByAnotherJob() {
+		// After a job's work rolls back, a waiting job can process its actions before its finalizer runs
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
+		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
+		for (AsyncAction__c action : actions) {
+			action.Status__c = AsyncActions.Status.COMPLETED?.name();
+		}
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		job.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+		FailedJobContext context = new FailedJobContext();
+
+		Test.startTest();
+		job.finalize(context);
+		Test.stopTest();
+
+		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
+			Assert.isNull(action?.Error__c, 'Finalizer failed an action another job completed');
+		}
+	}
+
+	@IsTest
+	static void shouldProcessOldestActionsFirst() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		settings.BatchSize__c = 1;
+		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
+		AsyncActionJob job = new AsyncActionJob(factory);
+		// Insert the newer action first, so Id order and first-in-first-out order disagree
+		AsyncAction__c newerAction = AsyncActions.initAction(settings);
+		newerAction.NextEligibleAt__c = DateTime.now()?.addMinutes(-1);
+		AsyncAction__c olderAction = AsyncActions.initAction(settings);
+		olderAction.NextEligibleAt__c = DateTime.now()?.addMinutes(-2);
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{ newerAction, olderAction };
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
+
+		Test.startTest();
+		System.enqueueJob(job);
+		Test.stopTest();
+
+		List<AsyncAction__c> updatedActions = AsyncActionJobTest.getUpdatedActions(actions);
+		Map<Id, AsyncAction__c> updatedActionsById = new Map<Id, AsyncAction__c>(updatedActions);
+		String olderStatus = updatedActionsById?.get(olderAction?.Id)?.Status__c;
+		String newerStatus = updatedActionsById?.get(newerAction?.Id)?.Status__c;
+		String completedStatus = AsyncActions.Status.COMPLETED?.name();
+		String pendingStatus = AsyncActions.Status.PENDING?.name();
+		Assert.areEqual(completedStatus, olderStatus, 'Oldest action was not processed');
+		Assert.areEqual(pendingStatus, newerStatus, 'Newer action was processed first');
+	}
+
 	// **** HELPER **** //
 	/**
 	 * @description Helper method to retrieve updated AsyncAction__c records from database
@@ -186,6 +267,62 @@ private class AsyncActionJobTest {
 		 */
 		public override void finalize(System.FinalizerContext context) {
 			throw new System.DmlException('This is a test exception');
+		}
+	}
+
+	/** @description Test-specific AsyncActionJob subclass whose actions are locked by another job **/
+	private class JobWithLockTimeout extends AsyncActionJob {
+		/**
+		 * @description Constructor for test job that can't lock its actions
+		 * @param factory The factory to use for launching async actions
+		 */
+		public JobWithLockTimeout(AsyncActionLauncher.Factory factory) {
+			super(factory);
+		}
+
+		/**
+		 * @description Throws the exception the platform raises when a lock wait times out
+		 * @param candidateIds Ids of the actions to lock (unused in this test implementation)
+		 * @return Never returns
+		 * @throws System.QueryException Always, as if another job held the lock
+		 */
+		public override List<AsyncAction__c> lockPendingActions(Set<Id> candidateIds) {
+			throw new System.QueryException('Record Currently Unavailable');
+		}
+	}
+
+	/** @description Finalizer context for a job that threw an unhandled exception **/
+	private class FailedJobContext implements System.FinalizerContext {
+		/**
+		 * @description Returns the job Id (unused in these tests)
+		 * @return null
+		 */
+		public Id getAsyncApexJobId() {
+			return null;
+		}
+
+		/**
+		 * @description Returns the exception the job threw
+		 * @return A test exception
+		 */
+		public Exception getException() {
+			return MockAsyncActionProcessor.error;
+		}
+
+		/**
+		 * @description Returns the request Id (unused in these tests)
+		 * @return null
+		 */
+		public String getRequestId() {
+			return null;
+		}
+
+		/**
+		 * @description Returns the job result
+		 * @return UNHANDLED_EXCEPTION
+		 */
+		public System.ParentJobResult getResult() {
+			return System.ParentJobResult.UNHANDLED_EXCEPTION;
 		}
 	}
 }
