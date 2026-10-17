@@ -94,7 +94,8 @@ global without sharing class AsyncActionLauncher {
 	 */
 	private System.AsyncOptions initAsyncOptions(AsyncActionProcessor__mdt settings) {
 		System.AsyncOptions options = new System.AsyncOptions();
-		// DuplicateSignature prevents multiple instances of the same processor from running concurrently
+		// DuplicateSignature prevents queueing a second job for the same processor
+		// It's removed once a job starts running, so AsyncActionJob also locks the actions it processes
 		options.DuplicateSignature = this.buildDuplicateSignature(settings);
 		options.MaximumQueueableStackDepth = this.getMaxStackDepth(settings);
 		// Always specify a delay to avoid being buffered by org-wide default delay settings

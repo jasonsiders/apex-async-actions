@@ -6,7 +6,9 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 
+	@TestVisible
 	private Set<Id> actionIds;
+	private Boolean isLockedOut = false;
 	private AsyncActions.Processor processor;
 	private AsyncActionProcessor__mdt settings;
 
@@ -75,9 +77,31 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 			Database.update(actions, true, System.AccessLevel.SYSTEM_MODE);
 		}
 		// Re-launch this job if there are still pending records
-		if (this.settings?.Enabled__c == true && AsyncActionJob.allowRecursion == true) {
+		// A locked out job doesn't; the job holding its actions re-launches when it finishes
+		if (this.settings?.Enabled__c == true && this.isLockedOut == false && AsyncActionJob.allowRecursion == true) {
 			new AsyncActionLauncher()?.launch(this.settings);
 		}
+	}
+
+	/**
+	 * @description Locks the given actions that are still pending and eligible, until this transaction ends.
+	 * A concurrent job locking the same actions waits for this one to finish, then gets only those still pending.
+	 * Read More: https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/langCon_apex_locking_statements.htm
+	 * @param candidates The actions to lock
+	 * @return The locked actions
+	 */
+	@TestVisible
+	protected virtual List<AsyncAction__c> lockPendingActions(List<AsyncAction__c> candidates) {
+		return [
+			SELECT Id, Data__c, Error__c, NextEligibleAt__c, ProcessorName__c, RelatedRecordId__c, Retries__c, Status__c
+			FROM AsyncAction__c
+			WHERE
+				Id IN :candidates
+				AND NextEligibleAt__c <= :DateTime.now()
+				AND Status__c = :AsyncActions.Status.PENDING.name()
+			WITH SYSTEM_MODE
+			FOR UPDATE
+		];
 	}
 
 	private Integer getBatchSize() {
@@ -93,10 +117,21 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	}
 
 	private List<AsyncAction__c> queryPendingActions() {
-		// Retrieve pending Async Action records for the current processor
+		List<AsyncAction__c> oldest = this.queryOldestPendingActions();
+		List<AsyncAction__c> actions = this.tryLockPendingActions(oldest);
+		this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+		return actions;
+	}
+
+	/**
+	 * @description Selects the next batch of pending actions for the current processor, first in first out.
+	 * Locking queries can't use ORDER BY, so the batch is picked here and locked separately.
+	 * @return The oldest pending actions, up to the processor's batch size (Ids only)
+	 */
+	private List<AsyncAction__c> queryOldestPendingActions() {
 		String processorName = this.settings?.DeveloperName;
-		List<AsyncAction__c> actions = [
-			SELECT Id, Data__c, Error__c, NextEligibleAt__c, ProcessorName__c, RelatedRecordId__c, Retries__c, Status__c
+		return [
+			SELECT Id
 			FROM AsyncAction__c
 			WHERE
 				ProcessorName__c = :processorName
@@ -106,18 +141,37 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 			ORDER BY NextEligibleAt__c ASC // First in, first out!
 			LIMIT :this.getBatchSize()
 		];
-		this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-		return actions;
 	}
 
 	private List<AsyncAction__c> requeryActions() {
 		// Note: SObject lists persist from Queueable to Finalizer, but in a truncated form (only Ids retained)
 		// Necessary to re-query to avoid "SObject row retrieved via SOQL" errors
+		// Once this job's work rolled back, a job waiting on its locks may have processed these actions; skip those
 		return [
 			SELECT Id, Data__c, Retries__c, ProcessorName__c, RelatedRecordId__c, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
-			WHERE Id IN :this.actionIds
+			WHERE
+				Id IN :this.actionIds
+				AND NextEligibleAt__c <= :DateTime.now()
+				AND Status__c = :AsyncActions.Status.PENDING.name()
 			WITH SYSTEM_MODE
+			FOR UPDATE
 		];
+	}
+
+	/**
+	 * @description Locks the given actions; if another job holds them past the lock wait, locks none.
+	 * @param candidates The actions to lock
+	 * @return The locked actions, or an empty list if another job holds them
+	 */
+	private List<AsyncAction__c> tryLockPendingActions(List<AsyncAction__c> candidates) {
+		try {
+			return this.lockPendingActions(candidates);
+		} catch (System.QueryException error) {
+			this.isLockedOut = true;
+			String msg = this.settings?.DeveloperName + ': actions locked by another job; skipping. ' + error;
+			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+			return new List<AsyncAction__c>();
+		}
 	}
 }
