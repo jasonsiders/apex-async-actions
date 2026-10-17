@@ -282,11 +282,11 @@ private class AsyncActionJobTest {
 
 		/**
 		 * @description Throws the exception the platform raises when a lock wait times out
-		 * @param candidates The actions to lock (unused in this test implementation)
+		 * @param candidateIds Ids of the actions to lock (unused in this test implementation)
 		 * @return Never returns
 		 * @throws System.QueryException Always, as if another job held the lock
 		 */
-		public override List<AsyncAction__c> lockPendingActions(List<AsyncAction__c> candidates) {
+		public override List<AsyncAction__c> lockPendingActions(Set<Id> candidateIds) {
 			throw new System.QueryException('Record Currently Unavailable');
 		}
 	}
@@ -306,7 +306,7 @@ private class AsyncActionJobTest {
 		 * @return A test exception
 		 */
 		public Exception getException() {
-			return new System.DmlException('This is a test exception');
+			return MockAsyncActionProcessor.error;
 		}
 
 		/**
