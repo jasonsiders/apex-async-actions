@@ -149,7 +149,8 @@ private class AsyncActionJobTest {
 		List<AsyncAction__c> actions = AsyncActionJobTest.initTestActions(settings);
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionJob.allowRecursion = true;
-		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
+		// Fails the test if the processor is called with an empty batch
+		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.THROW_ERROR;
 
 		Test.startTest();
 		Id jobId = System.enqueueJob(job);
@@ -169,7 +170,7 @@ private class AsyncActionJobTest {
 
 	@IsTest
 	static void shouldNotFailActionsHandledByAnotherJob() {
-		// Once a failed job's work rolls back, a job waiting on its locks can process its actions before its finalizer runs
+		// After a job's work rolls back, a waiting job can process its actions before its finalizer runs
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncActionLauncher.Factory factory = new AsyncActionLauncher.Factory(settings);
 		AsyncActionJob job = new AsyncActionJob(factory);
@@ -179,9 +180,10 @@ private class AsyncActionJobTest {
 		}
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 		job.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+		FailedJobContext context = new FailedJobContext();
 
 		Test.startTest();
-		job.finalize(new FailedJobContext());
+		job.finalize(context);
 		Test.stopTest();
 
 		for (AsyncAction__c action : AsyncActionJobTest.getUpdatedActions(actions)) {
@@ -197,9 +199,9 @@ private class AsyncActionJobTest {
 		AsyncActionJob job = new AsyncActionJob(factory);
 		// Insert the newer action first, so Id order and first-in-first-out order disagree
 		AsyncAction__c newerAction = AsyncActions.initAction(settings);
-		newerAction.NextEligibleAt__c = DateTime.now().addMinutes(-1);
+		newerAction.NextEligibleAt__c = DateTime.now()?.addMinutes(-1);
 		AsyncAction__c olderAction = AsyncActions.initAction(settings);
-		olderAction.NextEligibleAt__c = DateTime.now().addMinutes(-2);
+		olderAction.NextEligibleAt__c = DateTime.now()?.addMinutes(-2);
 		List<AsyncAction__c> actions = new List<AsyncAction__c>{ newerAction, olderAction };
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 		MockAsyncActionProcessor.pathType = MockAsyncActionProcessor.Path.SUCCESS;
@@ -208,13 +210,14 @@ private class AsyncActionJobTest {
 		System.enqueueJob(job);
 		Test.stopTest();
 
-		Map<Id, AsyncAction__c> updatedActions = new Map<Id, AsyncAction__c>(
-			AsyncActionJobTest.getUpdatedActions(actions)
-		);
-		String olderStatus = updatedActions?.get(olderAction?.Id)?.Status__c;
-		String newerStatus = updatedActions?.get(newerAction?.Id)?.Status__c;
-		Assert.areEqual(AsyncActions.Status.COMPLETED?.name(), olderStatus, 'Oldest action was not processed');
-		Assert.areEqual(AsyncActions.Status.PENDING?.name(), newerStatus, 'Newer action was processed first');
+		List<AsyncAction__c> updatedActions = AsyncActionJobTest.getUpdatedActions(actions);
+		Map<Id, AsyncAction__c> updatedActionsById = new Map<Id, AsyncAction__c>(updatedActions);
+		String olderStatus = updatedActionsById?.get(olderAction?.Id)?.Status__c;
+		String newerStatus = updatedActionsById?.get(newerAction?.Id)?.Status__c;
+		String completedStatus = AsyncActions.Status.COMPLETED?.name();
+		String pendingStatus = AsyncActions.Status.PENDING?.name();
+		Assert.areEqual(completedStatus, olderStatus, 'Oldest action was not processed');
+		Assert.areEqual(pendingStatus, newerStatus, 'Newer action was processed first');
 	}
 
 	// **** HELPER **** //
@@ -267,9 +270,7 @@ private class AsyncActionJobTest {
 		}
 	}
 
-	/**
-	 * @description Test-specific AsyncActionJob subclass whose actions are locked by another job
-	 */
+	/** @description Test-specific AsyncActionJob subclass whose actions are locked by another job **/
 	private class JobWithLockTimeout extends AsyncActionJob {
 		/**
 		 * @description Constructor for test job that can't lock its actions
@@ -282,16 +283,15 @@ private class AsyncActionJobTest {
 		/**
 		 * @description Throws the exception the platform raises when a lock wait times out
 		 * @param candidates The actions to lock (unused in this test implementation)
-		 * @return Never returns; always throws
+		 * @return Never returns
+		 * @throws System.QueryException Always, as if another job held the lock
 		 */
 		public override List<AsyncAction__c> lockPendingActions(List<AsyncAction__c> candidates) {
 			throw new System.QueryException('Record Currently Unavailable');
 		}
 	}
 
-	/**
-	 * @description Finalizer context for a job that threw an unhandled exception
-	 */
+	/** @description Finalizer context for a job that threw an unhandled exception **/
 	private class FailedJobContext implements System.FinalizerContext {
 		/**
 		 * @description Returns the job Id (unused in these tests)

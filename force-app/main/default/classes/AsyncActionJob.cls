@@ -6,9 +6,10 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	@TestVisible
 	private static Boolean allowRecursion = !Test.isRunningTest();
 
+	/** @description Ids of the actions this job locked; the finalizer re-queries them, since only Ids survive to it **/
 	@TestVisible
 	private Set<Id> actionIds;
-	private Boolean isLockedOut = false;
+	private Boolean isLockedOut;
 	private AsyncActions.Processor processor;
 	private AsyncActionProcessor__mdt settings;
 
@@ -32,8 +33,11 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 		if (this.settings?.Enabled__c == true) {
 			try {
 				List<AsyncAction__c> actions = this.queryPendingActions();
-				this.processor?.process(this.settings, actions);
-				Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
+				// Empty when another job got to these actions first
+				if (actions?.isEmpty() == false) {
+					this.processor?.process(this.settings, actions);
+					Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
+				}
 			} catch (Exception error) {
 				AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
 				throw error;
@@ -78,7 +82,7 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 		}
 		// Re-launch this job if there are still pending records
 		// A locked out job doesn't; the job holding its actions re-launches when it finishes
-		if (this.settings?.Enabled__c == true && this.isLockedOut == false && AsyncActionJob.allowRecursion == true) {
+		if (this.settings?.Enabled__c == true && this.isLockedOut != true && AsyncActionJob.allowRecursion == true) {
 			new AsyncActionLauncher()?.launch(this.settings);
 		}
 	}
@@ -90,7 +94,6 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	 * @param candidates The actions to lock
 	 * @return The locked actions
 	 */
-	@TestVisible
 	protected virtual List<AsyncAction__c> lockPendingActions(List<AsyncAction__c> candidates) {
 		return [
 			SELECT Id, Data__c, Error__c, NextEligibleAt__c, ProcessorName__c, RelatedRecordId__c, Retries__c, Status__c
@@ -116,6 +119,10 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 		}
 	}
 
+	/**
+	 * @description Claims the next batch, so no other job processes the same actions while this one runs
+	 * @return The actions this job processes; empty if another job holds them
+	 */
 	private List<AsyncAction__c> queryPendingActions() {
 		List<AsyncAction__c> oldest = this.queryOldestPendingActions();
 		List<AsyncAction__c> actions = this.tryLockPendingActions(oldest);
@@ -143,6 +150,10 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 		];
 	}
 
+	/**
+	 * @description Re-selects this job's still-pending actions, so its failure skips actions another job handled
+	 * @return The actions to mark as failed
+	 */
 	private List<AsyncAction__c> requeryActions() {
 		// Note: SObject lists persist from Queueable to Finalizer, but in a truncated form (only Ids retained)
 		// Necessary to re-query to avoid "SObject row retrieved via SOQL" errors
@@ -171,7 +182,7 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 			this.isLockedOut = true;
 			String msg = this.settings?.DeveloperName + ': actions locked by another job; skipping. ' + error;
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
-			return new List<AsyncAction__c>();
+			return new List<AsyncAction__c>{};
 		}
 	}
 }
