@@ -32,11 +32,7 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 		if (this.settings?.Enabled__c == true) {
 			try {
 				List<AsyncAction__c> actions = this.queryPendingActions();
-				// Empty when another job got to these actions first
-				if (actions?.isEmpty() == false) {
-					this.processor?.process(this.settings, actions);
-					Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
-				}
+				this.processActions(actions);
 			} catch (Exception error) {
 				AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
 				throw error;
@@ -117,6 +113,18 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 			this.processor = new AsyncActionFlowProcessor(settings);
 		} else {
 			this.processor = (AsyncActions.Processor) Type.forName(settings?.Processor__c)?.newInstance();
+		}
+	}
+
+	/**
+	 * @description Runs the processor on the claimed actions and saves the results.
+	 * Skips an empty batch, which means another job got to these actions first.
+	 * @param actions The actions this job claimed
+	 */
+	private void processActions(List<AsyncAction__c> actions) {
+		if (actions?.isEmpty() == false) {
+			this.processor?.process(this.settings, actions);
+			Database.update(actions, false, System.AccessLevel.SYSTEM_MODE);
 		}
 	}
 
