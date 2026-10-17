@@ -74,7 +74,6 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	protected virtual void finalize(System.FinalizerContext context) {
 		if (context?.getResult() == System.ParentJobResult.UNHANDLED_EXCEPTION) {
 			// The job failed; mark each action record as failed, according to its defined retry behavior
-			// Note: SObject lists persist from Queueable to Finalizer, but in a truncated form (only Ids retained)
 			// Re-locking skips actions a waiting job processed after this job's work rolled back
 			Exception error = context?.getException();
 			List<AsyncAction__c> actions = this.lockPendingActions(this.actionIds);
