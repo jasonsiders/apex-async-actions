@@ -34,29 +34,30 @@ Async Action Processor records define:
 
 The `DelayInMinutes__c` field controls the delay before enqueueing queueable jobs for this specific processor:
 
-- **Default**: When blank, inherits the value from `AsyncActionGlobalSetting__mdt.DelayInMinutes__c`
+- **Default**: When blank, inherits the value from the `DelayInMinutes` [`AsyncActionParameter__mdt`](./The-AsyncActionParameter__mdt-Custom-Metadata-Type) record
 - **Override**: Set to `0` for immediate execution, or a specific number of minutes to delay
 - **Purpose**: Ensures the processor controls its own timing instead of inheriting org-wide defaults
 
 This setting is particularly useful when:
+
 - Your org has configured org-wide default delays for queueable jobs
 - You need different timing behavior for different processors
 - You want to prioritize certain processors over others
 
 ## Best Practices
 
--   **Start with larger batch sizes (200+)** - Begin with higher batch sizes and adjust based on processing requirements
--   **Monitor Limits** - Watch for governor limit exceptions in debug logs
--   **Profile Performance** - Measure actual processing times and adjust accordingly
--   **Consider Complexity** - Reduce batch size for processor-intensive operations
--   **Appropriate Retries** - Set retry counts based on expected failure patterns
--   **Reasonable Intervals** - Allow enough time for transient issues to resolve
--   **Delay Configuration** - Set to `0` for time-sensitive processors, or use a delay for lower-priority background work
+- **Start with larger batch sizes (200+)** - Begin with higher batch sizes and adjust based on processing requirements
+- **Monitor Limits** - Watch for governor limit exceptions in debug logs
+- **Profile Performance** - Measure actual processing times and adjust accordingly
+- **Consider Complexity** - Reduce batch size for processor-intensive operations
+- **Appropriate Retries** - Set retry counts based on expected failure patterns
+- **Reasonable Intervals** - Allow enough time for transient issues to resolve
+- **Delay Configuration** - Set to `0` for time-sensitive processors, or use a delay for lower-priority background work
 
 ## Related Objects
 
--   [AsyncAction\_\_c](./The-AsyncAction__c-Object) - Records that reference these configurations
--   [AsyncActionScheduledJobItem\_\_mdt](./The-AsyncActionScheduledJobItem__mdt-Custom-Metadata-Type) - Scheduled execution of processors
--   [AsyncActionGlobalSetting\_\_mdt](./The-AsyncActionGlobalSetting__mdt-Custom-Metadata-Type) - Framework-wide settings
+- [AsyncAction\_\_c](./The-AsyncAction__c-Object) - Records that reference these configurations
+- [AsyncActionScheduledJobItem\_\_mdt](./The-AsyncActionScheduledJobItem__mdt-Custom-Metadata-Type) - Scheduled execution of processors
+- [AsyncActionParameter\_\_mdt](./The-AsyncActionParameter__mdt-Custom-Metadata-Type) - Framework-wide parameters
 
 ---

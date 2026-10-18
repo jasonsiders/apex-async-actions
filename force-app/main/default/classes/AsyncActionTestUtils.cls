@@ -6,20 +6,6 @@
 @IsTest
 global class AsyncActionTestUtils {
 	/**
-	 * @description Constructs an AsyncActionGlobalSetting__mdt settings object for testing.
-	 * @return Initialized AsyncActionGlobalSetting__mdt record with test values
-	 */
-	global static AsyncActionGlobalSetting__mdt initGlobalSettings() {
-		// Constructs an AsyncActionGlobalSetting__mdt settings object
-		// This is usually not necessary, unless testing logging or other plugin(s) behavior
-		AsyncActionGlobalSetting__mdt settings = new AsyncActionGlobalSetting__mdt(
-			DeveloperName = 'Test_Global_Setting'
-		);
-		AsyncActionTestUtils.mockGlobalSettings(settings);
-		return settings;
-	}
-
-	/**
 	 * @description Instantiates and returns an Apex processor settings object with default values for testing.
 	 * @param processorType The processor class type to create settings for
 	 * @return AsyncActionProcessor__mdt record configured for Apex processing
@@ -95,12 +81,20 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Provides @IsTest access to inject global settings record to external callers.
-	 * @param settings The global settings record to inject for testing
+	 * @description Gives subscriber tests a way to set parameters, since custom metadata can't be inserted via DML
+	 * @param developerName The DeveloperName of the parameter to inject (ex., 'LoggerPlugin')
+	 * @param value The Value__c of the parameter to inject
 	 */
-	global static void mockGlobalSettings(AsyncActionGlobalSetting__mdt settings) {
-		// Gives @IsTest access to inject global settings record(s) to external callers
-		AsyncActionGlobalSettingService.settings = settings;
+	global static void mockParameter(String developerName, String value) {
+		AsyncActionParameter__mdt parameter = new AsyncActionParameter__mdt(
+			DeveloperName = developerName,
+			Value__c = value
+		);
+		Map<String, AsyncActionParameter__mdt> existing = AsyncActionParameterService.parameters ??
+			new Map<String, AsyncActionParameter__mdt>{};
+		// Copy, since a map already loaded from getAll() is read-only
+		AsyncActionParameterService.parameters = new Map<String, AsyncActionParameter__mdt>(existing);
+		AsyncActionParameterService.parameters?.put(developerName, parameter);
 	}
 
 	/**

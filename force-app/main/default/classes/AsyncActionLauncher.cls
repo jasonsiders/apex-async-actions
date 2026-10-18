@@ -67,14 +67,23 @@ global without sharing class AsyncActionLauncher {
 
 	/**
 	 * @description Gets the delay in minutes before enqueueing a job for the given processor.
-	 * Processor-level setting takes priority over global setting; defaults to 0.
+	 * Processor-level setting takes priority over the DelayInMinutes parameter; defaults to 0.
 	 * @param settings The processor configuration to check for delay setting
 	 * @return Delay in minutes to use when enqueueing the job
 	 */
 	@TestVisible
 	private Integer getDelayInMinutes(AsyncActionProcessor__mdt settings) {
-		Decimal delay = settings?.DelayInMinutes__c ?? AsyncActionGlobalSettingService.getSettings()?.DelayInMinutes__c;
+		Decimal delay = settings?.DelayInMinutes__c ?? this.getGlobalDelayInMinutes();
 		return delay?.intValue() ?? 0;
+	}
+
+	/**
+	 * @description Ignores a value that isn't a whole number, so a typo in the parameter can't block enqueueing
+	 * @return The parameter's value as a whole number of minutes, or null if blank or not a whole number
+	 */
+	private Decimal getGlobalDelayInMinutes() {
+		String value = AsyncActionParameterService.getParameter('DelayInMinutes');
+		return value?.isNumeric() == true ? Decimal.valueOf(value) : null;
 	}
 
 	/**

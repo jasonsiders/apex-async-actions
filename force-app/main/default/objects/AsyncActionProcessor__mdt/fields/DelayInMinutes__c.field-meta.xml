@@ -4,7 +4,7 @@
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <inlineHelpText>The number of minutes to delay before enqueueing a new job for this processor.
-When left blank, falls back to the value defined in AsyncActionGlobalSetting__mdt.
+When left blank, falls back to the DelayInMinutes AsyncActionParameter__mdt.
 Set to 0 to enqueue immediately, bypassing any org-wide default delay.</inlineHelpText>
     <label>Delay (Minutes)</label>
     <precision>18</precision>
