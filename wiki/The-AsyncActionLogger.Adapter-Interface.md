@@ -15,8 +15,6 @@ The framework supports [Nebula Logger](https://github.com/jongpie/NebulaLogger/)
 
 This requires Nebula Logger `v4.14.10` or newer. Framework logs are added as Nebula Logger entries, and saved using Nebula Logger's default save method. When the framework logs an exception, the exception is passed to Nebula Logger so its type and stack trace are recorded.
 
-More generally, if `LoggerPlugin` is set to a class that implements `System.Callable` instead of `AsyncActionLogger.Adapter`, the framework calls it with the `newEntry` and `saveLog` actions that `CallableLogger` expects.
-
 ## Methods
 
 #### `log(System.LoggingLevel level, Object logMessage)`

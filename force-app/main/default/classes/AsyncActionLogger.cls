@@ -1,8 +1,8 @@
 /**
  * @description Provides framework-wide logging by delegating to a configurable adapter.
- * Defaults to System.debug; subscribers supply a custom adapter, or a System.Callable logger like
- * Nebula Logger's CallableLogger, via the LoggerPlugin AsyncActionParameter__mdt so log output can be
- * routed to any platform without changing call sites.
+ * Defaults to System.debug; subscribers supply a custom adapter, or Nebula Logger's CallableLogger,
+ * via the LoggerPlugin AsyncActionParameter__mdt so log output can be routed to any platform
+ * without changing call sites.
  */
 // Global modifier and debug statements are required for subscriber extensibility; empty save() block is an intentional no-op
 @SuppressWarnings('PMD.AvoidDebugStatements,PMD.AvoidGlobalModifier,PMD.EmptyStatementBlock')
@@ -50,9 +50,9 @@ global abstract class AsyncActionLogger {
 	}
 
 	/**
-	 * @description System.Callable plugins (ex., Nebula Logger's CallableLogger) are wrapped so
-	 * subscribers can use them without a compile-time dependency or a custom adapter
-	 * @param adapterName Fully qualified name of a class that implements AsyncActionLogger.Adapter or System.Callable
+	 * @description Nebula Logger's CallableLogger is detected as a System.Callable, so the package compiles
+	 * without Nebula Logger installed, and wrapped in NebulaAdapter, so subscribers need no custom adapter
+	 * @param adapterName Fully qualified name of an AsyncActionLogger.Adapter, or of Nebula Logger's CallableLogger
 	 * @return The plugin as an adapter, or null if the class does not exist
 	 */
 	private static AsyncActionLogger.Adapter initAdapter(String adapterName) {
@@ -103,7 +103,7 @@ global abstract class AsyncActionLogger {
 		private System.Callable logger;
 
 		/**
-		 * @description Private so it is only constructed when the LoggerPlugin parameter is set to a System.Callable
+		 * @description Wraps the CallableLogger instance that the LoggerPlugin parameter is set to
 		 * @param logger The callable logger to send entries to
 		 */
 		private NebulaAdapter(System.Callable logger) {

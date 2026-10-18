@@ -4,7 +4,7 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionLoggerTest {
-	// Recorded by MockCallable; held here since inner classes can't declare static fields
+	// Recorded by MockCallableLogger; held here since inner classes can't declare static fields
 	static List<String> callableActions = new List<String>{};
 	static List<Map<String, Object>> callableArgs = new List<Map<String, Object>>{};
 
@@ -86,8 +86,8 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
-	static void shouldSendLogsToCallable() {
-		AsyncActionLoggerTest.useMockCallable();
+	static void shouldSendLogsToNebula() {
+		AsyncActionLoggerTest.useMockCallableLogger();
 
 		Test.startTest();
 		AsyncActionLogger.log(System.LoggingLevel.WARN, 'Test Log');
@@ -101,8 +101,8 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
-	static void shouldSendExceptionsToCallable() {
-		AsyncActionLoggerTest.useMockCallable();
+	static void shouldSendExceptionsToNebula() {
+		AsyncActionLoggerTest.useMockCallableLogger();
 		Exception error = new DmlException('Oops');
 
 		Test.startTest();
@@ -114,8 +114,8 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
-	static void shouldSaveCallableLogs() {
-		AsyncActionLoggerTest.useMockCallable();
+	static void shouldSaveNebulaLogs() {
+		AsyncActionLoggerTest.useMockCallableLogger();
 
 		Test.startTest();
 		AsyncActionLogger.save();
@@ -140,8 +140,8 @@ private class AsyncActionLoggerTest {
 	}
 
 	// **** PRIVATE **** //
-	static void useMockCallable() {
-		Type callableType = MockCallable.class;
+	static void useMockCallableLogger() {
+		Type callableType = MockCallableLogger.class;
 		String callableName = callableType?.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
 	}
@@ -149,7 +149,7 @@ private class AsyncActionLoggerTest {
 	// **** INNER **** //
 	/**
 	 * @description Mock adapter for testing custom logging; also implements System.Callable, so
-	 * shouldInitializeCustomLogAdapter proves adapters are never wrapped as callables
+	 * shouldInitializeCustomLogAdapter proves adapters are never wrapped in NebulaAdapter
 	 */
 	public class MockAdapter implements AsyncActionLogger.Adapter, System.Callable {
 		/**
@@ -182,7 +182,7 @@ private class AsyncActionLoggerTest {
 	/**
 	 * @description Stands in for Nebula Logger's CallableLogger, recording each call for assertions
 	 */
-	public class MockCallable implements System.Callable {
+	public class MockCallableLogger implements System.Callable {
 		/**
 		 * @description Records the call instead of logging it
 		 * @param action The action to perform
