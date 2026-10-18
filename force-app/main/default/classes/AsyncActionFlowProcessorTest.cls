@@ -100,7 +100,12 @@ private class AsyncActionFlowProcessorTest {
 
 	// **** HELPER **** //
 	private static List<AsyncAction__c> getActions() {
-		return [SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c FROM AsyncAction__c LIMIT :TEST_SIZE];
+		return [
+			SELECT Id, Error__c, NextEligibleAt__c, Retries__c, Status__c
+			FROM AsyncAction__c
+			WITH SYSTEM_MODE
+			LIMIT :TEST_SIZE
+		];
 	}
 
 	private static AsyncActionProcessor__mdt initSettings() {
