@@ -148,9 +148,10 @@ private class AsyncActionLoggerTest {
 
 	// **** INNER **** //
 	/**
-	 * @description Mock adapter implementation for testing custom logging functionality
+	 * @description Mock adapter implementation for testing custom logging functionality.
+	 * Also implements System.Callable, so shouldInitializeCustomLogAdapter proves adapters are never wrapped as callables.
 	 */
-	public class MockAdapter implements AsyncActionLogger.Adapter {
+	public class MockAdapter implements AsyncActionLogger.Adapter, System.Callable {
 		/**
 		 * @description Mock log implementation that does nothing
 		 * @param level The logging level (unused in mock)
@@ -165,6 +166,16 @@ private class AsyncActionLoggerTest {
 		 */
 		public void save() {
 			// Doesn't matter
+		}
+
+		/**
+		 * @description Mock call implementation that does nothing
+		 * @param action The action to perform (unused in mock)
+		 * @param arguments The arguments for the action (unused in mock)
+		 * @return Always null
+		 */
+		public Object call(String action, Map<String, Object> arguments) {
+			return null;
 		}
 	}
 
