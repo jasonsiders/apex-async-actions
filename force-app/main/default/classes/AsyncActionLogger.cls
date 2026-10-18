@@ -1,7 +1,8 @@
 /**
  * @description Provides framework-wide logging by delegating to a configurable adapter.
- * Defaults to System.debug; subscribers supply a custom adapter (or a System.Callable logger, like Nebula Logger's CallableLogger)
- * via the LoggerPlugin AsyncActionParameter__mdt so log output can be routed to any platform without changing call sites.
+ * Defaults to System.debug; subscribers supply a custom adapter, or a System.Callable logger like
+ * Nebula Logger's CallableLogger, via the LoggerPlugin AsyncActionParameter__mdt so log output can be
+ * routed to any platform without changing call sites.
  */
 // Global modifier and debug statements are required for subscriber extensibility; empty save() block is an intentional no-op
 @SuppressWarnings('PMD.AvoidDebugStatements,PMD.AvoidGlobalModifier,PMD.EmptyStatementBlock')
@@ -49,8 +50,8 @@ global abstract class AsyncActionLogger {
 	}
 
 	/**
-	 * @description Instantiates the named plugin; System.Callable plugins (ex., Nebula Logger's CallableLogger) are wrapped
-	 * so subscribers can use them without a compile-time dependency or a custom adapter
+	 * @description System.Callable plugins (ex., Nebula Logger's CallableLogger) are wrapped so
+	 * subscribers can use them without a compile-time dependency or a custom adapter
 	 * @param adapterName Fully qualified name of a class that implements AsyncActionLogger.Adapter or System.Callable
 	 * @return The plugin as an adapter, or null if the class does not exist
 	 */

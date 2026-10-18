@@ -148,8 +148,8 @@ private class AsyncActionLoggerTest {
 
 	// **** INNER **** //
 	/**
-	 * @description Mock adapter implementation for testing custom logging functionality.
-	 * Also implements System.Callable, so shouldInitializeCustomLogAdapter proves adapters are never wrapped as callables.
+	 * @description Mock adapter for testing custom logging; also implements System.Callable, so
+	 * shouldInitializeCustomLogAdapter proves adapters are never wrapped as callables
 	 */
 	public class MockAdapter implements AsyncActionLogger.Adapter, System.Callable {
 		/**
@@ -180,7 +180,7 @@ private class AsyncActionLoggerTest {
 	}
 
 	/**
-	 * @description Mock System.Callable logger (ex., Nebula Logger's CallableLogger) that records each call for assertions
+	 * @description Stands in for Nebula Logger's CallableLogger, recording each call for assertions
 	 */
 	public class MockCallable implements System.Callable {
 		/**
