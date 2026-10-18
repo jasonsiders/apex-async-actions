@@ -23,7 +23,7 @@ global abstract class AsyncActionLogger {
 		INSTANCE?.log(level, logMessage);
 	}
 
-	/** @description Flushes buffered log entries; delegated to the adapter since only custom adapters require an explicit flush **/
+	/** @description Delegated to the adapter, since only some adapters buffer entries that need a flush **/
 	global static void save() {
 		INSTANCE?.save();
 	}
@@ -43,7 +43,7 @@ global abstract class AsyncActionLogger {
 				: DEFAULT_LOGGER;
 			return adapter ?? DEFAULT_LOGGER;
 		} catch (Exception error) {
-			System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
+			System.debug(System.LoggingLevel.WARN, adapterName + ' could not be loaded, using DefaultLogger: ' + error);
 			return DEFAULT_LOGGER;
 		}
 	}
@@ -82,7 +82,7 @@ global abstract class AsyncActionLogger {
 		void save();
 	}
 
-	/** @description Bundled fallback that writes to System.debug; active when no LoggerPlugin parameter is configured **/
+	/** @description Bundled fallback that writes to System.debug; used when LoggerPlugin is blank or fails **/
 	@TestVisible
 	private class DefaultLogger implements AsyncActionLogger.Adapter {
 		/** @description Private to prevent external construction; access logging via AsyncActionLogger.log and AsyncActionLogger.save **/
