@@ -1,16 +1,14 @@
 /**
- * @description Service class for retrieving AsyncActionParameter__mdt values by DeveloperName.
- * The parameters property serves as a seam to inject test records in @IsTest context,
- * since custom metadata types cannot be manipulated via traditional DML.
- * See AsyncActionTestUtils.mockParameter to easily inject parameters for your apex tests.
+ * @description Reads package-wide AsyncActionParameter__mdt values by DeveloperName, so each setting is its own
+ * record and a plugin package can ship one without overwriting a subscriber's configuration
  */
 public abstract class AsyncActionParameterService {
+	/** @description Cached for the transaction; also a seam for tests, since custom metadata can't be inserted via DML **/
 	@TestVisible
 	static Map<String, AsyncActionParameter__mdt> parameters;
 
 	/**
-	 * @description Retrieves the value of a named AsyncActionParameter__mdt record.
-	 * Records are cached for the remainder of the transaction; getAll() consumes no SOQL.
+	 * @description Loads every parameter on first read; getAll() costs no SOQL, and callers read on each log or enqueue
 	 * @param developerName The DeveloperName of the parameter to retrieve
 	 * @return The Value__c of the matching parameter, or null if not found
 	 */

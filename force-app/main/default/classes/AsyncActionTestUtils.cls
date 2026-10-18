@@ -81,8 +81,7 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Provides @IsTest access to inject an AsyncActionParameter__mdt value to external callers.
-	 * This is usually not necessary, unless testing logging or other plugin(s) behavior.
+	 * @description Gives subscriber tests a way to set parameters, since custom metadata can't be inserted via DML
 	 * @param developerName The DeveloperName of the parameter to inject (ex., 'LoggerPlugin')
 	 * @param value The Value__c of the parameter to inject
 	 */

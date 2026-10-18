@@ -78,7 +78,7 @@ global without sharing class AsyncActionLauncher {
 	}
 
 	/**
-	 * @description Parses the DelayInMinutes parameter; a non-numeric value is ignored so a typo can't block enqueueing.
+	 * @description Ignores a value that isn't a whole number, so a typo in the parameter can't block enqueueing
 	 * @return The parameter's value as a whole number of minutes, or null if blank or not a whole number
 	 */
 	private Decimal getGlobalDelayInMinutes() {
