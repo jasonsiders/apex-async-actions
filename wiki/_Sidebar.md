@@ -10,12 +10,13 @@
 - [Core Concepts](./Core-Concepts)
 - [Your First Processor](./Creating-Your-First-Processor)
 - [Best Practices](./Best-Practices)
+- [Migration Guide: v4.0.0](./Migration-Guide-v4.0.0)
 
 ## Objects
 
 - [AsyncAction\_\_c](./The-AsyncAction__c-Object)
 - [AsyncActionProcessor\_\_mdt](./The-AsyncActionProcessor__mdt-Custom-Metadata-Type)
-- [AsyncActionGlobalSetting\_\_mdt](./The-AsyncActionGlobalSetting__mdt-Custom-Metadata-Type)
+- [AsyncActionParameter\_\_mdt](./The-AsyncActionParameter__mdt-Custom-Metadata-Type)
 - [AsyncActionScheduledJob\_\_mdt](./The-AsyncActionScheduledJob__mdt-Custom-Metadata-Type)
 - [AsyncActionScheduledJobItem\_\_mdt](./The-AsyncActionScheduledJobItem__mdt-Custom-Metadata-Type)
 

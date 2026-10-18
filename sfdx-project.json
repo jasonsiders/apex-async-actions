@@ -35,9 +35,9 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "v3.3.2",
-			"versionNumber": "3.3.2.NEXT",
-			"versionDescription": "Added AsyncActions.groupByRecord to group a batch by related record"
+			"versionName": "v4.0.0",
+			"versionNumber": "4.0.0.NEXT",
+			"versionDescription": "Replaced AsyncActionGlobalSetting__mdt with AsyncActionParameter__mdt"
 		}
 	],
 	"sfdcLoginUrl": "https://login.salesforce.com",
