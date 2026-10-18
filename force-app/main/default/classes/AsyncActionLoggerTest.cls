@@ -114,6 +114,29 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
+	static void shouldBuildNebulaEntryArgs() {
+		Test.startTest();
+		Map<String, Object> args = AsyncActionLogger.initNebulaEntryArgs(System.LoggingLevel.WARN, 'Test Log');
+		Test.stopTest();
+
+		Assert.areEqual(System.LoggingLevel.WARN, args?.get('loggingLevel'), 'Wrong loggingLevel');
+		Assert.areEqual('Test Log', args?.get('message'), 'Wrong message');
+		Assert.areEqual(new List<String>{ 'apex-async-actions' }, args?.get('tags'), 'Wrong tags');
+		Assert.isFalse(args?.containsKey('exception'), 'Should not include an exception');
+	}
+
+	@IsTest
+	static void shouldIncludeExceptionInNebulaEntryArgs() {
+		Exception error = new DmlException('Oops');
+
+		Test.startTest();
+		Map<String, Object> args = AsyncActionLogger.initNebulaEntryArgs(System.LoggingLevel.ERROR, error);
+		Test.stopTest();
+
+		Assert.areEqual(error, args?.get('exception'), 'Wrong exception');
+	}
+
+	@IsTest
 	static void shouldPerformDefaultLoggingLogic() {
 		// Ensure the default logger is used
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', null);
