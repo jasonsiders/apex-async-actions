@@ -1,6 +1,6 @@
 /**
  * @description Provides framework-wide logging by delegating to a configurable adapter.
- * Defaults to System.debug; subscribers supply a custom adapter, or Nebula Logger's CallableLogger,
+ * Defaults to System.debug; subscribers supply a custom adapter, or the bundled NebulaAdapter,
  * via the LoggerPlugin AsyncActionParameter__mdt so log output can be routed to any platform
  * without changing call sites.
  */
@@ -39,27 +39,13 @@ global abstract class AsyncActionLogger {
 		try {
 			adapterName = AsyncActionParameterService.getParameter('LoggerPlugin');
 			AsyncActionLogger.Adapter adapter = String.isNotBlank(adapterName)
-				? AsyncActionLogger.initAdapter(adapterName)
+				? (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance()
 				: DEFAULT_LOGGER;
 			return adapter ?? DEFAULT_LOGGER;
 		} catch (Exception error) {
-			String msg = adapterName + ' is not an instance of AsyncActionLogger.Adapter or System.Callable';
-			System.debug(System.LoggingLevel.WARN, msg);
+			System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
 			return DEFAULT_LOGGER;
 		}
-	}
-
-	/**
-	 * @description Nebula Logger's CallableLogger is detected as a System.Callable, so the package compiles
-	 * without Nebula Logger installed, and wrapped in NebulaAdapter, so subscribers need no custom adapter
-	 * @param adapterName Fully qualified name of an AsyncActionLogger.Adapter, or of Nebula Logger's CallableLogger
-	 * @return The plugin as an adapter, or null if the class does not exist
-	 */
-	private static AsyncActionLogger.Adapter initAdapter(String adapterName) {
-		Object plugin = Type.forName(adapterName)?.newInstance();
-		return (plugin instanceof System.Callable && (plugin instanceof AsyncActionLogger.Adapter) == false)
-			? new AsyncActionLogger.NebulaAdapter((System.Callable) plugin)
-			: (AsyncActionLogger.Adapter) plugin;
 	}
 
 	// **** INNER **** //
@@ -97,17 +83,16 @@ global abstract class AsyncActionLogger {
 		}
 	}
 
-	/** @description Maps Adapter calls to Nebula Logger's CallableLogger actions, so no custom adapter is needed **/
-	private class NebulaAdapter implements AsyncActionLogger.Adapter {
+	/** @description Bundled adapter for Nebula Logger; calls its CallableLogger, so there is no package dependency **/
+	public class NebulaAdapter implements AsyncActionLogger.Adapter {
 		/** @description Typed as System.Callable so the package compiles without Nebula Logger installed **/
 		private System.Callable logger;
 
-		/**
-		 * @description Wraps the CallableLogger instance that the LoggerPlugin parameter is set to
-		 * @param logger The callable logger to send entries to
-		 */
-		private NebulaAdapter(System.Callable logger) {
-			this.logger = logger;
+		/** @description Throws when Nebula Logger isn't installed, so getInstance falls back to DefaultLogger **/
+		public NebulaAdapter() {
+			// Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
+			Type loggerType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+			this.logger = (System.Callable) loggerType.newInstance();
 			this.ignoreFrameworkOrigins();
 		}
 

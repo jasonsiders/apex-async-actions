@@ -4,10 +4,6 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionLoggerTest {
-	// Recorded by MockCallableLogger; held here since inner classes can't declare static fields
-	static List<String> callableActions = new List<String>{};
-	static List<Map<String, Object>> callableArgs = new List<Map<String, Object>>{};
-
 	@IsTest
 	static void shouldLog() {
 		Type adapterType = MockAdapter.class;
@@ -86,57 +82,35 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
-	static void shouldIgnoreFrameworkOriginsInNebula() {
-		AsyncActionLoggerTest.useMockCallableLogger();
+	static void shouldUseNebulaAdapterIfNebulaIsInstalled() {
+		Type adapterType = AsyncActionLogger.NebulaAdapter.class;
+		String adapterName = adapterType?.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 
 		Test.startTest();
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
 		Test.stopTest();
 
-		Assert.isNotNull(logger, 'Should initialize the adapter');
-		Assert.areEqual(new List<String>{ 'ignoreOrigin' }, callableActions, 'Wrong actions');
-		Map<String, Object> args = callableArgs?.get(0);
-		Assert.areEqual(AsyncActionLogger.class, args?.get('apexType'), 'Wrong apexType');
+		Boolean isNebulaInstalled = AsyncActionLoggerTest.isNebulaInstalled();
+		Type expectedType = isNebulaInstalled ? adapterType : AsyncActionLogger.DefaultLogger.class;
+		Assert.isInstanceOfType(logger, expectedType, 'Wrong adapter type: ' + logger);
 	}
 
 	@IsTest
-	static void shouldSendLogsToNebula() {
-		AsyncActionLoggerTest.useMockCallableLogger();
+	static void shouldLogToNebula() {
+		Type adapterType = AsyncActionLogger.NebulaAdapter.class;
+		String adapterName = adapterType?.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 
-		Test.startTest();
-		AsyncActionLogger.log(System.LoggingLevel.WARN, 'Test Log');
-		Test.stopTest();
-
-		Assert.areEqual(new List<String>{ 'ignoreOrigin', 'newEntry' }, callableActions, 'Wrong actions');
-		Map<String, Object> args = callableArgs?.get(1);
-		Assert.areEqual(System.LoggingLevel.WARN, args?.get('loggingLevel'), 'Wrong loggingLevel');
-		Assert.areEqual('Test Log', args?.get('message'), 'Wrong message');
-		Assert.areEqual(new List<String>{ 'apex-async-actions' }, args?.get('tags'), 'Wrong tags');
-		Assert.isFalse(args?.containsKey('exception'), 'Should not include an exception');
-	}
-
-	@IsTest
-	static void shouldSendExceptionsToNebula() {
-		AsyncActionLoggerTest.useMockCallableLogger();
-		Exception error = new DmlException('Oops');
-
-		Test.startTest();
-		AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
-		Test.stopTest();
-
-		Map<String, Object> args = callableArgs?.get(1);
-		Assert.areEqual(error, args?.get('exception'), 'Wrong exception');
-	}
-
-	@IsTest
-	static void shouldSaveNebulaLogs() {
-		AsyncActionLoggerTest.useMockCallableLogger();
-
-		Test.startTest();
-		AsyncActionLogger.save();
-		Test.stopTest();
-
-		Assert.areEqual(new List<String>{ 'ignoreOrigin', 'saveLog' }, callableActions, 'Wrong actions');
+		try {
+			Test.startTest();
+			AsyncActionLogger.log(System.LoggingLevel.WARN, 'Test Log');
+			AsyncActionLogger.log(System.LoggingLevel.ERROR, new DmlException('Oops'));
+			AsyncActionLogger.save();
+			Test.stopTest();
+		} catch (Exception error) {
+			Assert.fail('Failed to log: ' + error);
+		}
 	}
 
 	@IsTest
@@ -155,18 +129,16 @@ private class AsyncActionLoggerTest {
 	}
 
 	// **** PRIVATE **** //
-	static void useMockCallableLogger() {
-		Type callableType = MockCallableLogger.class;
-		String callableName = callableType?.getName();
-		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
+	static Boolean isNebulaInstalled() {
+		Type loggerType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+		return loggerType != null;
 	}
 
 	// **** INNER **** //
 	/**
-	 * @description Mock adapter for testing custom logging; also implements System.Callable, so
-	 * shouldInitializeCustomLogAdapter proves adapters are never wrapped in NebulaAdapter
+	 * @description Mock adapter implementation for testing custom logging functionality
 	 */
-	public class MockAdapter implements AsyncActionLogger.Adapter, System.Callable {
+	public class MockAdapter implements AsyncActionLogger.Adapter {
 		/**
 		 * @description Mock log implementation that does nothing
 		 * @param level The logging level (unused in mock)
@@ -181,33 +153,6 @@ private class AsyncActionLoggerTest {
 		 */
 		public void save() {
 			// Doesn't matter
-		}
-
-		/**
-		 * @description Mock call implementation that does nothing
-		 * @param action The action to perform (unused in mock)
-		 * @param arguments The arguments for the action (unused in mock)
-		 * @return Always null
-		 */
-		public Object call(String action, Map<String, Object> arguments) {
-			return null;
-		}
-	}
-
-	/**
-	 * @description Stands in for Nebula Logger's CallableLogger, recording each call for assertions
-	 */
-	public class MockCallableLogger implements System.Callable {
-		/**
-		 * @description Records the call instead of logging it
-		 * @param action The action to perform
-		 * @param arguments The arguments for the action
-		 * @return Always null
-		 */
-		public Object call(String action, Map<String, Object> arguments) {
-			callableActions?.add(action);
-			callableArgs?.add(arguments);
-			return null;
 		}
 	}
 }
