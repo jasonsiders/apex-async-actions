@@ -231,6 +231,7 @@ private class AsyncActionJobTest {
 			SELECT Id, Error__c, Retries__c, NextEligibleAt__c, Status__c
 			FROM AsyncAction__c
 			WHERE Id IN :originalActions
+			WITH SYSTEM_MODE
 		];
 	}
 

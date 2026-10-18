@@ -84,7 +84,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.stopTest();
 
-		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];
+		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id WITH SYSTEM_MODE];
 		Assert.areEqual(settings?.Retries__c, action?.Retries__c, 'Wrong # of Retries');
 	}
 
@@ -96,7 +96,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.stopTest();
 
-		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];
+		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id WITH SYSTEM_MODE];
 		Assert.areEqual(0, action?.Retries__c, 'Wrong # of Retries');
 	}
 
@@ -112,7 +112,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.stopTest();
 
-		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id];
+		action = [SELECT Id, Retries__c FROM AsyncAction__c WHERE Id = :action.Id WITH SYSTEM_MODE];
 		Assert.areEqual(3, action?.Retries__c, 'Wrong # of Retries');
 	}
 
