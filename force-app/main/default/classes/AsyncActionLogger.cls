@@ -56,7 +56,7 @@ global abstract class AsyncActionLogger {
 	 */
 	private static AsyncActionLogger.Adapter initAdapter(String adapterName) {
 		Object plugin = Type.forName(adapterName)?.newInstance();
-		return (plugin instanceof System.Callable && !(plugin instanceof AsyncActionLogger.Adapter))
+		return (plugin instanceof System.Callable && (plugin instanceof AsyncActionLogger.Adapter) == false)
 			? new AsyncActionLogger.CallableAdapter((System.Callable) plugin)
 			: (AsyncActionLogger.Adapter) plugin;
 	}
@@ -96,7 +96,7 @@ global abstract class AsyncActionLogger {
 		}
 	}
 
-	/** @description Translates Adapter calls into Nebula Logger's CallableLogger actions; active when LoggerPlugin is set to a System.Callable **/
+	/** @description Maps Adapter calls to Nebula Logger's CallableLogger actions, so no custom adapter is needed **/
 	@TestVisible
 	private class CallableAdapter implements AsyncActionLogger.Adapter {
 		/** @description Typed as System.Callable so the package compiles without Nebula Logger installed **/
@@ -111,11 +111,27 @@ global abstract class AsyncActionLogger {
 		}
 
 		/**
-		 * @description Adds a log entry via the newEntry action; exceptions are also passed whole so their stack trace is kept
+		 * @description Adds a log entry via the newEntry action
 		 * @param level The logging level for the message
 		 * @param logMessage The message or object to log
 		 */
 		public void log(System.LoggingLevel level, Object logMessage) {
+			Map<String, Object> args = this.initEntryArgs(level, logMessage);
+			this.logger?.call('newEntry', args);
+		}
+
+		/** @description Saves buffered entries via the saveLog action, using the logger's default save method **/
+		public void save() {
+			this.logger?.call('saveLog', null);
+		}
+
+		/**
+		 * @description Exceptions are also passed whole, so the logger can record their type and stack trace
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 * @return The newEntry arguments, keyed by the names CallableLogger expects
+		 */
+		private Map<String, Object> initEntryArgs(System.LoggingLevel level, Object logMessage) {
 			Map<String, Object> args = new Map<String, Object>{
 				'loggingLevel' => level,
 				'message' => String.valueOf(logMessage)
@@ -123,12 +139,7 @@ global abstract class AsyncActionLogger {
 			if (logMessage instanceof Exception) {
 				args?.put('exception', logMessage);
 			}
-			this.logger?.call('newEntry', args);
-		}
-
-		/** @description Saves buffered entries via the saveLog action, using the logger's default save method **/
-		public void save() {
-			this.logger?.call('saveLog', null);
+			return args;
 		}
 	}
 }

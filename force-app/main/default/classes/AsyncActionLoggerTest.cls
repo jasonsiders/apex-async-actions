@@ -5,8 +5,8 @@
 @IsTest
 private class AsyncActionLoggerTest {
 	// Recorded by MockCallable; held here since inner classes can't declare static fields
-	static List<String> callableActions = new List<String>();
-	static List<Map<String, Object>> callableArgs = new List<Map<String, Object>>();
+	static List<String> callableActions = new List<String>{};
+	static List<Map<String, Object>> callableArgs = new List<Map<String, Object>>{};
 
 	@IsTest
 	static void shouldLog() {
@@ -87,9 +87,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldWrapCallableLogPlugin() {
-		Type callableType = MockCallable.class;
-		String callableName = callableType?.getName();
-		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
+		AsyncActionLoggerTest.useMockCallable();
 
 		Test.startTest();
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
@@ -104,9 +102,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldSendLogsToCallable() {
-		Type callableType = MockCallable.class;
-		String callableName = callableType?.getName();
-		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
+		AsyncActionLoggerTest.useMockCallable();
 
 		Test.startTest();
 		AsyncActionLogger.log(System.LoggingLevel.WARN, 'Test Log');
@@ -121,9 +117,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldSendExceptionsToCallable() {
-		Type callableType = MockCallable.class;
-		String callableName = callableType?.getName();
-		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
+		AsyncActionLoggerTest.useMockCallable();
 		Exception error = new DmlException('Oops');
 
 		Test.startTest();
@@ -137,9 +131,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldSaveCallableLogs() {
-		Type callableType = MockCallable.class;
-		String callableName = callableType?.getName();
-		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
+		AsyncActionLoggerTest.useMockCallable();
 
 		Test.startTest();
 		AsyncActionLogger.save();
@@ -161,6 +153,13 @@ private class AsyncActionLoggerTest {
 			Assert.fail('An error was thrown while performing default logging logic: ' + error);
 		}
 		Test.stopTest();
+	}
+
+	// **** PRIVATE **** //
+	static void useMockCallable() {
+		Type callableType = MockCallable.class;
+		String callableName = callableType?.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', callableName);
 	}
 
 	// **** INNER **** //
