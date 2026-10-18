@@ -128,9 +128,7 @@ private class AsyncActionLauncherTest {
 	static void shouldUseProcessorLevelDelay() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.DelayInMinutes__c = 5;
-		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionTestUtils.initGlobalSettings();
-		globalSettings.DelayInMinutes__c = 10;
-		AsyncActionTestUtils.mockGlobalSettings(globalSettings);
+		AsyncActionTestUtils.mockParameter('DelayInMinutes', '10');
 
 		Test.startTest();
 		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
@@ -142,15 +140,25 @@ private class AsyncActionLauncherTest {
 	@IsTest
 	static void shouldFallBackToGlobalDelay() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncActionGlobalSetting__mdt globalSettings = AsyncActionTestUtils.initGlobalSettings();
-		globalSettings.DelayInMinutes__c = 3;
-		AsyncActionTestUtils.mockGlobalSettings(globalSettings);
+		AsyncActionTestUtils.mockParameter('DelayInMinutes', '3');
 
 		Test.startTest();
 		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
 		Test.stopTest();
 
 		Assert.areEqual(3, delay, 'Expected global-level delay of 3');
+	}
+
+	@IsTest
+	static void shouldIgnoreNonNumericGlobalDelay() {
+		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
+		AsyncActionTestUtils.mockParameter('DelayInMinutes', 'five');
+
+		Test.startTest();
+		Integer delay = new AsyncActionLauncher().getDelayInMinutes(settings);
+		Test.stopTest();
+
+		Assert.areEqual(0, delay, 'Expected non-numeric global delay to be ignored');
 	}
 
 	// **** PRIVATE **** //

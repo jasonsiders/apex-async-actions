@@ -1,6 +1,6 @@
 /**
  * @description Provides framework-wide logging by delegating to a configurable adapter.
- * Defaults to System.debug; subscribers supply a custom adapter via AsyncActionGlobalSetting__mdt.LoggerPlugin__c
+ * Defaults to System.debug; subscribers supply a custom adapter via the LoggerPlugin AsyncActionParameter__mdt
  * so log output can be routed to any platform without changing call sites.
  */
 // Global modifier and debug statements are required for subscriber extensibility; empty save() block is an intentional no-op
@@ -30,14 +30,13 @@ global abstract class AsyncActionLogger {
 	// **** PRIVATE **** //
 
 	/**
-	 * @description Reads LoggerPlugin__c once so initialization cost is paid only once per transaction
+	 * @description Reads the LoggerPlugin parameter once so initialization cost is paid only once per transaction
 	 * @return Configured adapter, or DefaultLogger when none is specified or the specified class fails to load
 	 */
 	private static AsyncActionLogger.Adapter getInstance() {
 		String adapterName;
 		try {
-			AsyncActionGlobalSetting__mdt settings = AsyncActionGlobalSettingService.getSettings();
-			adapterName = settings?.LoggerPlugin__c;
+			adapterName = AsyncActionParameterService.getParameter('LoggerPlugin');
 			AsyncActionLogger.Adapter adapter = String.isNotBlank(adapterName)
 				? (AsyncActionLogger.Adapter) Type.forName(adapterName)?.newInstance()
 				: DEFAULT_LOGGER;
@@ -50,7 +49,7 @@ global abstract class AsyncActionLogger {
 
 	// **** INNER **** //
 
-	/** @description Contract custom adapters must satisfy; implement and register the class name via AsyncActionGlobalSetting__mdt.LoggerPlugin__c **/
+	/** @description Contract custom adapters must satisfy; implement and register the class name via the LoggerPlugin AsyncActionParameter__mdt **/
 	global interface Adapter {
 		/**
 		 * @description Called on every log statement; implementations must be safe to invoke in any execution context
@@ -62,7 +61,7 @@ global abstract class AsyncActionLogger {
 		void save();
 	}
 
-	/** @description Bundled fallback that writes to System.debug; active when no LoggerPlugin__c is configured **/
+	/** @description Bundled fallback that writes to System.debug; active when no LoggerPlugin parameter is configured **/
 	@TestVisible
 	private class DefaultLogger implements AsyncActionLogger.Adapter {
 		/** @description Private to prevent external construction; access logging via AsyncActionLogger.log and AsyncActionLogger.save **/

@@ -7,8 +7,8 @@ private class AsyncActionLoggerTest {
 	@IsTest
 	static void shouldLog() {
 		Type adapterType = MockAdapter.class;
-		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.LoggerPlugin__c = adapterType?.getName();
+		String adapterName = adapterType?.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 
 		try {
 			Test.startTest();
@@ -23,8 +23,8 @@ private class AsyncActionLoggerTest {
 	@IsTest
 	static void shouldInitializeCustomLogAdapter() {
 		Type adapterType = MockAdapter.class;
-		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.LoggerPlugin__c = adapterType?.getName();
+		String adapterName = adapterType?.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 
 		Test.startTest();
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
@@ -35,8 +35,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldUseDefaultLogAdapterIfInvalid() {
-		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.LoggerPlugin__c = 'foo/bar';
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', 'foo/bar');
 
 		Test.startTest();
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
@@ -54,8 +53,7 @@ private class AsyncActionLoggerTest {
 		// Use a real class that exists but doesn't implement AsyncActionLogger.Adapter.
 		// Type.forName() will succeed and newInstance() will return an object, but the
 		// cast to Adapter throws a TypeException, which exercises the catch block in getInstance().
-		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.LoggerPlugin__c = 'InvocableInitAsyncAction';
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', 'InvocableInitAsyncAction');
 
 		Test.startTest();
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
@@ -70,8 +68,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldUseDefualtLogAdapterIfNone() {
-		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.LoggerPlugin__c = null;
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', null);
 
 		Test.startTest();
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
@@ -87,8 +84,7 @@ private class AsyncActionLoggerTest {
 	@IsTest
 	static void shouldPerformDefaultLoggingLogic() {
 		// Ensure the default logger is used
-		AsyncActionGlobalSetting__mdt settings = AsyncActionTestUtils.initGlobalSettings();
-		settings.LoggerPlugin__c = null;
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', null);
 
 		Test.startTest();
 		try {
