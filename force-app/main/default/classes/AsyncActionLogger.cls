@@ -96,14 +96,14 @@ global abstract class AsyncActionLogger {
 		}
 	}
 
-	/** @description Translates Adapter calls into Nebula Logger's CallableLogger actions; active when LoggerPlugin names a System.Callable **/
+	/** @description Translates Adapter calls into Nebula Logger's CallableLogger actions; active when LoggerPlugin is set to a System.Callable **/
 	@TestVisible
 	private class CallableAdapter implements AsyncActionLogger.Adapter {
 		/** @description Typed as System.Callable so the package compiles without Nebula Logger installed **/
 		private System.Callable logger;
 
 		/**
-		 * @description Private so it is only constructed when the LoggerPlugin parameter names a System.Callable
+		 * @description Private so it is only constructed when the LoggerPlugin parameter is set to a System.Callable
 		 * @param logger The callable logger to send entries to
 		 */
 		private CallableAdapter(System.Callable logger) {
