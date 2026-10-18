@@ -133,17 +133,17 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	 * @return The actions this job processes; empty if another job holds them
 	 */
 	private List<AsyncAction__c> queryPendingActions() {
-		Set<Id> oldestIds = this.queryOldestPendingIds();
-		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
 		try {
-			actions = this.lockPendingActions(oldestIds);
+			Set<Id> oldestIds = this.queryOldestPendingActionIds();
+			List<AsyncAction__c> actions = this.lockPendingActions(oldestIds);
+			this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
+			return actions;
 		} catch (System.QueryException error) {
 			// The lock wait timed out; the job holding these actions re-launches when it finishes
 			String msg = this.settings?.DeveloperName + ': actions locked by another job; skipping. ' + error;
 			AsyncActionLogger.log(System.LoggingLevel.FINEST, msg);
+			return null;
 		}
-		this.actionIds = new Map<Id, AsyncAction__c>(actions)?.keySet();
-		return actions;
 	}
 
 	/**
@@ -151,7 +151,7 @@ public virtual without sharing class AsyncActionJob implements Database.AllowsCa
 	 * Locking queries can't use ORDER BY, so the batch is picked here and locked separately.
 	 * @return Ids of the oldest pending actions, up to the processor's batch size
 	 */
-	private Set<Id> queryOldestPendingIds() {
+	private Set<Id> queryOldestPendingActionIds() {
 		String processorName = this.settings?.DeveloperName;
 		List<AsyncAction__c> oldest = [
 			SELECT Id
