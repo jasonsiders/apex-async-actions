@@ -10,6 +10,10 @@ global abstract class AsyncActionLogger {
 	/** @description Shared fallback so DefaultLogger is only constructed once regardless of which code path triggers it **/
 	private static final AsyncActionLogger.Adapter DEFAULT_LOGGER = new AsyncActionLogger.DefaultLogger();
 
+	/** @description Lets tests construct NebulaAdapter, and so cover it, without Nebula Logger installed **/
+	@TestVisible
+	private static Boolean bypassNebulaCheck = false;
+
 	/** @description Cached once at class load to avoid repeated metadata queries per transaction **/
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance() ?? DEFAULT_LOGGER;
@@ -46,26 +50,6 @@ global abstract class AsyncActionLogger {
 			System.debug(System.LoggingLevel.WARN, adapterName + ' could not be loaded, using DefaultLogger: ' + error);
 			return DEFAULT_LOGGER;
 		}
-	}
-
-	/**
-	 * @description On the outer class so tests can cover it without Nebula Logger installed; exceptions are also
-	 * passed whole, so Nebula Logger can record their type and stack trace
-	 * @param level The logging level for the message
-	 * @param logMessage The message or object to log
-	 * @return The newEntry arguments, keyed by the names Nebula Logger's CallableLogger expects
-	 */
-	@TestVisible
-	private static Map<String, Object> initNebulaEntryArgs(System.LoggingLevel level, Object logMessage) {
-		Map<String, Object> args = new Map<String, Object>{
-			'loggingLevel' => level,
-			'message' => String.valueOf(logMessage),
-			'tags' => new List<String>{ 'apex-async-actions' }
-		};
-		if (logMessage instanceof Exception) {
-			args?.put('exception', logMessage);
-		}
-		return args;
 	}
 
 	// **** INNER **** //
@@ -112,7 +96,10 @@ global abstract class AsyncActionLogger {
 		public NebulaAdapter() {
 			// Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
 			Type loggerType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
-			this.logger = (System.Callable) loggerType.newInstance();
+			if (loggerType == null && AsyncActionLogger.bypassNebulaCheck != true) {
+				throw new System.TypeException('Nebula Logger is not installed');
+			}
+			this.logger = (System.Callable) loggerType?.newInstance();
 			// Keeps AsyncActionLogger (and so this inner class) out of each entry's origin. A no-op until Nebula
 			// Logger releases ignoreOrigin: older versions reject it as unknown, and CallableLogger reports that
 			// without throwing
@@ -125,13 +112,32 @@ global abstract class AsyncActionLogger {
 		 * @param logMessage The message or object to log
 		 */
 		public void log(System.LoggingLevel level, Object logMessage) {
-			Map<String, Object> args = AsyncActionLogger.initNebulaEntryArgs(level, logMessage);
+			Map<String, Object> args = this.initEntryArgs(level, logMessage);
 			this.logger?.call('newEntry', args);
 		}
 
 		/** @description Saves buffered entries via the saveLog action, using the logger's default save method **/
 		public void save() {
 			this.logger?.call('saveLog', null);
+		}
+
+		/**
+		 * @description Exceptions are passed whole, so Nebula Logger can record their type and stack trace
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 * @return The newEntry arguments, keyed by the names Nebula Logger's CallableLogger expects
+		 */
+		@TestVisible
+		private Map<String, Object> initEntryArgs(System.LoggingLevel level, Object logMessage) {
+			Map<String, Object> args = new Map<String, Object>{
+				'loggingLevel' => level,
+				'message' => String.valueOf(logMessage),
+				'tags' => new List<String>{ 'apex-async-actions' }
+			};
+			if (logMessage instanceof Exception) {
+				args?.put('exception', logMessage);
+			}
+			return args;
 		}
 	}
 }

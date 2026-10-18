@@ -98,15 +98,14 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldLogToNebula() {
-		Type adapterType = AsyncActionLogger.NebulaAdapter.class;
-		String adapterName = adapterType?.getName();
-		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
+		AsyncActionLogger.bypassNebulaCheck = true;
+		AsyncActionLogger.Adapter logger = new AsyncActionLogger.NebulaAdapter();
 
 		try {
 			Test.startTest();
-			AsyncActionLogger.log(System.LoggingLevel.WARN, 'Test Log');
-			AsyncActionLogger.log(System.LoggingLevel.ERROR, new DmlException('Oops'));
-			AsyncActionLogger.save();
+			logger?.log(System.LoggingLevel.WARN, 'Test Log');
+			logger?.log(System.LoggingLevel.ERROR, new DmlException('Oops'));
+			logger?.save();
 			Test.stopTest();
 		} catch (Exception error) {
 			Assert.fail('Failed to log: ' + error);
@@ -115,8 +114,11 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldBuildNebulaEntryArgs() {
+		AsyncActionLogger.bypassNebulaCheck = true;
+		AsyncActionLogger.NebulaAdapter logger = new AsyncActionLogger.NebulaAdapter();
+
 		Test.startTest();
-		Map<String, Object> args = AsyncActionLogger.initNebulaEntryArgs(System.LoggingLevel.WARN, 'Test Log');
+		Map<String, Object> args = logger?.initEntryArgs(System.LoggingLevel.WARN, 'Test Log');
 		Test.stopTest();
 
 		Assert.areEqual(System.LoggingLevel.WARN, args?.get('loggingLevel'), 'Wrong loggingLevel');
@@ -127,10 +129,12 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldIncludeExceptionInNebulaEntryArgs() {
+		AsyncActionLogger.bypassNebulaCheck = true;
+		AsyncActionLogger.NebulaAdapter logger = new AsyncActionLogger.NebulaAdapter();
 		Exception error = new DmlException('Oops');
 
 		Test.startTest();
-		Map<String, Object> args = AsyncActionLogger.initNebulaEntryArgs(System.LoggingLevel.ERROR, error);
+		Map<String, Object> args = logger?.initEntryArgs(System.LoggingLevel.ERROR, error);
 		Test.stopTest();
 
 		Assert.areEqual(error, args?.get('exception'), 'Wrong exception');
