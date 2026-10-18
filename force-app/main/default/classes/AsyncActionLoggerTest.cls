@@ -91,8 +91,8 @@ private class AsyncActionLoggerTest {
 		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
 		Test.stopTest();
 
-		Boolean isNebulaInstalled = AsyncActionLoggerTest.isNebulaInstalled();
-		Type expectedType = isNebulaInstalled ? adapterType : AsyncActionLogger.DefaultLogger.class;
+		Type nebulaType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+		Type expectedType = (nebulaType != null) ? adapterType : AsyncActionLogger.DefaultLogger.class;
 		Assert.isInstanceOfType(logger, expectedType, 'Wrong adapter type: ' + logger);
 	}
 
@@ -149,12 +149,6 @@ private class AsyncActionLoggerTest {
 			Assert.fail('An error was thrown while performing default logging logic: ' + error);
 		}
 		Test.stopTest();
-	}
-
-	// **** PRIVATE **** //
-	static Boolean isNebulaInstalled() {
-		Type loggerType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
-		return loggerType != null;
 	}
 
 	// **** INNER **** //
