@@ -97,7 +97,6 @@ global abstract class AsyncActionLogger {
 	}
 
 	/** @description Maps Adapter calls to Nebula Logger's CallableLogger actions, so no custom adapter is needed **/
-	@TestVisible
 	private class CallableAdapter implements AsyncActionLogger.Adapter {
 		/** @description Typed as System.Callable so the package compiles without Nebula Logger installed **/
 		private System.Callable logger;

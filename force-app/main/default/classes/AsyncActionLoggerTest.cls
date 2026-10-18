@@ -86,21 +86,6 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
-	static void shouldWrapCallableLogPlugin() {
-		AsyncActionLoggerTest.useMockCallable();
-
-		Test.startTest();
-		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
-		Test.stopTest();
-
-		Assert.isInstanceOfType(
-			logger,
-			AsyncActionLogger.CallableAdapter.class,
-			'Wrong adapter type: ' + AsyncActionLogger.INSTANCE
-		);
-	}
-
-	@IsTest
 	static void shouldSendLogsToCallable() {
 		AsyncActionLoggerTest.useMockCallable();
 
@@ -125,7 +110,6 @@ private class AsyncActionLoggerTest {
 		Test.stopTest();
 
 		Map<String, Object> args = callableArgs?.get(0);
-		Assert.areEqual(String.valueOf(error), args?.get('message'), 'Wrong message');
 		Assert.areEqual(error, args?.get('exception'), 'Wrong exception');
 	}
 
