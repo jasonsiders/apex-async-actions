@@ -20,4 +20,16 @@ private class AsyncActionParameterServiceTest {
 
 		Assert.areEqual('Bar', value, 'Did not use injected parameter');
 	}
+
+	@IsTest
+	static void shouldInjectParametersAfterLoadingFromOrg() {
+		AsyncActionParameterService.getParameter('Foo');
+		AsyncActionTestUtils.mockParameter('Foo', 'Bar');
+
+		Test.startTest();
+		String value = AsyncActionParameterService.getParameter('Foo');
+		Test.stopTest();
+
+		Assert.areEqual('Bar', value, 'Did not use parameter injected after org parameters were loaded');
+	}
 }

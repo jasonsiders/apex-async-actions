@@ -90,8 +90,10 @@ global class AsyncActionTestUtils {
 			DeveloperName = developerName,
 			Value__c = value
 		);
-		AsyncActionParameterService.parameters = AsyncActionParameterService.parameters ??
+		Map<String, AsyncActionParameter__mdt> existing = AsyncActionParameterService.parameters ??
 			new Map<String, AsyncActionParameter__mdt>{};
+		// Copy, since a map already loaded from getAll() is read-only
+		AsyncActionParameterService.parameters = new Map<String, AsyncActionParameter__mdt>(existing);
 		AsyncActionParameterService.parameters?.put(developerName, parameter);
 	}
 
