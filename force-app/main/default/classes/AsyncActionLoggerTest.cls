@@ -86,6 +86,20 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
+	static void shouldIgnoreFrameworkOriginsInNebula() {
+		AsyncActionLoggerTest.useMockCallableLogger();
+
+		Test.startTest();
+		AsyncActionLogger.Adapter logger = AsyncActionLogger.INSTANCE;
+		Test.stopTest();
+
+		Assert.isNotNull(logger, 'Should initialize the adapter');
+		Assert.areEqual(new List<String>{ 'ignoreOrigin' }, callableActions, 'Wrong actions');
+		Map<String, Object> args = callableArgs?.get(0);
+		Assert.areEqual(AsyncActionLogger.class, args?.get('apexType'), 'Wrong apexType');
+	}
+
+	@IsTest
 	static void shouldSendLogsToNebula() {
 		AsyncActionLoggerTest.useMockCallableLogger();
 
@@ -93,10 +107,11 @@ private class AsyncActionLoggerTest {
 		AsyncActionLogger.log(System.LoggingLevel.WARN, 'Test Log');
 		Test.stopTest();
 
-		Assert.areEqual(new List<String>{ 'newEntry' }, callableActions, 'Wrong actions');
-		Map<String, Object> args = callableArgs?.get(0);
+		Assert.areEqual(new List<String>{ 'ignoreOrigin', 'newEntry' }, callableActions, 'Wrong actions');
+		Map<String, Object> args = callableArgs?.get(1);
 		Assert.areEqual(System.LoggingLevel.WARN, args?.get('loggingLevel'), 'Wrong loggingLevel');
 		Assert.areEqual('Test Log', args?.get('message'), 'Wrong message');
+		Assert.areEqual(new List<String>{ 'apex-async-actions' }, args?.get('tags'), 'Wrong tags');
 		Assert.isFalse(args?.containsKey('exception'), 'Should not include an exception');
 	}
 
@@ -109,7 +124,7 @@ private class AsyncActionLoggerTest {
 		AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
 		Test.stopTest();
 
-		Map<String, Object> args = callableArgs?.get(0);
+		Map<String, Object> args = callableArgs?.get(1);
 		Assert.areEqual(error, args?.get('exception'), 'Wrong exception');
 	}
 
@@ -121,7 +136,7 @@ private class AsyncActionLoggerTest {
 		AsyncActionLogger.save();
 		Test.stopTest();
 
-		Assert.areEqual(new List<String>{ 'saveLog' }, callableActions, 'Wrong actions');
+		Assert.areEqual(new List<String>{ 'ignoreOrigin', 'saveLog' }, callableActions, 'Wrong actions');
 	}
 
 	@IsTest

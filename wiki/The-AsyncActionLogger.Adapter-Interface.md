@@ -13,7 +13,9 @@ The framework supports [Nebula Logger](https://github.com/jongpie/NebulaLogger/)
 | Unlocked (no namespace)      | `CallableLogger`        |
 | Managed (`Nebula` namespace) | `Nebula.CallableLogger` |
 
-This requires Nebula Logger `v4.14.10` or newer. Framework logs are added as Nebula Logger entries, and saved using Nebula Logger's default save method. When the framework logs an exception, the exception is passed to Nebula Logger so its type and stack trace are recorded.
+This requires Nebula Logger `v4.14.10` or newer. Framework logs are added as Nebula Logger entries with the `apex-async-actions` tag, and saved using Nebula Logger's default save method. When the framework logs an exception, the exception is passed to Nebula Logger so its type and stack trace are recorded.
+
+Each entry's origin is `AsyncActionLogger.NebulaAdapter.log` until Nebula Logger releases `CallableLogger`'s `ignoreOrigin` action. The framework already calls it, so once your Nebula Logger version supports it, entries show the framework method that logged them instead.
 
 ## Methods
 

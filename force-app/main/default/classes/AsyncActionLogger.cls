@@ -108,6 +108,7 @@ global abstract class AsyncActionLogger {
 		 */
 		private NebulaAdapter(System.Callable logger) {
 			this.logger = logger;
+			this.ignoreFrameworkOrigins();
 		}
 
 		/**
@@ -134,12 +135,24 @@ global abstract class AsyncActionLogger {
 		private Map<String, Object> initEntryArgs(System.LoggingLevel level, Object logMessage) {
 			Map<String, Object> args = new Map<String, Object>{
 				'loggingLevel' => level,
-				'message' => String.valueOf(logMessage)
+				'message' => String.valueOf(logMessage),
+				'tags' => new List<String>{ 'apex-async-actions' }
 			};
 			if (logMessage instanceof Exception) {
 				args?.put('exception', logMessage);
 			}
 			return args;
+		}
+
+		/**
+		 * @description Keeps the framework's logging classes out of each entry's origin and stack trace; ignoring
+		 * AsyncActionLogger also covers this inner class
+		 */
+		private void ignoreFrameworkOrigins() {
+			// No-op until Nebula Logger releases the ignoreOrigin action: older versions reject it as an unknown
+			// action, which CallableLogger catches and reports as isSuccess = false instead of throwing
+			Map<String, Object> args = new Map<String, Object>{ 'apexType' => AsyncActionLogger.class };
+			this.logger?.call('ignoreOrigin', args);
 		}
 	}
 }
