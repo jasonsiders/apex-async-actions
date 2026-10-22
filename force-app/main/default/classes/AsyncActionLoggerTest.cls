@@ -98,8 +98,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldLogToNebula() {
-		AsyncActionLogger.bypassNebulaCheck = true;
-		AsyncActionLogger.Adapter logger = new AsyncActionLogger.NebulaAdapter();
+		AsyncActionLogger.Adapter logger = new MockNebulaAdapter();
 
 		try {
 			Test.startTest();
@@ -113,9 +112,20 @@ private class AsyncActionLoggerTest {
 	}
 
 	@IsTest
+	static void shouldThrowIfNebulaIsNotInstalled() {
+		Test.startTest();
+		try {
+			new FakeNebulaAdapter();
+			Assert.fail('Did not throw a System.TypeException');
+		} catch (System.TypeException typeError) {
+			Assert.areEqual('Nebula Logger is not installed', typeError?.getMessage(), 'Wrong error');
+		}
+		Test.stopTest();
+	}
+
+	@IsTest
 	static void shouldBuildNebulaEntryArgs() {
-		AsyncActionLogger.bypassNebulaCheck = true;
-		AsyncActionLogger.NebulaAdapter logger = new AsyncActionLogger.NebulaAdapter();
+		AsyncActionLogger.NebulaAdapter logger = new MockNebulaAdapter();
 
 		Test.startTest();
 		Map<String, Object> args = logger?.initEntryArgs(System.LoggingLevel.WARN, 'Test Log');
@@ -129,8 +139,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldIncludeExceptionInNebulaEntryArgs() {
-		AsyncActionLogger.bypassNebulaCheck = true;
-		AsyncActionLogger.NebulaAdapter logger = new AsyncActionLogger.NebulaAdapter();
+		AsyncActionLogger.NebulaAdapter logger = new MockNebulaAdapter();
 		Exception error = new DmlException('Oops');
 
 		Test.startTest();
@@ -174,6 +183,47 @@ private class AsyncActionLoggerTest {
 		 */
 		public void save() {
 			// Doesn't matter
+		}
+	}
+
+	/**
+	 * @description Reports no CallableLogger type, as if Nebula Logger isn't installed
+	 */
+	private class FakeNebulaAdapter extends AsyncActionLogger.NebulaAdapter {
+		/**
+		 * @description Simulates a missing Nebula Logger package
+		 * @return null
+		 */
+		protected override Type getLoggerType() {
+			return null;
+		}
+	}
+
+	/**
+	 * @description Swaps Nebula Logger's CallableLogger for MockCallable, so tests can run without Nebula Logger
+	 */
+	private class MockNebulaAdapter extends AsyncActionLogger.NebulaAdapter {
+		/**
+		 * @description Stands in for Nebula Logger's CallableLogger type
+		 * @return The MockCallable type
+		 */
+		protected override Type getLoggerType() {
+			return MockCallable.class;
+		}
+	}
+
+	/**
+	 * @description Mock CallableLogger that accepts every action and does nothing
+	 */
+	public class MockCallable implements System.Callable {
+		/**
+		 * @description Mock call implementation that does nothing
+		 * @param action The action name (unused in mock)
+		 * @param args The action arguments (unused in mock)
+		 * @return null
+		 */
+		public Object call(String action, Map<String, Object> args) {
+			return null;
 		}
 	}
 }

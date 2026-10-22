@@ -10,10 +10,6 @@ global abstract class AsyncActionLogger {
 	/** @description Shared fallback so DefaultLogger is only constructed once regardless of which code path triggers it **/
 	private static final AsyncActionLogger.Adapter DEFAULT_LOGGER = new AsyncActionLogger.DefaultLogger();
 
-	/** @description Lets tests construct NebulaAdapter, and so cover it, without Nebula Logger installed **/
-	@TestVisible
-	private static Boolean bypassNebulaCheck = false;
-
 	/** @description Cached once at class load to avoid repeated metadata queries per transaction **/
 	@TestVisible
 	private static final AsyncActionLogger.Adapter INSTANCE = AsyncActionLogger.getInstance() ?? DEFAULT_LOGGER;
@@ -88,15 +84,14 @@ global abstract class AsyncActionLogger {
 	}
 
 	/** @description Bundled adapter for Nebula Logger; calls its CallableLogger, so there is no package dependency **/
-	public class NebulaAdapter implements AsyncActionLogger.Adapter {
+	public virtual class NebulaAdapter implements AsyncActionLogger.Adapter {
 		/** @description Typed as System.Callable so the package compiles without Nebula Logger installed **/
 		private System.Callable logger;
 
 		/** @description Throws when Nebula Logger isn't installed, so getInstance falls back to DefaultLogger **/
 		public NebulaAdapter() {
-			// Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
-			Type loggerType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
-			if (loggerType == null && AsyncActionLogger.bypassNebulaCheck != true) {
+			Type loggerType = this.getLoggerType();
+			if (loggerType == null) {
 				throw new System.TypeException('Nebula Logger is not installed');
 			}
 			this.logger = (System.Callable) loggerType?.newInstance();
@@ -104,6 +99,15 @@ global abstract class AsyncActionLogger {
 			// Logger releases ignoreOrigin: older versions reject it as unknown, and CallableLogger reports that
 			// without throwing
 			this.logger?.call('ignoreOrigin', new Map<String, Object>{ 'apexType' => AsyncActionLogger.class });
+		}
+
+		/**
+		 * @description Virtual so tests can stand in for Nebula Logger, whether or not it's installed
+		 * @return Nebula Logger's CallableLogger type, or null when Nebula Logger isn't installed
+		 */
+		protected virtual Type getLoggerType() {
+			// Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
+			return Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
 		}
 
 		/**
