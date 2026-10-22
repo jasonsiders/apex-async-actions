@@ -4,6 +4,9 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionLoggerTest {
+	/** @description The last args MockCallable received for each action, so tests can assert what NebulaAdapter sent **/
+	private static Map<String, Map<String, Object>> argsByAction = new Map<String, Map<String, Object>>();
+
 	@IsTest
 	static void shouldLog() {
 		Type adapterType = MockAdapter.class;
@@ -125,11 +128,13 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldBuildNebulaEntryArgs() {
-		AsyncActionLogger.NebulaAdapter logger = new MockNebulaAdapter();
+		AsyncActionLogger.Adapter logger = new MockNebulaAdapter();
 
 		Test.startTest();
-		Map<String, Object> args = logger?.initEntryArgs(System.LoggingLevel.WARN, 'Test Log');
+		logger?.log(System.LoggingLevel.WARN, 'Test Log');
 		Test.stopTest();
+
+		Map<String, Object> args = argsByAction?.get('newEntry');
 
 		Assert.areEqual(System.LoggingLevel.WARN, args?.get('loggingLevel'), 'Wrong loggingLevel');
 		Assert.areEqual('Test Log', args?.get('message'), 'Wrong message');
@@ -139,12 +144,14 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldIncludeExceptionInNebulaEntryArgs() {
-		AsyncActionLogger.NebulaAdapter logger = new MockNebulaAdapter();
+		AsyncActionLogger.Adapter logger = new MockNebulaAdapter();
 		Exception error = new DmlException('Oops');
 
 		Test.startTest();
-		Map<String, Object> args = logger?.initEntryArgs(System.LoggingLevel.ERROR, error);
+		logger?.log(System.LoggingLevel.ERROR, error);
 		Test.stopTest();
+
+		Map<String, Object> args = argsByAction?.get('newEntry');
 
 		Assert.areEqual(error, args?.get('exception'), 'Wrong exception');
 	}
@@ -213,16 +220,17 @@ private class AsyncActionLoggerTest {
 	}
 
 	/**
-	 * @description Mock CallableLogger that accepts every action and does nothing
+	 * @description Mock CallableLogger that records each action's args in argsByAction
 	 */
 	public class MockCallable implements System.Callable {
 		/**
-		 * @description Mock call implementation that does nothing
-		 * @param action The action name (unused in mock)
-		 * @param args The action arguments (unused in mock)
+		 * @description Records the action's args in place of calling Nebula Logger
+		 * @param action The action name
+		 * @param args The action arguments
 		 * @return null
 		 */
 		public Object call(String action, Map<String, Object> args) {
+			argsByAction?.put(action, args);
 			return null;
 		}
 	}

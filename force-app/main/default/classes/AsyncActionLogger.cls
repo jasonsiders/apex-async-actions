@@ -96,9 +96,10 @@ global abstract class AsyncActionLogger {
 
 		/**
 		 * @description Attempts to initialize Nebula Logger's CallableLogger
+		 * @return Nebula Logger's CallableLogger, typed as System.Callable
 		 * @throws System.TypeException when NebulaLogger is not installed
 		 */
-		private void initLogger() {
+		private System.Callable initLogger() {
 			Type loggerType = this.getLoggerType();
 			if (loggerType == null) {
 				throw new System.TypeException('Nebula Logger is not installed');
@@ -111,15 +112,14 @@ global abstract class AsyncActionLogger {
 		 * @description Virtual so tests can stand in for Nebula Logger, whether or not it's installed
 		 * @return Nebula Logger's CallableLogger type, or null when Nebula Logger isn't installed
 		 */
-		@TestVisible
-		private virtual Type getLoggerType() {
+		protected virtual Type getLoggerType() {
 			// Note: Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
 			return Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
 		}
 
 		/** @description Omit this class from Nebula Logger's log stack traces */
 		private void ignoreOrigin() {
-			Map<Stirng, Object> args = new Map<String, Object>{ 'apexType' => AsyncActionLogger.class };
+			Map<String, Object> args = new Map<String, Object>{ 'apexType' => AsyncActionLogger.class };
 			this.logger?.call('ignoreOrigin', args);
 		}
 
@@ -144,7 +144,6 @@ global abstract class AsyncActionLogger {
 		 * @param logMessage The message or object to log
 		 * @return The newEntry arguments, keyed by the names Nebula Logger's CallableLogger expects
 		 */
-		@TestVisible
 		private Map<String, Object> initEntryArgs(System.LoggingLevel level, Object logMessage) {
 			Map<String, Object> args = new Map<String, Object>{
 				'loggingLevel' => level,
