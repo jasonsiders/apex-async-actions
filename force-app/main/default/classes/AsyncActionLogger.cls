@@ -29,7 +29,6 @@ global abstract class AsyncActionLogger {
 	}
 
 	// **** PRIVATE **** //
-
 	/**
 	 * @description Reads the LoggerPlugin parameter once so initialization cost is paid only once per transaction
 	 * @return Configured adapter, or DefaultLogger when none is specified or the specified class fails to load
@@ -49,7 +48,6 @@ global abstract class AsyncActionLogger {
 	}
 
 	// **** INNER **** //
-
 	/** @description Contract custom adapters must satisfy; implement and register the class name via the LoggerPlugin AsyncActionParameter__mdt **/
 	global interface Adapter {
 		/**
@@ -114,7 +112,9 @@ global abstract class AsyncActionLogger {
 		 */
 		protected virtual Type getLoggerType() {
 			// Note: Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
-			return Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+			String namespace = 'Nebula';
+			String className = 'CallableLogger';
+			return Type.forName(namespace, className) ?? Type.forName(className);
 		}
 
 		/** @description Omit this class from Nebula Logger's log stack traces */
