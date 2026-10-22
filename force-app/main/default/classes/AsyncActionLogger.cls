@@ -1,8 +1,7 @@
 /**
  * @description Provides framework-wide logging by delegating to a configurable adapter.
  * Defaults to System.debug; subscribers supply a custom adapter, or the bundled NebulaAdapter,
- * via the LoggerPlugin AsyncActionParameter__mdt so log output can be routed to any platform
- * without changing call sites.
+ * via the LoggerPlugin AsyncActionParameter__mdt so log output can be routed to any platform.
  */
 // Global modifier and debug statements are required for subscriber extensibility; empty save() block is an intentional no-op
 @SuppressWarnings('PMD.AvoidDebugStatements,PMD.AvoidGlobalModifier,PMD.EmptyStatementBlock')

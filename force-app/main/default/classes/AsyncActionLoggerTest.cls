@@ -4,7 +4,7 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs,PMD.EmptyStatementBlock')
 @IsTest
 private class AsyncActionLoggerTest {
-	/** @description The last args MockCallable received for each action, so tests can assert what NebulaAdapter sent **/
+	/** @description The last args the mock Callable received for each action, so tests can assert what NebulaAdapter sent **/
 	private static Map<String, Map<String, Object>> argsByAction = new Map<String, Map<String, Object>>();
 
 	@IsTest
@@ -118,7 +118,7 @@ private class AsyncActionLoggerTest {
 	static void shouldThrowIfNebulaIsNotInstalled() {
 		Test.startTest();
 		try {
-			new FakeNebulaAdapter();
+			new InvalidNebulaAdapter();
 			Assert.fail('Did not throw a System.TypeException');
 		} catch (System.TypeException typeError) {
 			Assert.areEqual('Nebula Logger is not installed', typeError?.getMessage(), 'Wrong error');
@@ -196,7 +196,7 @@ private class AsyncActionLoggerTest {
 	/**
 	 * @description Reports no CallableLogger type, as if Nebula Logger isn't installed
 	 */
-	private class FakeNebulaAdapter extends AsyncActionLogger.NebulaAdapter {
+	private class InvalidNebulaAdapter extends AsyncActionLogger.NebulaAdapter {
 		/**
 		 * @description Simulates a missing Nebula Logger package
 		 * @return null
