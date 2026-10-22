@@ -12,7 +12,7 @@ You get the following out of the box:
 - **Flexible Processor Types** - Support for both Apex classes and Flows as processor implementations
 - **Configurable Execution** - Control batch sizes, retry policies, and scheduling through metadata configuration
 - **Production Monitoring** - List views, related lists, and reporting capabilities for operational oversight
-- **Plugin Architecture** - Extensible logging framework with support for custom integrations
+- **Nebula Logger Support** - Send the framework's logs to [Nebula Logger](https://github.com/jongpie/NebulaLogger/) by setting one parameter, or connect any other logging tool through a custom adapter
 - **Automatic Scheduling** - Built-in scheduled job management for regular processing intervals
 
 Best of all, the framework is built 100% on the Salesforce platform using standard Salesforce technology. It's available as an unlocked package, and it always will be.
@@ -82,6 +82,12 @@ insert action;
 ```
 
 The framework will automatically process pending actions based on your configuration!
+
+## Nebula Logger Support
+
+The framework includes an adapter for [Nebula Logger](https://github.com/jongpie/NebulaLogger/). To send the framework's logs to Nebula Logger, create an `AsyncActionParameter__mdt` record named `LoggerPlugin` with the value `AsyncActionLogger.NebulaAdapter`. It works with Nebula Logger's unlocked and managed packages, and this package doesn't depend on either.
+
+See [AsyncActionLogger.Adapter](https://github.com/jasonsiders/apex-async-actions/wiki/The-AsyncActionLogger.Adapter-Interface#nebula-logger) for details, or to connect a different logging tool.
 
 ## Core-Concepts
 

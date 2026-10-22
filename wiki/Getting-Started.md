@@ -30,6 +30,10 @@ sf org assign permset -n AsyncActionAdministrator
 
 Or assign via Setup → Users → Permission Sets in the Salesforce UI.
 
-### Step 3: Build Async Action Processors
+### Step 3: Connect Nebula Logger (Optional)
+
+If you use [Nebula Logger](https://github.com/jongpie/NebulaLogger/), you can send the framework's logs to it. Create an `AsyncActionParameter__mdt` record named `LoggerPlugin` with the value `AsyncActionLogger.NebulaAdapter`. See [AsyncActionLogger.Adapter](./The-AsyncActionLogger.Adapter-Interface#nebula-logger) for details.
+
+### Step 4: Build Async Action Processors
 
 Once you've completed the installation, create your first async action using these step-by-step instructions: [Creating Your First Processor](./Creating-Your-First-Processor).

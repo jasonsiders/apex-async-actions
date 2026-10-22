@@ -6,14 +6,14 @@ Apex Async Actions was designed to solve the challenges of asynchronous processi
 
 You get the following out of the box:
 
--   **Asynchronous Task Management** - Create and manage custom asynchronous operations using Apex or Flow
--   **Built-in Error Handling** - Automatic retry logic with configurable retry behaviors and intervals
--   **Comprehensive Monitoring** - Track every operation instance as an `AsyncAction__c` record for full visibility
--   **Flexible Processor Types** - Support for both Apex classes and Flows as processor implementations
--   **Configurable Execution** - Control batch sizes, retry policies, and scheduling through metadata configuration
--   **Production Monitoring** - List views, related lists, and reporting capabilities for operational oversight
--   **Plugin Architecture** - Extensible logging framework with support for custom integrations
--   **Automatic Scheduling** - Built-in scheduled job management for regular processing intervals
+- **Asynchronous Task Management** - Create and manage custom asynchronous operations using Apex or Flow
+- **Built-in Error Handling** - Automatic retry logic with configurable retry behaviors and intervals
+- **Comprehensive Monitoring** - Track every operation instance as an `AsyncAction__c` record for full visibility
+- **Flexible Processor Types** - Support for both Apex classes and Flows as processor implementations
+- **Configurable Execution** - Control batch sizes, retry policies, and scheduling through metadata configuration
+- **Production Monitoring** - List views, related lists, and reporting capabilities for operational oversight
+- **Nebula Logger Support** - Send the framework's logs to [Nebula Logger](https://github.com/jongpie/NebulaLogger/) by setting one parameter, or connect any other logging tool through a custom adapter
+- **Automatic Scheduling** - Built-in scheduled job management for regular processing intervals
 
 Best of all, the framework is built 100% on the Salesforce platform using standard Salesforce technology. It's available as an unlocked package, and it always will be.
 
@@ -83,15 +83,21 @@ insert action;
 
 The framework will automatically process pending actions based on your configuration!
 
+## Nebula Logger Support
+
+The framework includes an adapter for [Nebula Logger](https://github.com/jongpie/NebulaLogger/). To send the framework's logs to Nebula Logger, create an `AsyncActionParameter__mdt` record named `LoggerPlugin` with the value `AsyncActionLogger.NebulaAdapter`. It works with Nebula Logger's unlocked and managed packages, and this package doesn't depend on either.
+
+See [AsyncActionLogger.Adapter](./The-AsyncActionLogger.Adapter-Interface#nebula-logger) for details, or to connect a different logging tool.
+
 ## Core-Concepts
 
 The framework operates on several key principles:
 
--   **Processors** define the logic to be executed asynchronously
--   **AsyncAction\_\_c records** represent individual work items to be processed
--   **AsyncActionProcessor\_\_mdt** configures how processors behave
--   **AsyncActionJob** is the queueable that orchestrates processing
--   **Status lifecycle** tracks actions from Pending → Completed/Failed
+- **Processors** define the logic to be executed asynchronously
+- **AsyncAction\_\_c records** represent individual work items to be processed
+- **AsyncActionProcessor\_\_mdt** configures how processors behave
+- **AsyncActionJob** is the queueable that orchestrates processing
+- **Status lifecycle** tracks actions from Pending → Completed/Failed
 
 ## Monitoring Your Actions
 
@@ -105,8 +111,8 @@ Track the status of your actions through the included UI components:
 
 Check out the sidebar for comprehensive documentation about:
 
--   [Getting started guide](./Getting-Started) with detailed setup instructions
--   [Core concepts](./Core-Concepts) explaining the framework architecture
--   [Object documentation](./The-AsyncAction__c-Object) for all custom objects and fields
--   [Class documentation](./The-AsyncActions-Class) for all global classes and methods
--   [Flow integration](./The-Template-Async-Action-Flow) and customization guide
+- [Getting started guide](./Getting-Started) with detailed setup instructions
+- [Core concepts](./Core-Concepts) explaining the framework architecture
+- [Object documentation](./The-AsyncAction__c-Object) for all custom objects and fields
+- [Class documentation](./The-AsyncActions-Class) for all global classes and methods
+- [Flow integration](./The-Template-Async-Action-Flow) and customization guide
