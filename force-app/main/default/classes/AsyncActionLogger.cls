@@ -90,24 +90,37 @@ global abstract class AsyncActionLogger {
 
 		/** @description Throws when Nebula Logger isn't installed, so getInstance falls back to DefaultLogger **/
 		public NebulaAdapter() {
+			this.logger = this.initLogger();
+			this.ignoreOrigin();
+		}
+
+		/**
+		 * @description Attempts to initialize Nebula Logger's CallableLogger
+		 * @throws System.TypeException when NebulaLogger is not installed
+		 */
+		private void initLogger() {
 			Type loggerType = this.getLoggerType();
 			if (loggerType == null) {
 				throw new System.TypeException('Nebula Logger is not installed');
+			} else {
+				return (System.Callable) loggerType?.newInstance();
 			}
-			this.logger = (System.Callable) loggerType?.newInstance();
-			// Keeps AsyncActionLogger (and so this inner class) out of each entry's origin. A no-op until Nebula
-			// Logger releases ignoreOrigin: older versions reject it as unknown, and CallableLogger reports that
-			// without throwing
-			this.logger?.call('ignoreOrigin', new Map<String, Object>{ 'apexType' => AsyncActionLogger.class });
 		}
 
 		/**
 		 * @description Virtual so tests can stand in for Nebula Logger, whether or not it's installed
 		 * @return Nebula Logger's CallableLogger type, or null when Nebula Logger isn't installed
 		 */
-		protected virtual Type getLoggerType() {
-			// Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
+		@TestVisible
+		private virtual Type getLoggerType() {
+			// Note: Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
 			return Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+		}
+
+		/** @description Omit this class from Nebula Logger's log stack traces */
+		private void ignoreOrigin() {
+			Map<Stirng, Object> args = new Map<String, Object>{ 'apexType' => AsyncActionLogger.class };
+			this.logger?.call('ignoreOrigin', args);
 		}
 
 		/**
