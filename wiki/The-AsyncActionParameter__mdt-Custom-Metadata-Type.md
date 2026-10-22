@@ -17,12 +17,12 @@ The framework recognizes the following parameters. Any other `DeveloperName` val
 
 ### `LoggerPlugin`
 
-|                   |                                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Purpose**       | Routes the framework's internal logs to your preferred logging framework                                                       |
-| **Value**         | Fully qualified name of an Apex class that implements [`AsyncActionLogger.Adapter`](./The-AsyncActionLogger.Adapter-Interface) |
-| **Example Value** | `MyLoggerAdapter`                                                                                                              |
-| **Default**       | When blank, missing, or invalid, the framework writes logs via `System.debug()`                                                |
+|                   |                                                                                                                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Purpose**       | Routes the framework's internal logs to your preferred logging framework                                                                                                                                                                         |
+| **Value**         | Fully qualified name of an Apex class that implements [`AsyncActionLogger.Adapter`](./The-AsyncActionLogger.Adapter-Interface), such as the bundled [`AsyncActionLogger.NebulaAdapter`](./The-AsyncActionLogger.Adapter-Interface#nebula-logger) |
+| **Example Value** | `AsyncActionLogger.NebulaAdapter`                                                                                                                                                                                                                |
+| **Default**       | When blank, missing, or invalid, the framework writes logs via `System.debug()`                                                                                                                                                                  |
 
 ### `DelayInMinutes`
 

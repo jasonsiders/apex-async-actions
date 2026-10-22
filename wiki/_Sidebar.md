@@ -31,6 +31,7 @@
 - [AsyncActions.RetryBehavior](./The-AsyncActions.RetryBehavior-Enum)
 - [AsyncActions.Status](./The-AsyncActions.Status-Enum)
 - [AsyncActionLogger.Adapter](./The-AsyncActionLogger.Adapter-Interface)
+- [AsyncActionLogger.NebulaAdapter](./The-AsyncActionLogger.Adapter-Interface#nebula-logger)
 
 ## Invocable Actions
 

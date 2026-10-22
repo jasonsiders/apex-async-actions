@@ -1,7 +1,7 @@
 /**
  * @description Provides framework-wide logging by delegating to a configurable adapter.
- * Defaults to System.debug; subscribers supply a custom adapter via the LoggerPlugin AsyncActionParameter__mdt
- * so log output can be routed to any platform without changing call sites.
+ * Defaults to System.debug; subscribers supply a custom adapter, or the bundled NebulaAdapter,
+ * via the LoggerPlugin AsyncActionParameter__mdt so log output can be routed to any platform.
  */
 // Global modifier and debug statements are required for subscriber extensibility; empty save() block is an intentional no-op
 @SuppressWarnings('PMD.AvoidDebugStatements,PMD.AvoidGlobalModifier,PMD.EmptyStatementBlock')
@@ -22,13 +22,12 @@ global abstract class AsyncActionLogger {
 		INSTANCE?.log(level, logMessage);
 	}
 
-	/** @description Flushes buffered log entries; delegated to the adapter since only custom adapters require an explicit flush **/
+	/** @description Delegated to the adapter, since only some adapters buffer entries that need a flush **/
 	global static void save() {
 		INSTANCE?.save();
 	}
 
 	// **** PRIVATE **** //
-
 	/**
 	 * @description Reads the LoggerPlugin parameter once so initialization cost is paid only once per transaction
 	 * @return Configured adapter, or DefaultLogger when none is specified or the specified class fails to load
@@ -42,13 +41,12 @@ global abstract class AsyncActionLogger {
 				: DEFAULT_LOGGER;
 			return adapter ?? DEFAULT_LOGGER;
 		} catch (Exception error) {
-			System.debug(System.LoggingLevel.WARN, adapterName + ' is not a instance of AsyncActionLogger.Adapter');
+			System.debug(System.LoggingLevel.WARN, adapterName + ' could not be loaded, using DefaultLogger: ' + error);
 			return DEFAULT_LOGGER;
 		}
 	}
 
 	// **** INNER **** //
-
 	/** @description Contract custom adapters must satisfy; implement and register the class name via the LoggerPlugin AsyncActionParameter__mdt **/
 	global interface Adapter {
 		/**
@@ -61,7 +59,7 @@ global abstract class AsyncActionLogger {
 		void save();
 	}
 
-	/** @description Bundled fallback that writes to System.debug; active when no LoggerPlugin parameter is configured **/
+	/** @description Bundled fallback that writes to System.debug; used when LoggerPlugin is blank or fails **/
 	@TestVisible
 	private class DefaultLogger implements AsyncActionLogger.Adapter {
 		/** @description Private to prevent external construction; access logging via AsyncActionLogger.log and AsyncActionLogger.save **/
@@ -79,6 +77,82 @@ global abstract class AsyncActionLogger {
 
 		/** @description System.debug writes are immediate so no flush step is needed; declared to satisfy the Adapter contract **/
 		public void save() {
+		}
+	}
+
+	/** @description Bundled adapter for Nebula Logger; calls its CallableLogger, so there is no package dependency **/
+	public virtual class NebulaAdapter implements AsyncActionLogger.Adapter {
+		/** @description Typed as System.Callable so the package compiles without Nebula Logger installed **/
+		private System.Callable logger;
+
+		/** @description Throws when Nebula Logger isn't installed, so getInstance falls back to DefaultLogger **/
+		public NebulaAdapter() {
+			this.logger = this.initLogger();
+			this.ignoreOrigin();
+		}
+
+		/**
+		 * @description Attempts to initialize Nebula Logger's CallableLogger
+		 * @return Nebula Logger's CallableLogger, typed as System.Callable
+		 * @throws System.TypeException when NebulaLogger is not installed
+		 */
+		private System.Callable initLogger() {
+			Type loggerType = this.getLoggerType();
+			if (loggerType == null) {
+				throw new System.TypeException('Nebula Logger is not installed');
+			} else {
+				return (System.Callable) loggerType?.newInstance();
+			}
+		}
+
+		/**
+		 * @description Virtual so tests can stand in for Nebula Logger, whether or not it's installed
+		 * @return Nebula Logger's CallableLogger type, or null when Nebula Logger isn't installed
+		 */
+		protected virtual Type getLoggerType() {
+			// Note: Nebula Logger's managed package uses the Nebula namespace; its unlocked package has none
+			String namespace = 'Nebula';
+			String className = 'CallableLogger';
+			return Type.forName(namespace, className) ?? Type.forName(className);
+		}
+
+		/** @description Omit this class from Nebula Logger's log stack traces */
+		private void ignoreOrigin() {
+			Map<String, Object> args = new Map<String, Object>{ 'apexType' => AsyncActionLogger.class };
+			this.logger?.call('ignoreOrigin', args);
+		}
+
+		/**
+		 * @description Adds a log entry via the newEntry action
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 */
+		public void log(System.LoggingLevel level, Object logMessage) {
+			Map<String, Object> args = this.initEntryArgs(level, logMessage);
+			this.logger?.call('newEntry', args);
+		}
+
+		/** @description Saves buffered entries via the saveLog action, using the logger's default save method **/
+		public void save() {
+			this.logger?.call('saveLog', null);
+		}
+
+		/**
+		 * @description Exceptions are passed whole, so Nebula Logger can record their type and stack trace
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 * @return The newEntry arguments, keyed by the names Nebula Logger's CallableLogger expects
+		 */
+		private Map<String, Object> initEntryArgs(System.LoggingLevel level, Object logMessage) {
+			Map<String, Object> args = new Map<String, Object>{
+				'loggingLevel' => level,
+				'message' => String.valueOf(logMessage),
+				'tags' => new List<String>{ 'apex-async-actions' }
+			};
+			if (logMessage instanceof Exception) {
+				args?.put('exception', logMessage);
+			}
+			return args;
 		}
 	}
 }

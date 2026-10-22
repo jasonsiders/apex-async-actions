@@ -37,9 +37,9 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "v4.0.0",
-			"versionNumber": "4.0.0.NEXT",
-			"versionDescription": "Replaced AsyncActionGlobalSetting__mdt with AsyncActionParameter__mdt"
+			"versionName": "v4.1.0",
+			"versionNumber": "4.1.0.NEXT",
+			"versionDescription": "Added Nebula Logger support via its CallableLogger class"
 		}
 	],
 	"sfdcLoginUrl": "https://login.salesforce.com",

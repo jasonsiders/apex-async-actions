@@ -4,6 +4,14 @@ The framework determines which logging adapter to use based on the `LoggerPlugin
 
 > **Important:** The framework performs asynchronous runs as the _Automated Process_ user. To see these debug logs, enable a trace flag on this system user.
 
+## Nebula Logger
+
+The framework includes `AsyncActionLogger.NebulaAdapter`, which sends its logs to [Nebula Logger](https://github.com/jongpie/NebulaLogger/) without a custom adapter or a package dependency. Set the `LoggerPlugin` parameter to `AsyncActionLogger.NebulaAdapter`. It works with both Nebula Logger's unlocked package and its managed (`Nebula` namespace) package. If Nebula Logger isn't installed, the framework falls back to the `DefaultLogger`.
+
+This requires Nebula Logger `v4.14.10` or newer. Framework logs are added as Nebula Logger entries with the `apex-async-actions` tag, and saved using Nebula Logger's default save method. When the framework logs an exception, the exception is passed to Nebula Logger so its type and stack trace are recorded.
+
+Each entry's origin is `AsyncActionLogger.NebulaAdapter.log` until Nebula Logger releases `CallableLogger`'s `ignoreOrigin` action. The framework already calls it, so once your Nebula Logger version supports it, entries show the framework method that logged them instead.
+
 ## Methods
 
 #### `log(System.LoggingLevel level, Object logMessage)`
@@ -16,16 +24,16 @@ Saves/commits any pending log entries. Implementation depends on the logging ada
 
 ## Example
 
-This example routes internal framework logs to [NebulaLogger](https://github.com/jongpie/NebulaLogger/):
+This example routes internal framework logs to a custom `MyLogger` class:
 
 ```apex
-global class NebulaLoggerAdapter implements AsyncActionLogger.Adapter {
+global class MyLoggerAdapter implements AsyncActionLogger.Adapter {
 	global void log(System.LoggingLevel level, Object logMessage) {
-		Logger.newEntry(level, logMessage?.toString());
+		MyLogger.add(level, String.valueOf(logMessage));
 	}
 
 	global void save() {
-		Logger.saveLog();
+		MyLogger.flush();
 	}
 }
 ```
