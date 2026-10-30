@@ -141,8 +141,8 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Lists the jobs that run processors, so tests can check which processors were started
-	 * @return The org's AsyncActionJob jobs
+	 * @description Lets tests count the processors that were started
+	 * @return The AsyncActionJob jobs
 	 */
 	public static List<AsyncApexJob> getProcessorJobs() {
 		return [
@@ -154,9 +154,9 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Scheduled Apex runs as the job's owner, so tests use this to check which user a job runs as
+	 * @description Scheduled jobs run as their owner, so this shows who a job runs as
 	 * @param jobSettings The scheduled job settings to check
-	 * @return The owner's UserType (ex., 'AutomatedProcess'), or null if the job is not scheduled
+	 * @return The owner's UserType (ex., 'AutomatedProcess'), or null if not scheduled
 	 */
 	public static String getScheduledJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
 		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
@@ -171,8 +171,7 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Inserts a Standard User with the AsyncActionAdministrator permission set,
-	 * which does not grant Create access on AsyncActionStart__e
+	 * @description Inserts a Standard User with the AsyncActionAdministrator permission set
 	 * @return The inserted User record
 	 */
 	public static User insertAdministrator() {
@@ -193,7 +192,7 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Inserts a Standard User with no package permission sets, so it has no access to AsyncAction__c
+	 * @description Inserts a Standard User with no package permission sets
 	 * @return The inserted User record
 	 */
 	public static User insertStandardUser() {
@@ -203,7 +202,7 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Builds a Standard User; the random username avoids colliding with usernames in other orgs
+	 * @description Randomizes the username, which must be unique across all orgs
 	 * @return The uninserted User record
 	 */
 	private static User initStandardUser() {
@@ -223,8 +222,8 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Inserts in a runAs block, since a test can't otherwise mix setup and non-setup DML
-	 * @param record The setup object record (ex., a User) to insert
+	 * @description Uses runAs, since tests can't otherwise mix setup and non-setup DML
+	 * @param record The record to insert, ex. a User
 	 */
 	private static void insertSetupRecord(SObject record) {
 		User me = new User(Id = UserInfo.getUserId());

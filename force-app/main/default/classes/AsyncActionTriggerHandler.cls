@@ -3,7 +3,7 @@
  * Handles inserted AsyncAction__c records by:
  * - Inheriting values from their AsyncActionProcessor__mdt settings
  * - Triggering corresponding jobs to be launched if defined
- * - Publishing an AsyncActionSchedule__e event to run AsyncActionScheduleEnforcer logic
+ * - Running AsyncActionScheduleEnforcer logic
  */
 public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;

@@ -30,7 +30,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		AsyncActionLogger.save();
 	}
 
-	/** @description Launches nothing for a disabled job, though execute() still reschedules it */
+	/** @description Skips disabled jobs, which execute() still reschedules */
 	private void doScheduledActions() {
 		if (this.jobSettings?.Enabled__c == true) {
 			Set<String> processorNames = this.getActiveProcessorNames();
@@ -39,8 +39,8 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	}
 
 	/**
-	 * @description Collects names, since AsyncActionStart__e identifies processors by DeveloperName
-	 * @return DeveloperNames of the processors of this job's enabled items
+	 * @description Gets the processors run by the job's enabled items
+	 * @return The processors' DeveloperNames
 	 */
 	private Set<String> getActiveProcessorNames() {
 		Set<String> processorNames = new Set<String>{};

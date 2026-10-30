@@ -333,7 +333,7 @@ private class AsyncActionsTest {
 
 	@IsTest
 	static void shouldNotStartAllProcessorsIfNoneListed() {
-		// A blank Actions__c starts every processor, so no names must mean no event
+		// A blank Actions__c would start every processor
 		AsyncActionsTest.insertActionsForTwoProcessors();
 		AsyncActions.EventPublisher publisher = new AsyncActions.EventPublisher();
 		List<String> noNames = new List<String>{};
@@ -353,7 +353,7 @@ private class AsyncActionsTest {
 	static void shouldLogFailedPublishes() {
 		String adapterName = AsyncActionsTest.MockLogAdapter.class.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
-		// Longer than AsyncActionStart__e.Actions__c allows, so the event fails to publish
+		// Exceeds Actions__c's max length, so the publish fails
 		String tooLongName = 'a'.repeat(131073);
 
 		new AsyncActions.EventPublisher()?.start(tooLongName);
@@ -378,13 +378,13 @@ private class AsyncActionsTest {
 	}
 
 	// **** INNER **** //
-	/** @description Buffers ERROR logs until save(), like adapters that flush in bulk */
+	/** @description Records ERROR logs for tests to assert on */
 	public class MockLogAdapter implements AsyncActionLogger.Adapter {
-		/** @description ERROR messages logged since the last save() */
+		/** @description ERROR messages not yet saved */
 		private List<Object> pendingLogs = new List<Object>{};
 
 		/**
-		 * @description Buffers ERROR messages, so tests can check that a failure was logged
+		 * @description Buffers ERROR messages until save()
 		 * @param level The logging level for the message
 		 * @param logMessage The message or object to log
 		 */
@@ -394,7 +394,7 @@ private class AsyncActionsTest {
 			}
 		}
 
-		/** @description Moves buffered messages into errorLogs, where tests assert on them */
+		/** @description Moves buffered messages into errorLogs */
 		public void save() {
 			errorLogs?.addAll(this.pendingLogs);
 			this.pendingLogs?.clear();

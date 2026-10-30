@@ -1,10 +1,6 @@
-/**
- * @description Trigger handler for AsyncActionSchedule__e platform events.
- * Runs AsyncActionScheduleEnforcer logic as the Automated Process user,
- * so that the scheduled jobs it creates are owned by that user.
- */
+/** @description Runs AsyncActionScheduleEnforcer as the Automated Process user, which then owns the scheduled jobs */
 public class AsyncActionScheduleTriggerHandler extends AsyncActionTriggerFramework {
-	/** @description Runs the enforcer in this trigger, since only here does it run as the Automated Process user */
+	/** @description Enforces once per batch, since the events carry no data */
 	public override void afterInsert() {
 		new AsyncActionScheduleEnforcer()?.enforce();
 		AsyncActionLogger.save();

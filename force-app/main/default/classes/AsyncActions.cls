@@ -121,19 +121,16 @@ global abstract class AsyncActions {
 		FAIL_DUPLICATES
 	}
 
-	/**
-	 * @description Publishes the package's platform events in system mode. Since API 67.0, EventBus.publish() fails,
-	 * without throwing, for users who lack Create access on the event.
-	 */
+	/** @description Starts processors and enforces scheduled jobs via the package's platform events */
 	global class EventPublisher {
-		/** @description Runs AsyncActionScheduleEnforcer via event, so it schedules jobs as the Automated Process user */
+		/** @description Aligns scheduled jobs with their AsyncActionScheduledJob__mdt settings */
 		global void enforceScheduledJobs() {
 			AsyncActionSchedule__e event = new AsyncActionSchedule__e();
 			this.publish(event);
 		}
 
 		/**
-		 * @description Publishes nothing when no names are given, since a blank Actions__c would start every processor
+		 * @description Starts the named processors, or none if no names are given
 		 * @param processorNames DeveloperNames of the AsyncActionProcessor__mdt records to start
 		 */
 		global void start(Iterable<String> processorNames) {
@@ -154,14 +151,14 @@ global abstract class AsyncActions {
 			this.start(processorNames);
 		}
 
-		/** @description Leaves Actions__c blank, which AsyncActionStartTriggerHandler reads as every processor */
+		/** @description Starts every processor */
 		global void startAll() {
 			AsyncActionStart__e event = new AsyncActionStart__e();
 			this.publish(event);
 		}
 
 		/**
-		 * @description Logs failures, since publishWithAccessLevel() reports them in its result instead of throwing
+		 * @description Uses system mode, since callers may lack Create access on the event
 		 * @param event The platform event to publish
 		 */
 		private void publish(SObject event) {
