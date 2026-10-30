@@ -238,6 +238,18 @@ private class AsyncActionScheduleEnforcerTest {
 		Assert.isFalse(needsEnforcement, 'Job scheduled with the hourly fallback needed enforcement');
 	}
 
+	@IsTest
+	static void shouldNotNeedEnforcementForSemiHourlyJobWithoutInterval() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
+		jobSetting.Interval__c = null;
+		jobSetting.Type__c = 'Semi-Hourly';
+		new AsyncActionScheduleEnforcer().enforce();
+
+		Boolean needsEnforcement = new AsyncActionScheduleEnforcer().needsEnforcement();
+
+		Assert.isFalse(needsEnforcement, 'Job scheduled with the default interval needed enforcement');
+	}
+
 	// **** HELPER **** //
 	/**
 	 * @description Returns all AsyncApexJob records for AsyncActionSchedulable that are currently active

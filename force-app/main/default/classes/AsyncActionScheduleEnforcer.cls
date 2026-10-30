@@ -113,9 +113,6 @@ public without sharing class AsyncActionScheduleEnforcer {
 		/** @description The CronTrigger instance associated with this wrapper **/
 		CronTrigger cronTrigger;
 
-		/** @description Configured interval in minutes; used to assess whether the current NextFireTime is within range **/
-		Integer interval;
-
 		/** @description The scheduled job configuration metadata **/
 		AsyncActionScheduledJob__mdt jobSettings;
 
@@ -125,7 +122,6 @@ public without sharing class AsyncActionScheduleEnforcer {
 		 */
 		public JobWrapper(AsyncActionScheduledJob__mdt jobSettings) {
 			this.jobSettings = jobSettings;
-			this.interval = jobSettings?.Interval__c?.intValue();
 		}
 
 		/**
@@ -170,7 +166,8 @@ public without sharing class AsyncActionScheduleEnforcer {
 		 * @return Whether the job fires within the configured interval
 		 */
 		private Boolean isValidSemiHourlyJob() {
-			DateTime shouldFireBefore = DateTime.now()?.addMinutes(this.interval);
+			Integer interval = AsyncActionScheduledJobUtils.getInterval(this.jobSettings);
+			DateTime shouldFireBefore = DateTime.now()?.addMinutes(interval);
 			DateTime nextFireTime = this.cronTrigger?.NextFireTime;
 			Boolean firesTooLate = shouldFireBefore < nextFireTime;
 			return firesTooLate == false;

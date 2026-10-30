@@ -71,11 +71,20 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 		if (jobSettings?.Type__c == 'Custom') {
 			return jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
 		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
-			Integer interval = jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
+			Integer interval = AsyncActionScheduledJobUtils.getInterval(jobSettings);
 			return new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
 		} else {
 			return HOURLY_CRON_EXP;
 		}
+	}
+
+	/**
+	 * @description Shared by scheduling and validation, so both fall back to the same default
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return The configured interval in minutes, or the default if blank
+	 */
+	public static Integer getInterval(AsyncActionScheduledJob__mdt jobSettings) {
+		return jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
 	}
 
 	/**
