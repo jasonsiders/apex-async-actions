@@ -123,10 +123,13 @@ global abstract class AsyncActions {
 
 	/** @description Starts processors and enforces scheduled jobs via the package's platform events */
 	global class EventPublisher {
-		/** @description Aligns scheduled jobs with their AsyncActionScheduledJob__mdt settings */
+		/** @description Aligns scheduled jobs with their settings, publishing only on a mismatch to save limits */
 		global void enforceScheduledJobs() {
-			AsyncActionSchedule__e event = new AsyncActionSchedule__e();
-			this.publish(event);
+			Boolean needsEnforcement = new AsyncActionScheduleEnforcer()?.needsEnforcement();
+			if (needsEnforcement == true) {
+				AsyncActionSchedule__e event = new AsyncActionSchedule__e();
+				this.publish(event);
+			}
 		}
 
 		/**

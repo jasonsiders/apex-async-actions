@@ -182,6 +182,50 @@ private class AsyncActionScheduleEnforcerTest {
 		Assert.areEqual(cronTriggerId, job?.CronTriggerId, 'Did not use pre-existing job');
 	}
 
+	@IsTest
+	static void shouldNeedEnforcementIfNoJobExists() {
+		AsyncActionScheduleEnforcerTest.initActiveJobSettings();
+
+		Boolean needsEnforcement = new AsyncActionScheduleEnforcer().needsEnforcement();
+
+		Assert.isTrue(needsEnforcement, 'Missing job did not need enforcement');
+	}
+
+	@IsTest
+	static void shouldNeedEnforcementIfJobIsMisconfigured() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
+		jobSetting.CronExpression__c = NIGHTLY_AT_MIDNIGHT;
+		jobSetting.Type__c = 'Custom';
+		AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, NIGHTLY_AT_1AM);
+
+		Boolean needsEnforcement = new AsyncActionScheduleEnforcer().needsEnforcement();
+
+		Assert.isTrue(needsEnforcement, 'Misconfigured job did not need enforcement');
+	}
+
+	@IsTest
+	static void shouldNeedEnforcementWithoutAbortingDisabledJobs() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
+		jobSetting.Enabled__c = false;
+		AsyncActionScheduleEnforcerTest.scheduleExistingJob(jobSetting, NIGHTLY_AT_MIDNIGHT);
+
+		Boolean needsEnforcement = new AsyncActionScheduleEnforcer().needsEnforcement();
+
+		Assert.isTrue(needsEnforcement, 'Disabled job did not need enforcement');
+		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
+		Assert.areEqual(1, jobs?.size(), 'Checking for enforcement aborted the job');
+	}
+
+	@IsTest
+	static void shouldNotNeedEnforcementAfterEnforcing() {
+		AsyncActionScheduleEnforcerTest.initActiveJobSettings();
+		new AsyncActionScheduleEnforcer().enforce();
+
+		Boolean needsEnforcement = new AsyncActionScheduleEnforcer().needsEnforcement();
+
+		Assert.isFalse(needsEnforcement, 'Matching jobs needed enforcement');
+	}
+
 	// **** HELPER **** //
 	/**
 	 * @description Returns all AsyncApexJob records for AsyncActionSchedulable that are currently active

@@ -350,6 +350,32 @@ private class AsyncActionsTest {
 	}
 
 	@IsTest
+	static void shouldEnforceScheduledJobsIfMismatched() {
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
+		Test.getEventBus().deliver();
+
+		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
+		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
+	}
+
+	@IsTest
+	static void shouldNotPublishIfScheduledJobsMatch() {
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+		new AsyncActionScheduleEnforcer().enforce();
+		Integer dmlBefore = Limits.getDmlStatements();
+
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
+
+		// Each publish counts as a DML statement
+		Integer publishes = Limits.getDmlStatements() - dmlBefore;
+		Assert.areEqual(0, publishes, 'Published although scheduled jobs match their settings');
+	}
+
+	@IsTest
 	static void shouldLogFailedPublishes() {
 		String adapterName = AsyncActionsTest.MockLogAdapter.class.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
