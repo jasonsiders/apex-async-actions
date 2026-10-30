@@ -22,7 +22,7 @@ public without sharing class AsyncActionScheduleEnforcer {
 	}
 
 	/**
-	 * @description Read-only, so callers can skip enforce() when it would change nothing
+	 * @description Changes no scheduled jobs, so callers can skip enforce() when it would do nothing
 	 * @return Whether any job is missing, misconfigured, or disabled
 	 */
 	public Boolean needsEnforcement() {
