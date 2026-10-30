@@ -31,33 +31,23 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 	}
 
 	private void doScheduledActions() {
-		List<AsyncActionScheduledJobItem__mdt> items = this.getActiveItems();
 		if (this.jobSettings?.Enabled__c == true) {
-			Set<String> processorNames = this.getProcessorNames(items);
+			Set<String> processorNames = this.getActiveProcessorNames();
 			new AsyncActions.EventPublisher()?.start(processorNames);
 		}
 	}
 
-	private List<AsyncActionScheduledJobItem__mdt> getActiveItems() {
-		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>{};
-		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
-			if (item?.Enabled__c == true) {
-				activeItems?.add(item);
-			}
-		}
-		return activeItems;
-	}
-
 	/**
 	 * @description Collects names, since AsyncActionStart__e identifies processors by DeveloperName
-	 * @param items The active job items to start
-	 * @return DeveloperNames of the items' processors
+	 * @return DeveloperNames of the processors of this job's enabled items
 	 */
-	private Set<String> getProcessorNames(List<AsyncActionScheduledJobItem__mdt> items) {
+	private Set<String> getActiveProcessorNames() {
 		Set<String> processorNames = new Set<String>{};
-		for (AsyncActionScheduledJobItem__mdt item : items) {
-			String processorName = item?.AsyncActionProcessor__r?.DeveloperName;
-			processorNames?.add(processorName);
+		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
+			if (item?.Enabled__c == true) {
+				String processorName = item?.AsyncActionProcessor__r?.DeveloperName;
+				processorNames?.add(processorName);
+			}
 		}
 		return processorNames;
 	}
