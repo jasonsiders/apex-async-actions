@@ -31,7 +31,7 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 		if (triggeredActions?.isEmpty() == false) {
 			AsyncActionStart__e event = new AsyncActionStart__e();
 			event.Actions__c = String.join(triggeredActions, ',');
-			EventBus.publish(event);
+			EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
 		}
 		// Ensure the scheduled job aligns with current configuration
 		new AsyncActionScheduleEnforcer()?.enforce();

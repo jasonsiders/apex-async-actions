@@ -35,7 +35,7 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		if (this.jobSettings?.Enabled__c == true && items?.isEmpty() == false) {
 			String actions = this.getCommaSeparatedActions(items);
 			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
-			EventBus.publish(event);
+			EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
 		}
 	}
 

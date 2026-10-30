@@ -70,6 +70,20 @@ private class AsyncActionSchedulableTest {
 	}
 
 	@IsTest
+	static void shouldLaunchIfUserCannotPublishEvents() {
+		User administrator = AsyncActionTestUtils.insertAdministrator();
+
+		System.runAs(administrator) {
+			new AsyncActionSchedulable(jobSettings).execute(null);
+		}
+		Test.getEventBus().deliver();
+
+		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
+		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
+		Assert.isNotNull(processorJob, 'Processor job was not launched');
+	}
+
+	@IsTest
 	static void shouldNotLaunchIfJobIsDisabled() {
 		jobSettings.Enabled__c = false; // The scheduled job should do nothing
 
