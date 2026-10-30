@@ -1,6 +1,8 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionsTest {
+	private static List<Object> errorLogs = new List<Object>{};
+
 	@IsTest
 	static void shouldInitializeAnAction() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
@@ -292,5 +294,131 @@ private class AsyncActionsTest {
 		Test.stopTest();
 
 		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Callers should not empty a group');
+	}
+
+	@IsTest
+	static void shouldStartAllProcessors() {
+		AsyncActionsTest.insertActionsForTwoProcessors();
+
+		new AsyncActions.EventPublisher()?.startAll();
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		Assert.areEqual(2, jobs?.size(), 'Wrong # of processor jobs');
+	}
+
+	@IsTest
+	static void shouldStartListedProcessors() {
+		List<AsyncActionProcessor__mdt> processors = AsyncActionsTest.insertActionsForTwoProcessors();
+		Set<String> processorNames = new Set<String>{ processors[0]?.DeveloperName };
+
+		new AsyncActions.EventPublisher()?.start(processorNames);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of processor jobs');
+	}
+
+	@IsTest
+	static void shouldStartASingleProcessor() {
+		List<AsyncActionProcessor__mdt> processors = AsyncActionsTest.insertActionsForTwoProcessors();
+		String processorName = processors[0]?.DeveloperName;
+
+		new AsyncActions.EventPublisher()?.start(processorName);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of processor jobs');
+	}
+
+	@IsTest
+	static void shouldNotStartAllProcessorsIfNoneListed() {
+		// A blank Actions__c starts every processor, so no names must mean no event
+		AsyncActionsTest.insertActionsForTwoProcessors();
+		AsyncActions.EventPublisher publisher = new AsyncActions.EventPublisher();
+		List<String> noNames = new List<String>{};
+		Iterable<String> nullNames = null;
+		String nullName = null;
+
+		publisher?.start(noNames);
+		publisher?.start(nullNames);
+		publisher?.start(nullName);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		Assert.isTrue(jobs?.isEmpty(), 'Processor jobs were launched');
+	}
+
+	@IsTest
+	static void shouldEnforceScheduledJobs() {
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
+		Test.getEventBus().deliver();
+
+		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
+		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
+	}
+
+	@IsTest
+	static void shouldLogFailedPublishes() {
+		String adapterName = AsyncActionsTest.MockLogAdapter.class.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
+		// Longer than AsyncActionStart__e.Actions__c allows, so the event fails to publish
+		String tooLongName = 'a'.repeat(131073);
+
+		new AsyncActions.EventPublisher()?.start(tooLongName);
+		AsyncActionLogger.save();
+
+		Assert.isFalse(errorLogs?.isEmpty(), 'Failed publish was not logged');
+	}
+
+	// **** HELPER **** //
+	static List<AsyncActionProcessor__mdt> insertActionsForTwoProcessors() {
+		List<AsyncActionProcessor__mdt> processors = new List<AsyncActionProcessor__mdt>{
+			AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class),
+			AsyncActionTestUtils.initFlowProcessor('Template_Async_Action_Flow')
+		};
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
+		for (AsyncActionProcessor__mdt processor : processors) {
+			AsyncAction__c action = AsyncActions.initAction(processor);
+			actions?.add(action);
+		}
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		return processors;
+	}
+
+	static List<AsyncApexJob> getProcessorJobs() {
+		return [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
+		];
+	}
+
+	// **** INNER **** //
+	/** @description Buffers ERROR logs until save(), like adapters that flush in bulk */
+	public class MockLogAdapter implements AsyncActionLogger.Adapter {
+		/** @description ERROR messages logged since the last save() */
+		private List<Object> pendingLogs = new List<Object>{};
+
+		/**
+		 * @description Buffers ERROR messages, so tests can check that a failure was logged
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 */
+		public void log(System.LoggingLevel level, Object logMessage) {
+			if (level == System.LoggingLevel.ERROR) {
+				this.pendingLogs?.add(logMessage);
+			}
+		}
+
+		/** @description Moves buffered messages into errorLogs, where tests assert on them */
+		public void save() {
+			errorLogs?.addAll(this.pendingLogs);
+			this.pendingLogs?.clear();
+		}
 	}
 }

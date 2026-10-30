@@ -122,6 +122,58 @@ global abstract class AsyncActions {
 	}
 
 	/**
+	 * @description Publishes the package's platform events in system mode. Since API 67.0, EventBus.publish() fails,
+	 * without throwing, for users who lack Create access on the event.
+	 */
+	global class EventPublisher {
+		/** @description Runs AsyncActionScheduleEnforcer via event, so it schedules jobs as the Automated Process user */
+		global void enforceScheduledJobs() {
+			AsyncActionSchedule__e event = new AsyncActionSchedule__e();
+			this.publish(event);
+		}
+
+		/**
+		 * @description Publishes nothing when no names are given, since a blank Actions__c would start every processor
+		 * @param processorNames DeveloperNames of the AsyncActionProcessor__mdt records to start
+		 */
+		global void start(Iterable<String> processorNames) {
+			Iterable<String> names = processorNames ?? new List<String>{};
+			String actions = String.join(names, ',');
+			if (String.isNotBlank(actions)) {
+				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
+				this.publish(event);
+			}
+		}
+
+		/**
+		 * @description Starts a single processor
+		 * @param processorName DeveloperName of the AsyncActionProcessor__mdt record to start
+		 */
+		global void start(String processorName) {
+			List<String> processorNames = new List<String>{ processorName };
+			this.start(processorNames);
+		}
+
+		/** @description Leaves Actions__c blank, which AsyncActionStartTriggerHandler reads as every processor */
+		global void startAll() {
+			AsyncActionStart__e event = new AsyncActionStart__e();
+			this.publish(event);
+		}
+
+		/**
+		 * @description Logs failures, since publishWithAccessLevel() reports them in its result instead of throwing
+		 * @param event The platform event to publish
+		 */
+		private void publish(SObject event) {
+			Database.SaveResult result = EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
+			if (result?.isSuccess() == false) {
+				String msg = 'Failed to publish ' + event?.getSObjectType() + ': ' + result?.getErrors();
+				AsyncActionLogger.log(System.LoggingLevel.ERROR, msg);
+			}
+		}
+	}
+
+	/**
 	 * @description Handles failure scenarios for async actions, implementing retry logic and error handling.
 	 */
 	global class Failure {
