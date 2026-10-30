@@ -26,38 +26,38 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 			this.reschedule(context?.getTriggerId());
 		}
 		// Once completed, ensure all scheduled jobs match the currently defined configuration in cmdt
-		new AsyncActionScheduleEnforcer().enforce();
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
 		AsyncActionLogger.save();
 	}
 
+	/** @description Skips a job disabled since its last run, which reschedule() then removes */
 	private void doScheduledActions() {
-		List<AsyncActionScheduledJobItem__mdt> items = this.getActiveItems();
-		if (this.jobSettings?.Enabled__c == true && items?.isEmpty() == false) {
-			String actions = this.getCommaSeparatedActions(items);
-			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
-			EventBus.publish(event);
+		if (this.jobSettings?.Enabled__c == true) {
+			Set<String> processorNames = this.getActiveProcessorNames();
+			new AsyncActions.EventPublisher()?.start(processorNames);
 		}
 	}
 
-	private List<AsyncActionScheduledJobItem__mdt> getActiveItems() {
-		List<AsyncActionScheduledJobItem__mdt> activeItems = new List<AsyncActionScheduledJobItem__mdt>{};
+	/**
+	 * @description Gets the processors run by the job's enabled items
+	 * @return The processors' DeveloperNames
+	 */
+	private Set<String> getActiveProcessorNames() {
+		Set<String> processorNames = new Set<String>{};
 		for (AsyncActionScheduledJobItem__mdt item : AsyncActionScheduledJobItemService.getJobItems(this.jobSettings)) {
 			if (item?.Enabled__c == true) {
-				activeItems?.add(item);
+				String processorName = item?.AsyncActionProcessor__r?.DeveloperName;
+				processorNames?.add(processorName);
 			}
 		}
-		return activeItems;
+		return processorNames;
 	}
 
-	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
-		Set<String> actionSet = new Set<String>{};
-		for (AsyncActionScheduledJobItem__mdt item : items) {
-			String actionName = item?.AsyncActionProcessor__r?.DeveloperName;
-			actionSet?.add(actionName);
-		}
-		return String.join(actionSet, ',');
-	}
-
+	/**
+	 * @description Looks up the job name too, which abortJobs() logs
+	 * @param currentJobId The CronTrigger ID of the running job
+	 * @return The running job's AsyncApexJob records
+	 */
 	private List<AsyncApexJob> getCurrentJobDetails(Id currentJobId) {
 		return [
 			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name
@@ -67,14 +67,18 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		];
 	}
 
+	/** @description Refreshes the settings, since they may have changed since the job was scheduled **/
 	private void getUpdatedJobSettings() {
-		// Get the latest values of the job settings record, in case it changed since the last scheduled run
 		String jobName = this.jobSettings?.DeveloperName;
 		this.jobSettings = AsyncActionScheduledJobService.get(jobName);
 	}
 
+	/**
+	 * @description Aborts the running job first, since the new one reuses its name
+	 * @param currentJobId The CronTrigger ID of the running job
+	 * @return The new job's ID, or null if it wasn't scheduled
+	 */
 	private Id reschedule(Id currentJobId) {
-		// Deletes the current job, then schedules a new one for the defined interval
 		List<AsyncApexJob> currentJobs = this.getCurrentJobDetails(currentJobId);
 		AsyncActionScheduledJobUtils.abortJobs(currentJobs);
 		return AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);

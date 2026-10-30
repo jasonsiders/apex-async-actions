@@ -16,13 +16,35 @@ public without sharing class AsyncActionScheduleEnforcer {
 
 	/** @description Ensures that CronTriggers created by the framework match the current AsyncActionScheduledJob__mdt configuration **/
 	public void enforce() {
-		this.retrieveJobSettings();
-		List<CronTrigger> cronTriggers = this.getPendingJobs();
-		this.registerExistingJobs(cronTriggers);
-		this.validateJobs();
+		List<CronTrigger> orphanedJobs = this.registerJobs();
+		AsyncActionScheduledJobUtils.abortJobs(orphanedJobs);
+		List<JobWrapper> invalidJobs = this.getInvalidJobs();
+		for (JobWrapper job : invalidJobs) {
+			job?.reschedule();
+		}
+	}
+
+	/**
+	 * @description Changes no scheduled jobs, so callers can skip enforce() when it would do nothing
+	 * @return Whether any job is missing, misconfigured, or disabled
+	 */
+	public Boolean needsEnforcement() {
+		List<CronTrigger> orphanedJobs = this.registerJobs();
+		List<JobWrapper> invalidJobs = this.getInvalidJobs();
+		return orphanedJobs?.isEmpty() == false || invalidJobs?.isEmpty() == false;
 	}
 
 	// **** PRIVATE **** //
+
+	/**
+	 * @description Matches each pending CronTrigger to its enabled setting
+	 * @return The CronTriggers with no enabled setting
+	 */
+	private List<CronTrigger> registerJobs() {
+		this.retrieveJobSettings();
+		List<CronTrigger> cronTriggers = this.getPendingJobs();
+		return this.registerExistingJobs(cronTriggers);
+	}
 
 	/**
 	 * @description Queries CronTrigger instead of AsyncApexJob — CronTriggers exist between firings even when no AsyncApexJob is in a queued state
@@ -40,24 +62,34 @@ public without sharing class AsyncActionScheduleEnforcer {
 	}
 
 	/**
-	 * @description Maps each CronTrigger to its wrapper; aborts any that have no matching enabled setting
+	 * @description Maps each CronTrigger to its wrapper
 	 * @param cronTriggers List of existing CronTrigger records to register
+	 * @return The CronTriggers with no enabled setting, which have no wrapper
 	 */
-	private void registerExistingJobs(List<CronTrigger> cronTriggers) {
+	private List<CronTrigger> registerExistingJobs(List<CronTrigger> cronTriggers) {
+		List<CronTrigger> orphanedJobs = new List<CronTrigger>{};
 		for (CronTrigger ct : cronTriggers) {
 			String jobName = ct?.CronJobDetail?.Name;
 			JobWrapper wrapper = this.jobs?.get(jobName)?.addCronTrigger(ct);
 			if (wrapper == null) {
-				AsyncActionScheduledJobUtils.abortJobs(ct);
+				orphanedJobs?.add(ct);
 			}
 		}
+		return orphanedJobs;
 	}
 
-	/** @description Validates each wrapper, scheduling or rescheduling jobs as needed **/
-	private void validateJobs() {
+	/**
+	 * @description Shared by enforce() and needsEnforcement(), so both agree on which jobs to reschedule
+	 * @return The enabled jobs that are missing or misconfigured
+	 */
+	private List<JobWrapper> getInvalidJobs() {
+		List<JobWrapper> invalidJobs = new List<JobWrapper>{};
 		for (JobWrapper job : this.jobs?.values()) {
-			job?.validate();
+			if (job?.isValid() == false) {
+				invalidJobs?.add(job);
+			}
 		}
+		return invalidJobs;
 	}
 
 	/** @description Builds wrappers for all enabled scheduled job settings **/
@@ -79,9 +111,6 @@ public without sharing class AsyncActionScheduleEnforcer {
 		/** @description The CronTrigger instance associated with this wrapper **/
 		CronTrigger cronTrigger;
 
-		/** @description Configured interval in minutes; used to assess whether the current NextFireTime is within range **/
-		Integer interval;
-
 		/** @description The scheduled job configuration metadata **/
 		AsyncActionScheduledJob__mdt jobSettings;
 
@@ -91,7 +120,6 @@ public without sharing class AsyncActionScheduleEnforcer {
 		 */
 		public JobWrapper(AsyncActionScheduledJob__mdt jobSettings) {
 			this.jobSettings = jobSettings;
-			this.interval = jobSettings?.Interval__c?.intValue();
 		}
 
 		/**
@@ -104,52 +132,41 @@ public without sharing class AsyncActionScheduleEnforcer {
 			return this;
 		}
 
-		/** @description Schedules a new job if none exists, or validates and reschedules the existing one if misconfigured **/
-		public void validate() {
-			try {
-				if (this.cronTrigger == null) {
-					AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
-				} else if (this.jobSettings?.Type__c == 'Custom') {
-					this.validateCustomJob();
-				} else if (this.jobSettings?.Type__c == 'Hourly') {
-					this.validateHourlyJob();
-				} else if (this.jobSettings?.Type__c == 'Semi-Hourly') {
-					this.validateSemiHourlyJob();
-				}
-			} catch (AsyncActionScheduleEnforcer.ValidationException error) {
-				AsyncActionScheduledJobUtils.abortJobs(this.cronTrigger);
-				AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
-			}
+		/** @description Aborts first, since the new job reuses the name; abortJobs() skips a missing one **/
+		public void reschedule() {
+			AsyncActionScheduledJobUtils.abortJobs(this.cronTrigger);
+			AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
 		}
 
-		/** @description Throws if the existing cron expression no longer matches the configured value **/
-		private void validateCustomJob() {
-			if (this.cronTrigger?.CronExpression != this.jobSettings?.CronExpression__c) {
-				throw new AsyncActionScheduleEnforcer.ValidationException();
-			}
+		/**
+		 * @description Read-only, so callers can check whether reschedule() is needed
+		 * @return Whether the job is scheduled and matches its settings
+		 */
+		public Boolean isValid() {
+			Boolean isSemiHourly = this.jobSettings?.Type__c == 'Semi-Hourly';
+			Boolean matchesSettings = isSemiHourly ? this.isValidSemiHourlyJob() : this.isValidCronExpression();
+			return this.cronTrigger != null && matchesSettings;
 		}
 
-		/** @description Throws if the existing cron expression is not the standard hourly expression **/
-		private void validateHourlyJob() {
-			if (this.cronTrigger?.CronExpression != AsyncActionScheduledJobUtils.HOURLY_CRON_EXP) {
-				throw new AsyncActionScheduleEnforcer.ValidationException();
-			}
+		/**
+		 * @description Compares against the expression scheduleNewJob() uses, including its hourly fallback
+		 * @return Whether they match
+		 */
+		private Boolean isValidCronExpression() {
+			String expected = AsyncActionScheduledJobUtils.getCronExpression(this.jobSettings);
+			return this.cronTrigger?.CronExpression == expected;
 		}
 
-		/** @description Throws if the next fire time is further out than the configured interval allows **/
-		private void validateSemiHourlyJob() {
-			Integer interval = this.jobSettings?.Interval__c?.intValue();
+		/**
+		 * @description Checks the next fire time, since semi-hourly jobs reschedule themselves after each run
+		 * @return Whether the job fires within the configured interval
+		 */
+		private Boolean isValidSemiHourlyJob() {
+			Integer interval = AsyncActionScheduledJobUtils.getInterval(this.jobSettings);
 			DateTime shouldFireBefore = DateTime.now()?.addMinutes(interval);
 			DateTime nextFireTime = this.cronTrigger?.NextFireTime;
-			if (shouldFireBefore < nextFireTime) {
-				throw new AsyncActionScheduleEnforcer.ValidationException();
-			}
+			Boolean firesTooLate = shouldFireBefore < nextFireTime;
+			return firesTooLate == false;
 		}
-	}
-
-	/**
-	 * @description Exception thrown when job validation fails
-	 */
-	private class ValidationException extends Exception {
 	}
 }

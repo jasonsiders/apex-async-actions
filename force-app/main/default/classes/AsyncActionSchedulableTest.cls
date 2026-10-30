@@ -54,8 +54,12 @@ private class AsyncActionSchedulableTest {
 	static void shouldLaunchSemiHourlyIfEnabled() {
 		jobSettings.Interval__c = 15;
 		jobSettings.Type__c = 'Semi-Hourly';
+		// Lacks Create access on the package's platform events
+		User administrator = AsyncActionTestUtils.insertAdministrator();
 
-		new AsyncActionSchedulable(jobSettings).execute(null);
+		System.runAs(administrator) {
+			new AsyncActionSchedulable(jobSettings).execute(null);
+		}
 		Test.getEventBus().deliver();
 
 		// Should create 1 Queueable, and a future instance of the schedulable job
@@ -67,6 +71,17 @@ private class AsyncActionSchedulableTest {
 		DateTime nextRun = scheduledJob?.CronTrigger?.NextFireTime;
 		Assert.isTrue(nextRun > DateTime.now().addMinutes(14), 'Job was rescheduled <15 mins in future: ' + nextRun);
 		Assert.isTrue(nextRun < DateTime.now().addMinutes(16), 'Job was rescheduled >15 mins in future: ' + nextRun);
+	}
+
+	@IsTest
+	static void shouldScheduleOtherJobsAsAutomatedProcess() {
+		AsyncActionScheduledJob__mdt otherJobSettings = AsyncActionTestUtils.initEnabledScheduledJobSettings();
+
+		new AsyncActionSchedulable(jobSettings).execute(null);
+		Test.getEventBus().deliver();
+
+		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(otherJobSettings);
+		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
 	}
 
 	@IsTest

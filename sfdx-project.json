@@ -38,9 +38,9 @@
 			"definitionFile": "config/project-scratch-def.json",
 			"path": "force-app",
 			"package": "apex-async-actions",
-			"versionName": "v4.1.0",
-			"versionNumber": "4.1.0.NEXT",
-			"versionDescription": "Added Nebula Logger support via its CallableLogger class"
+			"versionName": "v4.2.0",
+			"versionNumber": "4.2.0.NEXT",
+			"versionDescription": "Added AsyncActions.EventPublisher, which publishes package events in system mode. Scheduled jobs now change after commit, so tests must call Test.getEventBus().deliver() before checking them"
 		}
 	],
 	"sfdcLoginUrl": "https://login.salesforce.com",

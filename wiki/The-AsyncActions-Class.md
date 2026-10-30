@@ -30,6 +30,7 @@ All overloads initialize the action with "Pending" status, set NextEligibleAt\_\
 This class contains several inner types that provide core framework functionality:
 
 - [AsyncActions.DuplicateBehavior](./The-AsyncActions.DuplicateBehavior-Enum) - Enum defining how groupByRecord handles duplicate actions
+- [AsyncActions.EventPublisher](./The-AsyncActions.EventPublisher-Class) - Starts processors and enforces scheduled jobs
 - [AsyncActions.Failure](./The-AsyncActions.Failure-Class) - Standardized error handling and retry logic
 - [AsyncActions.Processor](./The-AsyncActions.Processor-Interface) - Interface that all processors must implement
 - [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class) - One record and its actions

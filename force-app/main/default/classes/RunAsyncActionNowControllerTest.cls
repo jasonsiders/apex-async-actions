@@ -20,9 +20,13 @@ private class RunAsyncActionNowControllerTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
+		// Lacks Create access on the package's platform events
+		User administrator = AsyncActionTestUtils.insertAdministrator();
 
 		Test.startTest();
-		RunAsyncActionNowController.runAction(action?.Id);
+		System.runAs(administrator) {
+			RunAsyncActionNowController.runAction(action?.Id);
+		}
 		Test.getEventBus().deliver();
 		Test.stopTest();
 

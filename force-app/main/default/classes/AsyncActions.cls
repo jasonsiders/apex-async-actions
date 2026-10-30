@@ -121,6 +121,59 @@ global abstract class AsyncActions {
 		FAIL_DUPLICATES
 	}
 
+	/** @description Starts processors and enforces scheduled jobs via the package's platform events */
+	global class EventPublisher {
+		/** @description Aligns scheduled jobs with their settings, publishing only on a mismatch to save limits */
+		global void enforceScheduledJobs() {
+			Boolean needsEnforcement = new AsyncActionScheduleEnforcer()?.needsEnforcement();
+			if (needsEnforcement == true) {
+				AsyncActionSchedule__e event = new AsyncActionSchedule__e();
+				this.publish(event);
+			}
+		}
+
+		/**
+		 * @description Starts the named processors, or none if no names are given
+		 * @param processorNames DeveloperNames of the AsyncActionProcessor__mdt records to start
+		 */
+		global void start(Iterable<String> processorNames) {
+			Iterable<String> names = processorNames ?? new List<String>{};
+			String actions = String.join(names, ',');
+			if (String.isNotBlank(actions)) {
+				AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
+				this.publish(event);
+			}
+		}
+
+		/**
+		 * @description Starts a single processor
+		 * @param processorName DeveloperName of the AsyncActionProcessor__mdt record to start
+		 */
+		global void start(String processorName) {
+			List<String> processorNames = new List<String>{ processorName };
+			this.start(processorNames);
+		}
+
+		/** @description Starts every processor */
+		global void startAll() {
+			AsyncActionStart__e event = new AsyncActionStart__e();
+			this.publish(event);
+		}
+
+		/**
+		 * @description Uses system mode, since callers may lack Create access. Saves failures, since callers may not
+		 * @param event The platform event to publish
+		 */
+		private void publish(SObject event) {
+			Database.SaveResult result = EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
+			if (result?.isSuccess() == false) {
+				String msg = 'Failed to publish ' + event?.getSObjectType() + ': ' + result?.getErrors();
+				AsyncActionLogger.log(System.LoggingLevel.ERROR, msg);
+				AsyncActionLogger.save();
+			}
+		}
+	}
+
 	/**
 	 * @description Handles failure scenarios for async actions, implementing retry logic and error handling.
 	 */

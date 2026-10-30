@@ -3,7 +3,7 @@
  * Handles inserted AsyncAction__c records by:
  * - Inheriting values from their AsyncActionProcessor__mdt settings
  * - Triggering corresponding jobs to be launched if defined
- * - Running AsyncActionScheduleEnforcer logic
+ * - Enforcing scheduled jobs, if any need it
  */
 public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
@@ -26,15 +26,12 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	 * @description Runs jobs configured to run on insert and ensures scheduled jobs align with current configuration.
 	 */
 	public override void afterInsert() {
+		AsyncActions.EventPublisher publisher = new AsyncActions.EventPublisher();
 		// Run any jobs configured to run on insert
 		Set<String> triggeredActions = this.getTriggeredActions();
-		if (triggeredActions?.isEmpty() == false) {
-			AsyncActionStart__e event = new AsyncActionStart__e();
-			event.Actions__c = String.join(triggeredActions, ',');
-			EventBus.publish(event);
-		}
+		publisher?.start(triggeredActions);
 		// Ensure the scheduled job aligns with current configuration
-		new AsyncActionScheduleEnforcer()?.enforce();
+		publisher?.enforceScheduledJobs();
 		AsyncActionLogger.save();
 	}
 
@@ -46,8 +43,11 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 		return AsyncActionTriggerHandler.class;
 	}
 
+	/**
+	 * @description Deduplicates names, so each processor starts once per batch
+	 * @return The processors of the inserted actions that run on insert
+	 */
 	private Set<String> getTriggeredActions() {
-		// Returns a collection of Processor names of current Action(s) that are configured to run on insert
 		Set<String> results = new Set<String>{};
 		for (AsyncAction__c action : this.actions) {
 			String processorName = action?.ProcessorName__c;

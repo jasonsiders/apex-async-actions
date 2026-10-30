@@ -293,4 +293,97 @@ private class AsyncActionsTest {
 
 		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Callers should not empty a group');
 	}
+
+	@IsTest
+	static void shouldStartAllProcessors() {
+		AsyncActionsTest.insertActionsForTwoProcessors();
+
+		new AsyncActions.EventPublisher()?.startAll();
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
+		Assert.areEqual(2, jobs?.size(), 'Wrong # of processor jobs');
+	}
+
+	@IsTest
+	static void shouldStartListedProcessors() {
+		List<AsyncActionProcessor__mdt> processors = AsyncActionsTest.insertActionsForTwoProcessors();
+		Set<String> processorNames = new Set<String>{ processors[0]?.DeveloperName };
+
+		new AsyncActions.EventPublisher()?.start(processorNames);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of processor jobs');
+	}
+
+	@IsTest
+	static void shouldNotStartAllProcessorsIfNoneListed() {
+		// A blank Actions__c would start every processor
+		AsyncActionsTest.insertActionsForTwoProcessors();
+		AsyncActions.EventPublisher publisher = new AsyncActions.EventPublisher();
+		List<String> noNames = new List<String>{};
+		Iterable<String> nullNames = null;
+		String nullName = null;
+
+		publisher?.start(noNames);
+		publisher?.start(nullNames);
+		publisher?.start(nullName);
+		Test.getEventBus().deliver();
+
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
+		Assert.isTrue(jobs?.isEmpty(), 'Processor jobs were launched');
+	}
+
+	@IsTest
+	static void shouldPublishIfScheduledJobsMismatch() {
+		AsyncActionTestUtils.initEnabledScheduledJobSettings();
+		Integer dmlBefore = Limits.getDmlStatements();
+
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
+
+		// Each publish counts as a DML statement
+		Integer publishes = Limits.getDmlStatements() - dmlBefore;
+		Assert.areEqual(1, publishes, 'Did not publish although no job is scheduled');
+	}
+
+	@IsTest
+	static void shouldNotPublishIfScheduledJobsMatch() {
+		AsyncActionTestUtils.initEnabledScheduledJobSettings();
+		new AsyncActionScheduleEnforcer().enforce();
+		Integer dmlBefore = Limits.getDmlStatements();
+
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
+
+		// Each publish counts as a DML statement
+		Integer publishes = Limits.getDmlStatements() - dmlBefore;
+		Assert.areEqual(0, publishes, 'Published although scheduled jobs match their settings');
+	}
+
+	@IsTest
+	static void shouldLogFailedPublishes() {
+		String adapterName = AsyncActionTestUtils.MockLogAdapter.class.getName();
+		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
+		// Exceeds Actions__c's max length, so the publish fails
+		String tooLongName = 'a'.repeat(131073);
+
+		new AsyncActions.EventPublisher()?.start(tooLongName);
+
+		Assert.isFalse(AsyncActionTestUtils.errorLogs?.isEmpty(), 'Failed publish was not logged');
+	}
+
+	// **** HELPER **** //
+	static List<AsyncActionProcessor__mdt> insertActionsForTwoProcessors() {
+		List<AsyncActionProcessor__mdt> processors = new List<AsyncActionProcessor__mdt>{
+			AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class),
+			AsyncActionTestUtils.initFlowProcessor('Template_Async_Action_Flow')
+		};
+		List<AsyncAction__c> actions = new List<AsyncAction__c>{};
+		for (AsyncActionProcessor__mdt processor : processors) {
+			AsyncAction__c action = AsyncActions.initAction(processor);
+			actions?.add(action);
+		}
+		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
+		return processors;
+	}
 }

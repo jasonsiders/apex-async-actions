@@ -5,6 +5,9 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier')
 @IsTest
 global class AsyncActionTestUtils {
+	/** @description ERROR messages saved through MockLogAdapter **/
+	public static List<Object> errorLogs = new List<Object>{};
+
 	/**
 	 * @description Instantiates and returns an Apex processor settings object with default values for testing.
 	 * @param processorType The processor class type to create settings for
@@ -138,5 +141,131 @@ global class AsyncActionTestUtils {
 			: new Map<String, AsyncActionScheduledJob__mdt>{};
 		String jobName = jobSettings?.DeveloperName;
 		AsyncActionScheduledJobService.settings?.put(jobName, jobSettings);
+	}
+
+	/**
+	 * @description Scheduling tests mostly need an enabled job, and initScheduledJobSettings() defaults to disabled
+	 * @return An enabled AsyncActionScheduledJob__mdt record
+	 */
+	public static AsyncActionScheduledJob__mdt initEnabledScheduledJobSettings() {
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+		return jobSettings;
+	}
+
+	/**
+	 * @description Lets tests count the processors that were started
+	 * @return The AsyncActionJob jobs
+	 */
+	public static List<AsyncApexJob> getProcessorJobs() {
+		return [
+			SELECT Id
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
+			WITH SYSTEM_MODE
+		];
+	}
+
+	/**
+	 * @description Scheduled jobs run as their owner, so this shows who a job runs as
+	 * @param jobSettings The scheduled job settings to check
+	 * @return The owner's UserType (ex., 'AutomatedProcess'), or null if not scheduled
+	 */
+	public static String getScheduledJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
+		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
+		User owner = [
+			SELECT UserType
+			FROM User
+			WHERE Id IN (SELECT OwnerId FROM CronTrigger WHERE CronJobDetail.Name = :jobName)
+			WITH SYSTEM_MODE
+			LIMIT 1
+		] ?? null;
+		return owner?.UserType;
+	}
+
+	/**
+	 * @description Inserts a Standard User with the AsyncActionAdministrator permission set
+	 * @return The inserted User record
+	 */
+	public static User insertAdministrator() {
+		PermissionSet permissionSet = [
+			SELECT Id
+			FROM PermissionSet
+			WHERE Name = 'AsyncActionAdministrator'
+			WITH SYSTEM_MODE
+			LIMIT 1
+		];
+		User user = AsyncActionTestUtils.insertStandardUser();
+		PermissionSetAssignment assignment = new PermissionSetAssignment(
+			AssigneeId = user?.Id,
+			PermissionSetId = permissionSet?.Id
+		);
+		AsyncActionTestUtils.insertSetupRecord(assignment);
+		return user;
+	}
+
+	/**
+	 * @description Inserts a Standard User with no package permission sets
+	 * @return The inserted User record
+	 */
+	public static User insertStandardUser() {
+		User user = AsyncActionTestUtils.initStandardUser();
+		AsyncActionTestUtils.insertSetupRecord(user);
+		return user;
+	}
+
+	/**
+	 * @description Randomizes the username, which must be unique across all orgs
+	 * @return The uninserted User record
+	 */
+	private static User initStandardUser() {
+		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' WITH SYSTEM_MODE LIMIT 1];
+		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
+		return new User(
+			Alias = 'testuser',
+			Email = username,
+			EmailEncodingKey = 'UTF-8',
+			LanguageLocaleKey = 'en_US',
+			LastName = 'User',
+			LocaleSidKey = 'en_US',
+			ProfileId = standardProfile?.Id,
+			TimeZoneSidKey = 'GMT',
+			Username = username
+		);
+	}
+
+	/**
+	 * @description Uses runAs, since tests can't otherwise mix setup and non-setup DML
+	 * @param record The record to insert, ex. a User
+	 */
+	private static void insertSetupRecord(SObject record) {
+		User me = new User(Id = UserInfo.getUserId());
+		System.runAs(me) {
+			Database.insert(record, System.AccessLevel.SYSTEM_MODE);
+		}
+	}
+
+	// **** INNER **** //
+	/** @description Records ERROR logs for tests to assert on **/
+	public class MockLogAdapter implements AsyncActionLogger.Adapter {
+		/** @description ERROR messages not yet saved **/
+		private List<Object> pendingLogs = new List<Object>{};
+
+		/**
+		 * @description Buffers ERROR messages until save()
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 */
+		public void log(System.LoggingLevel level, Object logMessage) {
+			if (level == System.LoggingLevel.ERROR) {
+				this.pendingLogs?.add(logMessage);
+			}
+		}
+
+		/** @description Moves buffered messages into errorLogs **/
+		public void save() {
+			AsyncActionTestUtils.errorLogs?.addAll(this.pendingLogs);
+			this.pendingLogs?.clear();
+		}
 	}
 }

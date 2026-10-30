@@ -63,6 +63,31 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	}
 
 	/**
+	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return The generated cron expression
+	 */
+	public static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
+		String cronExpression = HOURLY_CRON_EXP;
+		if (jobSettings?.Type__c == 'Custom') {
+			cronExpression = jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
+		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
+			Integer interval = AsyncActionScheduledJobUtils.getInterval(jobSettings);
+			cronExpression = new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
+		}
+		return cronExpression;
+	}
+
+	/**
+	 * @description Shared by scheduling and validation, so both fall back to the same default
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return The configured interval in minutes, or the default if blank
+	 */
+	public static Integer getInterval(AsyncActionScheduledJob__mdt jobSettings) {
+		return jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
+	}
+
+	/**
 	 * @description Returns the unique name of the scheduled job based on job settings.
 	 * @param jobSettings The scheduled job configuration metadata
 	 * @return The unique job name with prefix
@@ -130,22 +155,12 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String msg = 'Could not schedule job: ' + jobName + ': ' + error.getMessage();
 			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
 			return null;
-		}
-	}
-
-	/**
-	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
-	 * @param jobSettings The scheduled job configuration metadata
-	 * @return The generated cron expression
-	 */
-	private static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
-		if (jobSettings?.Type__c == 'Custom') {
-			return jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
-		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
-			Integer interval = jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
-			return new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
-		} else {
-			return HOURLY_CRON_EXP;
+		} catch (System.StringException error) {
+			// Note: System.schedule() throws StringException for a malformed CronExpression__c.
+			// Failing only this job lets the caller schedule the remaining ones.
+			String msg = 'Invalid settings for job: ' + jobName + ': ' + error.getMessage();
+			AsyncActionLogger.log(System.LoggingLevel.ERROR, msg);
+			return null;
 		}
 	}
 

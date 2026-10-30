@@ -3,20 +3,18 @@
 private class AsyncActionTriggerHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsIfTriggerEnabled() {
+		// Lacks Create access on the package's platform events
+		User administrator = AsyncActionTestUtils.insertAdministrator();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.RunOnInsert__c = true;
 		AsyncAction__c action = AsyncActions.initAction(settings);
 
-		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
+		System.runAs(administrator) {
+			Database.insert(action, System.AccessLevel.USER_MODE);
+		}
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert');
 	}
 
@@ -29,13 +27,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched on insert');
 	}
 
@@ -54,6 +46,8 @@ private class AsyncActionTriggerHandlerTest {
 			AsyncActionTriggerHandlerTest.getScheduledJobs(jobSettings)?.isEmpty(),
 			'Enabled Scheduled Job was not created'
 		);
+		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
+		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
 	}
 
 	@IsTest

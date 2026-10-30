@@ -9,7 +9,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldLog() {
-		Type adapterType = MockAdapter.class;
+		Type adapterType = AsyncActionTestUtils.MockLogAdapter.class;
 		String adapterName = adapterType?.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 
@@ -25,7 +25,7 @@ private class AsyncActionLoggerTest {
 
 	@IsTest
 	static void shouldInitializeCustomLogAdapter() {
-		Type adapterType = MockAdapter.class;
+		Type adapterType = AsyncActionTestUtils.MockLogAdapter.class;
 		String adapterName = adapterType?.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 
@@ -172,27 +172,6 @@ private class AsyncActionLoggerTest {
 	}
 
 	// **** INNER **** //
-	/**
-	 * @description Mock adapter implementation for testing custom logging functionality
-	 */
-	public class MockAdapter implements AsyncActionLogger.Adapter {
-		/**
-		 * @description Mock log implementation that does nothing
-		 * @param level The logging level (unused in mock)
-		 * @param msg The message to log (unused in mock)
-		 */
-		public void log(System.LoggingLevel level, Object msg) {
-			// Doesn't matter
-		}
-
-		/**
-		 * @description Mock save implementation that does nothing
-		 */
-		public void save() {
-			// Doesn't matter
-		}
-	}
-
 	/**
 	 * @description Reports no CallableLogger type, as if Nebula Logger isn't installed
 	 */
