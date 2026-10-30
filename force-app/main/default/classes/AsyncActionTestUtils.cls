@@ -141,30 +141,16 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Inserts a Standard User with the AsyncActionAdministrator permission set,
-	 * which does not grant Create access on AsyncActionStart__e
-	 * @return The inserted User record
+	 * @description Lists the jobs that run processors, so tests can check which processors were started
+	 * @return The org's AsyncActionJob jobs
 	 */
-	public static User insertAdministrator() {
-		PermissionSet permissionSet = [
+	public static List<AsyncApexJob> getProcessorJobs() {
+		return [
 			SELECT Id
-			FROM PermissionSet
-			WHERE Name = 'AsyncActionAdministrator'
+			FROM AsyncApexJob
+			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
 			WITH SYSTEM_MODE
-			LIMIT 1
 		];
-		User user = AsyncActionTestUtils.initStandardUser();
-		// Can't mix DML ops - this is a workaround
-		User me = new User(Id = UserInfo.getUserId());
-		System.runAs(me) {
-			Database.insert(user, System.AccessLevel.SYSTEM_MODE);
-			PermissionSetAssignment assignment = new PermissionSetAssignment(
-				AssigneeId = user?.Id,
-				PermissionSetId = permissionSet?.Id
-			);
-			Database.insert(assignment, System.AccessLevel.SYSTEM_MODE);
-		}
-		return user;
 	}
 
 	/**
@@ -185,6 +171,38 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
+	 * @description Inserts a Standard User with the AsyncActionAdministrator permission set,
+	 * which does not grant Create access on AsyncActionStart__e
+	 * @return The inserted User record
+	 */
+	public static User insertAdministrator() {
+		PermissionSet permissionSet = [
+			SELECT Id
+			FROM PermissionSet
+			WHERE Name = 'AsyncActionAdministrator'
+			WITH SYSTEM_MODE
+			LIMIT 1
+		];
+		User user = AsyncActionTestUtils.insertStandardUser();
+		PermissionSetAssignment assignment = new PermissionSetAssignment(
+			AssigneeId = user?.Id,
+			PermissionSetId = permissionSet?.Id
+		);
+		AsyncActionTestUtils.insertSetupRecord(assignment);
+		return user;
+	}
+
+	/**
+	 * @description Inserts a Standard User with no package permission sets, so it has no access to AsyncAction__c
+	 * @return The inserted User record
+	 */
+	public static User insertStandardUser() {
+		User user = AsyncActionTestUtils.initStandardUser();
+		AsyncActionTestUtils.insertSetupRecord(user);
+		return user;
+	}
+
+	/**
 	 * @description Builds a Standard User; the random username avoids colliding with usernames in other orgs
 	 * @return The uninserted User record
 	 */
@@ -202,5 +220,16 @@ global class AsyncActionTestUtils {
 			TimeZoneSidKey = 'GMT',
 			Username = username
 		);
+	}
+
+	/**
+	 * @description Inserts in a runAs block, since a test can't otherwise mix setup and non-setup DML
+	 * @param record The setup object record (ex., a User) to insert
+	 */
+	private static void insertSetupRecord(SObject record) {
+		User me = new User(Id = UserInfo.getUserId());
+		System.runAs(me) {
+			Database.insert(record, System.AccessLevel.SYSTEM_MODE);
+		}
 	}
 }

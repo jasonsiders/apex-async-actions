@@ -10,13 +10,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert');
 	}
 
@@ -32,13 +26,7 @@ private class AsyncActionTriggerHandlerTest {
 		}
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert');
 	}
 
@@ -51,13 +39,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.isTrue(jobs?.isEmpty(), 'Job(s) were launched on insert');
 	}
 
@@ -76,6 +58,8 @@ private class AsyncActionTriggerHandlerTest {
 			AsyncActionTriggerHandlerTest.getScheduledJobs(jobSettings)?.isEmpty(),
 			'Enabled Scheduled Job was not created'
 		);
+		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
+		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
 	}
 
 	@IsTest
@@ -92,20 +76,6 @@ private class AsyncActionTriggerHandlerTest {
 			AsyncActionTriggerHandlerTest.getScheduledJobs(jobSettings)?.isEmpty(),
 			'Disabled Scheduled Job was created'
 		);
-	}
-
-	@IsTest
-	static void shouldScheduleAsAutomatedProcess() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c action = AsyncActions.initAction(settings);
-
-		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
-		Test.getEventBus().deliver();
-
-		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
-		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
 	}
 
 	@IsTest

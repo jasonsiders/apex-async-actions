@@ -303,7 +303,7 @@ private class AsyncActionsTest {
 		new AsyncActions.EventPublisher()?.startAll();
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.areEqual(2, jobs?.size(), 'Wrong # of processor jobs');
 	}
 
@@ -315,7 +315,7 @@ private class AsyncActionsTest {
 		new AsyncActions.EventPublisher()?.start(processorNames);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of processor jobs');
 	}
 
@@ -327,7 +327,7 @@ private class AsyncActionsTest {
 		new AsyncActions.EventPublisher()?.start(processorName);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of processor jobs');
 	}
 
@@ -345,20 +345,8 @@ private class AsyncActionsTest {
 		publisher?.start(nullName);
 		Test.getEventBus().deliver();
 
-		List<AsyncApexJob> jobs = AsyncActionsTest.getProcessorJobs();
+		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
 		Assert.isTrue(jobs?.isEmpty(), 'Processor jobs were launched');
-	}
-
-	@IsTest
-	static void shouldEnforceScheduledJobs() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
-
-		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
-		Test.getEventBus().deliver();
-
-		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
-		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
 	}
 
 	@IsTest
@@ -387,15 +375,6 @@ private class AsyncActionsTest {
 		}
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 		return processors;
-	}
-
-	static List<AsyncApexJob> getProcessorJobs() {
-		return [
-			SELECT Id
-			FROM AsyncApexJob
-			WHERE ApexClass.Name = :AsyncActionJob.class.getName()
-			WITH SYSTEM_MODE
-		];
 	}
 
 	// **** INNER **** //
