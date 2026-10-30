@@ -1,8 +1,6 @@
 @SuppressWarnings('PMD.ApexUnitTestClassShouldHaveRunAs')
 @IsTest
 private class AsyncActionsTest {
-	private static List<Object> errorLogs = new List<Object>{};
-
 	@IsTest
 	static void shouldInitializeAnAction() {
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
@@ -378,7 +376,7 @@ private class AsyncActionsTest {
 
 	@IsTest
 	static void shouldLogFailedPublishes() {
-		String adapterName = AsyncActionsTest.MockLogAdapter.class.getName();
+		String adapterName = AsyncActionTestUtils.MockLogAdapter.class.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 		// Exceeds Actions__c's max length, so the publish fails
 		String tooLongName = 'a'.repeat(131073);
@@ -386,7 +384,7 @@ private class AsyncActionsTest {
 		new AsyncActions.EventPublisher()?.start(tooLongName);
 		AsyncActionLogger.save();
 
-		Assert.isFalse(errorLogs?.isEmpty(), 'Failed publish was not logged');
+		Assert.isFalse(AsyncActionTestUtils.errorLogs?.isEmpty(), 'Failed publish was not logged');
 	}
 
 	// **** HELPER **** //
@@ -402,29 +400,5 @@ private class AsyncActionsTest {
 		}
 		Database.insert(actions, System.AccessLevel.SYSTEM_MODE);
 		return processors;
-	}
-
-	// **** INNER **** //
-	/** @description Records ERROR logs for tests to assert on */
-	public class MockLogAdapter implements AsyncActionLogger.Adapter {
-		/** @description ERROR messages not yet saved */
-		private List<Object> pendingLogs = new List<Object>{};
-
-		/**
-		 * @description Buffers ERROR messages until save()
-		 * @param level The logging level for the message
-		 * @param logMessage The message or object to log
-		 */
-		public void log(System.LoggingLevel level, Object logMessage) {
-			if (level == System.LoggingLevel.ERROR) {
-				this.pendingLogs?.add(logMessage);
-			}
-		}
-
-		/** @description Moves buffered messages into errorLogs */
-		public void save() {
-			errorLogs?.addAll(this.pendingLogs);
-			this.pendingLogs?.clear();
-		}
 	}
 }

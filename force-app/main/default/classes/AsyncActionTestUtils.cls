@@ -5,6 +5,9 @@
 @SuppressWarnings('PMD.AvoidGlobalModifier')
 @IsTest
 global class AsyncActionTestUtils {
+	/** @description ERROR messages saved through MockLogAdapter **/
+	public static List<Object> errorLogs = new List<Object>{};
+
 	/**
 	 * @description Instantiates and returns an Apex processor settings object with default values for testing.
 	 * @param processorType The processor class type to create settings for
@@ -229,6 +232,30 @@ global class AsyncActionTestUtils {
 		User me = new User(Id = UserInfo.getUserId());
 		System.runAs(me) {
 			Database.insert(record, System.AccessLevel.SYSTEM_MODE);
+		}
+	}
+
+	// **** INNER **** //
+	/** @description Records ERROR logs for tests to assert on **/
+	public class MockLogAdapter implements AsyncActionLogger.Adapter {
+		/** @description ERROR messages not yet saved **/
+		private List<Object> pendingLogs = new List<Object>{};
+
+		/**
+		 * @description Buffers ERROR messages until save()
+		 * @param level The logging level for the message
+		 * @param logMessage The message or object to log
+		 */
+		public void log(System.LoggingLevel level, Object logMessage) {
+			if (level == System.LoggingLevel.ERROR) {
+				this.pendingLogs?.add(logMessage);
+			}
+		}
+
+		/** @description Moves buffered messages into errorLogs **/
+		public void save() {
+			AsyncActionTestUtils.errorLogs?.addAll(this.pendingLogs);
+			this.pendingLogs?.clear();
 		}
 	}
 }

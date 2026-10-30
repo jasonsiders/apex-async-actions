@@ -1,9 +1,15 @@
 /** @description Runs AsyncActionScheduleEnforcer as the Automated Process user, which then owns the scheduled jobs */
 public class AsyncActionScheduleTriggerHandler extends AsyncActionTriggerFramework {
-	/** @description Enforces once per batch, since the events carry no data */
+	/** @description Enforces once per batch, since the events carry no data. Logs failures, since no caller sees them */
 	public override void afterInsert() {
-		new AsyncActionScheduleEnforcer()?.enforce();
-		AsyncActionLogger.save();
+		try {
+			new AsyncActionScheduleEnforcer()?.enforce();
+		} catch (Exception error) {
+			AsyncActionLogger.log(System.LoggingLevel.ERROR, error);
+			throw error;
+		} finally {
+			AsyncActionLogger.save();
+		}
 	}
 
 	/**
