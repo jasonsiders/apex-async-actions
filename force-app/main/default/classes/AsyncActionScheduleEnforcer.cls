@@ -18,7 +18,10 @@ public without sharing class AsyncActionScheduleEnforcer {
 	public void enforce() {
 		List<CronTrigger> orphanedJobs = this.registerJobs();
 		AsyncActionScheduledJobUtils.abortJobs(orphanedJobs);
-		this.validateJobs();
+		List<JobWrapper> invalidJobs = this.getInvalidJobs();
+		for (JobWrapper job : invalidJobs) {
+			job?.reschedule();
+		}
 	}
 
 	/**
@@ -27,8 +30,8 @@ public without sharing class AsyncActionScheduleEnforcer {
 	 */
 	public Boolean needsEnforcement() {
 		List<CronTrigger> orphanedJobs = this.registerJobs();
-		Boolean hasInvalidJobs = this.hasInvalidJobs();
-		return hasInvalidJobs || orphanedJobs?.isEmpty() == false;
+		List<JobWrapper> invalidJobs = this.getInvalidJobs();
+		return orphanedJobs?.isEmpty() == false || invalidJobs?.isEmpty() == false;
 	}
 
 	// **** PRIVATE **** //
@@ -75,23 +78,18 @@ public without sharing class AsyncActionScheduleEnforcer {
 		return orphanedJobs;
 	}
 
-	/** @description Validates each wrapper, scheduling or rescheduling jobs as needed **/
-	private void validateJobs() {
-		for (JobWrapper job : this.jobs?.values()) {
-			job?.validate();
-		}
-	}
-
 	/**
-	 * @description Read-only counterpart to validateJobs()
-	 * @return Whether any enabled job is missing or misconfigured
+	 * @description Shared by enforce() and needsEnforcement(), so both agree on which jobs to reschedule
+	 * @return The enabled jobs that are missing or misconfigured
 	 */
-	private Boolean hasInvalidJobs() {
-		Boolean hasInvalidJobs = false;
+	private List<JobWrapper> getInvalidJobs() {
+		List<JobWrapper> invalidJobs = new List<JobWrapper>{};
 		for (JobWrapper job : this.jobs?.values()) {
-			hasInvalidJobs = hasInvalidJobs || job?.isValid() == false;
+			if (job?.isValid() == false) {
+				invalidJobs?.add(job);
+			}
 		}
-		return hasInvalidJobs;
+		return invalidJobs;
 	}
 
 	/** @description Builds wrappers for all enabled scheduled job settings **/
@@ -134,16 +132,14 @@ public without sharing class AsyncActionScheduleEnforcer {
 			return this;
 		}
 
-		/** @description Reschedules a missing or misconfigured job; abortJobs() skips a missing one **/
-		public void validate() {
-			if (this.isValid() == false) {
-				AsyncActionScheduledJobUtils.abortJobs(this.cronTrigger);
-				AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
-			}
+		/** @description Aborts first, since the new job reuses the name; abortJobs() skips a missing one **/
+		public void reschedule() {
+			AsyncActionScheduledJobUtils.abortJobs(this.cronTrigger);
+			AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);
 		}
 
 		/**
-		 * @description Read-only, so callers can check whether validate() would change anything
+		 * @description Read-only, so callers can check whether reschedule() is needed
 		 * @return Whether the job is scheduled and matches its settings
 		 */
 		public Boolean isValid() {
