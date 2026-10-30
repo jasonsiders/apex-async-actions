@@ -53,6 +53,11 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		return processorNames;
 	}
 
+	/**
+	 * @description Looks up the job name too, which abortJobs() logs
+	 * @param currentJobId The CronTrigger ID of the running job
+	 * @return The running job's AsyncApexJob records
+	 */
 	private List<AsyncApexJob> getCurrentJobDetails(Id currentJobId) {
 		return [
 			SELECT CronTriggerId, CronTrigger.CronJobDetail.Name
@@ -62,14 +67,18 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		];
 	}
 
+	/** @description Refreshes the settings, since they may have changed since the job was scheduled **/
 	private void getUpdatedJobSettings() {
-		// Get the latest values of the job settings record, in case it changed since the last scheduled run
 		String jobName = this.jobSettings?.DeveloperName;
 		this.jobSettings = AsyncActionScheduledJobService.get(jobName);
 	}
 
+	/**
+	 * @description Aborts the running job first, since the new one reuses its name
+	 * @param currentJobId The CronTrigger ID of the running job
+	 * @return The new job's ID, or null if it wasn't scheduled
+	 */
 	private Id reschedule(Id currentJobId) {
-		// Deletes the current job, then schedules a new one for the defined interval
 		List<AsyncApexJob> currentJobs = this.getCurrentJobDetails(currentJobId);
 		AsyncActionScheduledJobUtils.abortJobs(currentJobs);
 		return AsyncActionScheduledJobUtils.scheduleNewJob(this.jobSettings);

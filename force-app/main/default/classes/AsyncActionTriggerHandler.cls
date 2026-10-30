@@ -43,8 +43,11 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 		return AsyncActionTriggerHandler.class;
 	}
 
+	/**
+	 * @description Deduplicates names, so each processor starts once per batch
+	 * @return The processors of the inserted actions that run on insert
+	 */
 	private Set<String> getTriggeredActions() {
-		// Returns a collection of Processor names of current Action(s) that are configured to run on insert
 		Set<String> results = new Set<String>{};
 		for (AsyncAction__c action : this.actions) {
 			String processorName = action?.ProcessorName__c;
