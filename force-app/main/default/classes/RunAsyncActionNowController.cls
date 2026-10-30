@@ -23,7 +23,6 @@ public with sharing class RunAsyncActionNowController {
 			action.Status__c = AsyncActions.Status.PENDING.name();
 			Database.update(action, true, System.AccessLevel.USER_MODE);
 			new AsyncActions.EventPublisher()?.start(action?.ProcessorName__c);
-			AsyncActionLogger.save();
 		} catch (Exception anyError) {
 			String msg = anyError?.getMessage();
 			throw new AuraHandledException(msg);

@@ -160,7 +160,7 @@ global abstract class AsyncActions {
 		}
 
 		/**
-		 * @description Uses system mode, since callers may lack Create access on the event
+		 * @description Uses system mode, since callers may lack Create access. Saves failures, since callers may not
 		 * @param event The platform event to publish
 		 */
 		private void publish(SObject event) {
@@ -168,6 +168,7 @@ global abstract class AsyncActions {
 			if (result?.isSuccess() == false) {
 				String msg = 'Failed to publish ' + event?.getSObjectType() + ': ' + result?.getErrors();
 				AsyncActionLogger.log(System.LoggingLevel.ERROR, msg);
+				AsyncActionLogger.save();
 			}
 		}
 	}

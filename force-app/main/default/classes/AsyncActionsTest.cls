@@ -382,7 +382,6 @@ private class AsyncActionsTest {
 		String tooLongName = 'a'.repeat(131073);
 
 		new AsyncActions.EventPublisher()?.start(tooLongName);
-		AsyncActionLogger.save();
 
 		Assert.isFalse(AsyncActionTestUtils.errorLogs?.isEmpty(), 'Failed publish was not logged');
 	}
