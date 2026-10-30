@@ -3,7 +3,7 @@
  * Handles inserted AsyncAction__c records by:
  * - Inheriting values from their AsyncActionProcessor__mdt settings
  * - Triggering corresponding jobs to be launched if defined
- * - Running AsyncActionScheduleEnforcer logic
+ * - Publishing an AsyncActionSchedule__e event to run AsyncActionScheduleEnforcer logic
  */
 public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	private List<AsyncAction__c> actions = (List<AsyncAction__c>) this.triggerNew;
@@ -33,8 +33,9 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 			event.Actions__c = String.join(triggeredActions, ',');
 			EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
 		}
-		// Ensure the scheduled job aligns with current configuration
-		new AsyncActionScheduleEnforcer()?.enforce();
+		// Ensure the scheduled job aligns with current configuration, as the Automated Process user
+		AsyncActionSchedule__e scheduleEvent = new AsyncActionSchedule__e();
+		EventBus.publishWithAccessLevel(scheduleEvent, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionLogger.save();
 	}
 

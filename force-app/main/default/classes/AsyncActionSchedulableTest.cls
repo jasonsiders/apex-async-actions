@@ -84,6 +84,18 @@ private class AsyncActionSchedulableTest {
 	}
 
 	@IsTest
+	static void shouldScheduleOtherJobsAsAutomatedProcess() {
+		AsyncActionScheduledJob__mdt otherJobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		otherJobSettings.Enabled__c = true;
+
+		new AsyncActionSchedulable(jobSettings).execute(null);
+		Test.getEventBus().deliver();
+
+		String ownerType = AsyncActionSchedulableTest.getJobOwnerType(otherJobSettings);
+		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
+	}
+
+	@IsTest
 	static void shouldNotLaunchIfJobIsDisabled() {
 		jobSettings.Enabled__c = false; // The scheduled job should do nothing
 
@@ -126,6 +138,20 @@ private class AsyncActionSchedulableTest {
 	}
 
 	// **** HELPER **** //
+	static String getJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
+		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
+		List<CronTrigger> jobs = [
+			SELECT OwnerId
+			FROM CronTrigger
+			WHERE CronJobDetail.Name = :jobName
+			WITH SYSTEM_MODE
+			LIMIT 1
+		];
+		Id ownerId = jobs?.isEmpty() == false ? jobs[0]?.OwnerId : null;
+		User owner = [SELECT UserType FROM User WHERE Id = :ownerId WITH SYSTEM_MODE LIMIT 1] ?? null;
+		return owner?.UserType;
+	}
+
 	static void insertAction() {
 		// Insert an Async Action, make sure the triger doesn't run so we can test the logic separately
 		AsyncActionTriggerFramework.disable(AsyncActionTriggerHandler.class);
