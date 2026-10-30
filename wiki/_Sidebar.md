@@ -25,6 +25,7 @@
 - [The AsyncActionLauncher](./The-AsyncActionLauncher-Class)
 - [The AsyncActions](./The-AsyncActions-Class)
 - [AsyncActions.DuplicateBehavior](./The-AsyncActions.DuplicateBehavior-Enum)
+- [AsyncActions.EventPublisher](./The-AsyncActions.EventPublisher-Class)
 - [AsyncActions.Failure](./The-AsyncActions.Failure-Class)
 - [AsyncActions.Processor](./The-AsyncActions.Processor-Interface)
 - [AsyncActions.RecordGroup](./The-AsyncActions.RecordGroup-Class)
