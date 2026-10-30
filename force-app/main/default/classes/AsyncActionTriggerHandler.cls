@@ -26,16 +26,12 @@ public class AsyncActionTriggerHandler extends AsyncActionTriggerFramework {
 	 * @description Runs jobs configured to run on insert and ensures scheduled jobs align with current configuration.
 	 */
 	public override void afterInsert() {
+		AsyncActions.EventPublisher publisher = new AsyncActions.EventPublisher();
 		// Run any jobs configured to run on insert
 		Set<String> triggeredActions = this.getTriggeredActions();
-		if (triggeredActions?.isEmpty() == false) {
-			AsyncActionStart__e event = new AsyncActionStart__e();
-			event.Actions__c = String.join(triggeredActions, ',');
-			EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
-		}
-		// Ensure the scheduled job aligns with current configuration, as the Automated Process user
-		AsyncActionSchedule__e scheduleEvent = new AsyncActionSchedule__e();
-		EventBus.publishWithAccessLevel(scheduleEvent, System.AccessLevel.SYSTEM_MODE);
+		publisher?.start(triggeredActions);
+		// Ensure the scheduled job aligns with current configuration
+		publisher?.enforceScheduledJobs();
 		AsyncActionLogger.save();
 	}
 

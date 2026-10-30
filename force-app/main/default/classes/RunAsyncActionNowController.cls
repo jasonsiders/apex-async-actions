@@ -22,8 +22,8 @@ public with sharing class RunAsyncActionNowController {
 			action.NextEligibleAt__c = (scheduledForPast) ? action?.NextEligibleAt__c : DateTime.now();
 			action.Status__c = AsyncActions.Status.PENDING.name();
 			Database.update(action, true, System.AccessLevel.USER_MODE);
-			AsyncActionStart__e startEvent = new AsyncActionStart__e(Actions__c = action?.ProcessorName__c);
-			EventBus.publishWithAccessLevel(startEvent, System.AccessLevel.SYSTEM_MODE);
+			new AsyncActions.EventPublisher()?.start(action?.ProcessorName__c);
+			AsyncActionLogger.save();
 		} catch (Exception anyError) {
 			String msg = anyError?.getMessage();
 			throw new AuraHandledException(msg);

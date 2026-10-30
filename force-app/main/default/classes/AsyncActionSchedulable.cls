@@ -26,18 +26,15 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 			this.reschedule(context?.getTriggerId());
 		}
 		// Once completed, ensure all scheduled jobs match the currently defined configuration in cmdt
-		// Do this via event, so the enforcer schedules jobs as the Automated Process user
-		AsyncActionSchedule__e scheduleEvent = new AsyncActionSchedule__e();
-		EventBus.publishWithAccessLevel(scheduleEvent, System.AccessLevel.SYSTEM_MODE);
+		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
 		AsyncActionLogger.save();
 	}
 
 	private void doScheduledActions() {
 		List<AsyncActionScheduledJobItem__mdt> items = this.getActiveItems();
-		if (this.jobSettings?.Enabled__c == true && items?.isEmpty() == false) {
-			String actions = this.getCommaSeparatedActions(items);
-			AsyncActionStart__e event = new AsyncActionStart__e(Actions__c = actions);
-			EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
+		if (this.jobSettings?.Enabled__c == true) {
+			Set<String> processorNames = this.getProcessorNames(items);
+			new AsyncActions.EventPublisher()?.start(processorNames);
 		}
 	}
 
@@ -51,13 +48,18 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 		return activeItems;
 	}
 
-	private String getCommaSeparatedActions(List<AsyncActionScheduledJobItem__mdt> items) {
-		Set<String> actionSet = new Set<String>{};
+	/**
+	 * @description Collects names, since AsyncActionStart__e identifies processors by DeveloperName
+	 * @param items The active job items to start
+	 * @return DeveloperNames of the items' processors
+	 */
+	private Set<String> getProcessorNames(List<AsyncActionScheduledJobItem__mdt> items) {
+		Set<String> processorNames = new Set<String>{};
 		for (AsyncActionScheduledJobItem__mdt item : items) {
-			String actionName = item?.AsyncActionProcessor__r?.DeveloperName;
-			actionSet?.add(actionName);
+			String processorName = item?.AsyncActionProcessor__r?.DeveloperName;
+			processorNames?.add(processorName);
 		}
-		return String.join(actionSet, ',');
+		return processorNames;
 	}
 
 	private List<AsyncApexJob> getCurrentJobDetails(Id currentJobId) {
