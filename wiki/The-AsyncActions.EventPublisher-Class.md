@@ -31,3 +31,5 @@ Checks that each enabled [AsyncActionScheduledJob\_\_mdt](./The-AsyncActionSched
 - `void enforceScheduledJobs()`
 
 The framework calls this after `AsyncAction__c` records are inserted and after each scheduled run, so you rarely need to call it yourself. Call it after aborting jobs by hand, to reschedule them right away.
+
+Since v4.2.0, scheduled jobs change only after the transaction commits. A test that inserts `AsyncAction__c` records and then checks for a scheduled job must call `Test.getEventBus().deliver()` first.
