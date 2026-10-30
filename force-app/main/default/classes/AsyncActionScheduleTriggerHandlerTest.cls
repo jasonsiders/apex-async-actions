@@ -17,14 +17,27 @@ private class AsyncActionScheduleTriggerHandlerTest {
 	static void shouldLogEnforcementErrors() {
 		String adapterName = AsyncActionTestUtils.MockLogAdapter.class.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initEnabledScheduledJobSettings();
-		jobSettings.CronExpression__c = 'not a cron expression';
-		jobSettings.Type__c = 'Custom';
+		AsyncActionScheduledJobUtils.terminator = new FailingTerminator();
+		// Has no settings, so enforce() tries to abort it
+		String orphanedJobName = AsyncActionScheduledJobUtils.SCHEDULED_JOB_PREFIX + 'Orphaned_Job';
+		System.schedule(
+			orphanedJobName,
+			AsyncActionScheduledJobUtils.HOURLY_CRON_EXP,
+			new AsyncActionSchedulable(null)
+		);
 		AsyncActionSchedule__e event = new AsyncActionSchedule__e();
 
 		EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
 		Assert.isFalse(AsyncActionTestUtils.errorLogs?.isEmpty(), 'Enforcement error was not logged');
+	}
+
+	// **** INNER **** //
+	/** @description Throws an error that tryAbortJob() doesn't handle, so it reaches the trigger handler **/
+	private class FailingTerminator extends AsyncActionScheduledJobUtils.JobTerminator {
+		public override void abortJob(Id jobId) {
+			throw new System.AsyncException('Simulated abort failure');
+		}
 	}
 }

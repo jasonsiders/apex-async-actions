@@ -58,6 +58,21 @@ private class AsyncActionScheduleEnforcerTest {
 	}
 
 	@IsTest
+	static void shouldScheduleValidJobsIfAnotherIsInvalid() {
+		AsyncActionScheduledJob__mdt invalidJob = AsyncActionTestUtils.initEnabledScheduledJobSettings();
+		invalidJob.CronExpression__c = 'not a cron expression';
+		invalidJob.Type__c = 'Custom';
+		AsyncActionScheduledJob__mdt validJob = AsyncActionTestUtils.initEnabledScheduledJobSettings();
+
+		new AsyncActionScheduleEnforcer().enforce();
+
+		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
+		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
+		String expectedName = AsyncActionScheduledJobUtils.getJobName(validJob);
+		Assert.areEqual(expectedName, jobs?.get(0)?.CronTrigger?.CronJobDetail?.Name, 'Scheduled the wrong job');
+	}
+
+	@IsTest
 	static void shouldAbortAndRescheduleCustomJob() {
 		AsyncActionScheduledJob__mdt jobSetting = AsyncActionTestUtils.initEnabledScheduledJobSettings();
 		jobSetting.CronExpression__c = NIGHTLY_AT_MIDNIGHT;
