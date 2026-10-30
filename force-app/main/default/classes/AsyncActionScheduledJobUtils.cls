@@ -63,6 +63,22 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	}
 
 	/**
+	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
+	 * @param jobSettings The scheduled job configuration metadata
+	 * @return The generated cron expression
+	 */
+	public static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
+		if (jobSettings?.Type__c == 'Custom') {
+			return jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
+		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
+			Integer interval = jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
+			return new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
+		} else {
+			return HOURLY_CRON_EXP;
+		}
+	}
+
+	/**
 	 * @description Returns the unique name of the scheduled job based on job settings.
 	 * @param jobSettings The scheduled job configuration metadata
 	 * @return The unique job name with prefix
@@ -130,22 +146,6 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String msg = 'Could not schedule job: ' + jobName + ': ' + error.getMessage();
 			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
 			return null;
-		}
-	}
-
-	/**
-	 * @description Derives the cron expression from the job type; defaults to hourly when type is unrecognized
-	 * @param jobSettings The scheduled job configuration metadata
-	 * @return The generated cron expression
-	 */
-	private static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
-		if (jobSettings?.Type__c == 'Custom') {
-			return jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
-		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
-			Integer interval = jobSettings?.Interval__c?.intValue() ?? DEFAULT_INTERVAL;
-			return new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
-		} else {
-			return HOURLY_CRON_EXP;
 		}
 	}
 

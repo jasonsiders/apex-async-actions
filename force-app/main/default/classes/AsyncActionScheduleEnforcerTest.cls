@@ -226,6 +226,18 @@ private class AsyncActionScheduleEnforcerTest {
 		Assert.isFalse(needsEnforcement, 'Matching jobs needed enforcement');
 	}
 
+	@IsTest
+	static void shouldNotNeedEnforcementForCustomJobWithoutCronExpression() {
+		AsyncActionScheduledJob__mdt jobSetting = AsyncActionScheduleEnforcerTest.initActiveJobSettings();
+		jobSetting.CronExpression__c = null;
+		jobSetting.Type__c = 'Custom';
+		new AsyncActionScheduleEnforcer().enforce();
+
+		Boolean needsEnforcement = new AsyncActionScheduleEnforcer().needsEnforcement();
+
+		Assert.isFalse(needsEnforcement, 'Job scheduled with the hourly fallback needed enforcement');
+	}
+
 	// **** HELPER **** //
 	/**
 	 * @description Returns all AsyncApexJob records for AsyncActionSchedulable that are currently active

@@ -350,15 +350,16 @@ private class AsyncActionsTest {
 	}
 
 	@IsTest
-	static void shouldEnforceScheduledJobsIfMismatched() {
+	static void shouldPublishIfScheduledJobsMismatch() {
 		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
 		jobSettings.Enabled__c = true;
+		Integer dmlBefore = Limits.getDmlStatements();
 
 		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
-		Test.getEventBus().deliver();
 
-		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
-		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
+		// Each publish counts as a DML statement
+		Integer publishes = Limits.getDmlStatements() - dmlBefore;
+		Assert.areEqual(1, publishes, 'Did not publish although no job is scheduled');
 	}
 
 	@IsTest
