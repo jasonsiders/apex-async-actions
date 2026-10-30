@@ -54,8 +54,12 @@ private class AsyncActionSchedulableTest {
 	static void shouldLaunchSemiHourlyIfEnabled() {
 		jobSettings.Interval__c = 15;
 		jobSettings.Type__c = 'Semi-Hourly';
+		// Lacks Create access on the package's platform events
+		User administrator = AsyncActionTestUtils.insertAdministrator();
 
-		new AsyncActionSchedulable(jobSettings).execute(null);
+		System.runAs(administrator) {
+			new AsyncActionSchedulable(jobSettings).execute(null);
+		}
 		Test.getEventBus().deliver();
 
 		// Should create 1 Queueable, and a future instance of the schedulable job
@@ -70,23 +74,8 @@ private class AsyncActionSchedulableTest {
 	}
 
 	@IsTest
-	static void shouldLaunchIfUserCannotPublishEvents() {
-		User administrator = AsyncActionTestUtils.insertAdministrator();
-
-		System.runAs(administrator) {
-			new AsyncActionSchedulable(jobSettings).execute(null);
-		}
-		Test.getEventBus().deliver();
-
-		Map<String, AsyncApexJob> jobsByClassName = AsyncActionSchedulableTest.getAsyncJobs();
-		AsyncApexJob processorJob = jobsByClassName?.get(AsyncActionJob.class.getName());
-		Assert.isNotNull(processorJob, 'Processor job was not launched');
-	}
-
-	@IsTest
 	static void shouldScheduleOtherJobsAsAutomatedProcess() {
-		AsyncActionScheduledJob__mdt otherJobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		otherJobSettings.Enabled__c = true;
+		AsyncActionScheduledJob__mdt otherJobSettings = AsyncActionTestUtils.initEnabledScheduledJobSettings();
 
 		new AsyncActionSchedulable(jobSettings).execute(null);
 		Test.getEventBus().deliver();

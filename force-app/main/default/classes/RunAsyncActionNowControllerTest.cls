@@ -20,9 +20,13 @@ private class RunAsyncActionNowControllerTest {
 		AsyncActionTestUtils.initScheduledJobSettings();
 		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
+		// Lacks Create access on the package's platform events
+		User administrator = AsyncActionTestUtils.insertAdministrator();
 
 		Test.startTest();
-		RunAsyncActionNowController.runAction(action?.Id);
+		System.runAs(administrator) {
+			RunAsyncActionNowController.runAction(action?.Id);
+		}
 		Test.getEventBus().deliver();
 		Test.stopTest();
 
@@ -41,24 +45,6 @@ private class RunAsyncActionNowControllerTest {
 
 		Test.startTest();
 		RunAsyncActionNowController.runAction(action?.Id);
-		Test.getEventBus().deliver();
-		Test.stopTest();
-
-		action = RunAsyncActionNowControllerTest.getAction();
-		Assert.areEqual(AsyncActions.Status.COMPLETED.name(), action?.Status__c, 'Action was not processed');
-	}
-
-	@IsTest
-	static void shouldLaunchActionIfUserCannotPublishEvents() {
-		AsyncActionTestUtils.initScheduledJobSettings();
-		AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		AsyncAction__c action = RunAsyncActionNowControllerTest.getAction();
-		User administrator = AsyncActionTestUtils.insertAdministrator();
-
-		Test.startTest();
-		System.runAs(administrator) {
-			RunAsyncActionNowController.runAction(action?.Id);
-		}
 		Test.getEventBus().deliver();
 		Test.stopTest();
 

@@ -3,8 +3,7 @@
 private class AsyncActionScheduleTriggerHandlerTest {
 	@IsTest
 	static void shouldScheduleJobsAsAutomatedProcess() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initEnabledScheduledJobSettings();
 		AsyncActionSchedule__e event = new AsyncActionSchedule__e();
 
 		EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);
@@ -18,9 +17,8 @@ private class AsyncActionScheduleTriggerHandlerTest {
 	static void shouldLogEnforcementErrors() {
 		String adapterName = AsyncActionTestUtils.MockLogAdapter.class.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initEnabledScheduledJobSettings();
 		jobSettings.CronExpression__c = 'not a cron expression';
-		jobSettings.Enabled__c = true;
 		jobSettings.Type__c = 'Custom';
 		AsyncActionSchedule__e event = new AsyncActionSchedule__e();
 

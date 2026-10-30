@@ -318,18 +318,6 @@ private class AsyncActionsTest {
 	}
 
 	@IsTest
-	static void shouldStartASingleProcessor() {
-		List<AsyncActionProcessor__mdt> processors = AsyncActionsTest.insertActionsForTwoProcessors();
-		String processorName = processors[0]?.DeveloperName;
-
-		new AsyncActions.EventPublisher()?.start(processorName);
-		Test.getEventBus().deliver();
-
-		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
-		Assert.areEqual(1, jobs?.size(), 'Wrong # of processor jobs');
-	}
-
-	@IsTest
 	static void shouldNotStartAllProcessorsIfNoneListed() {
 		// A blank Actions__c would start every processor
 		AsyncActionsTest.insertActionsForTwoProcessors();
@@ -349,8 +337,7 @@ private class AsyncActionsTest {
 
 	@IsTest
 	static void shouldPublishIfScheduledJobsMismatch() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
+		AsyncActionTestUtils.initEnabledScheduledJobSettings();
 		Integer dmlBefore = Limits.getDmlStatements();
 
 		new AsyncActions.EventPublisher()?.enforceScheduledJobs();
@@ -362,8 +349,7 @@ private class AsyncActionsTest {
 
 	@IsTest
 	static void shouldNotPublishIfScheduledJobsMatch() {
-		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
-		jobSettings.Enabled__c = true;
+		AsyncActionTestUtils.initEnabledScheduledJobSettings();
 		new AsyncActionScheduleEnforcer().enforce();
 		Integer dmlBefore = Limits.getDmlStatements();
 

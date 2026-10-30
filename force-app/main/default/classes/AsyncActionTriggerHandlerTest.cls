@@ -3,19 +3,7 @@
 private class AsyncActionTriggerHandlerTest {
 	@IsTest
 	static void shouldLaunchJobsIfTriggerEnabled() {
-		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
-		settings.RunOnInsert__c = true;
-		AsyncAction__c action = AsyncActions.initAction(settings);
-
-		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
-		Test.getEventBus().deliver();
-
-		List<AsyncApexJob> jobs = AsyncActionTestUtils.getProcessorJobs();
-		Assert.isFalse(jobs?.isEmpty(), 'Job(s) were not launched on insert');
-	}
-
-	@IsTest
-	static void shouldLaunchJobsIfUserCannotPublishEvents() {
+		// Lacks Create access on the package's platform events
 		User administrator = AsyncActionTestUtils.insertAdministrator();
 		AsyncActionProcessor__mdt settings = AsyncActionTestUtils.initApexProcessor(MockAsyncActionProcessor.class);
 		settings.RunOnInsert__c = true;

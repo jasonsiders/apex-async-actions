@@ -144,6 +144,16 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
+	 * @description Scheduling tests mostly need an enabled job, and initScheduledJobSettings() defaults to disabled
+	 * @return An enabled AsyncActionScheduledJob__mdt record
+	 */
+	public static AsyncActionScheduledJob__mdt initEnabledScheduledJobSettings() {
+		AsyncActionScheduledJob__mdt jobSettings = AsyncActionTestUtils.initScheduledJobSettings();
+		jobSettings.Enabled__c = true;
+		return jobSettings;
+	}
+
+	/**
 	 * @description Lets tests count the processors that were started
 	 * @return The AsyncActionJob jobs
 	 */
