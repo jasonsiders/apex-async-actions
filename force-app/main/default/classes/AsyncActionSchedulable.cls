@@ -25,7 +25,8 @@ public without sharing class AsyncActionSchedulable implements System.Schedulabl
 			this.doScheduledActions();
 			this.reschedule(context?.getTriggerId());
 		}
-		// Once completed, ensure all scheduled jobs match the currently defined configuration in cmdt, as the Automated Process user
+		// Once completed, ensure all scheduled jobs match the currently defined configuration in cmdt
+		// Do this via event, so the enforcer schedules jobs as the Automated Process user
 		AsyncActionSchedule__e scheduleEvent = new AsyncActionSchedule__e();
 		EventBus.publishWithAccessLevel(scheduleEvent, System.AccessLevel.SYSTEM_MODE);
 		AsyncActionLogger.save();

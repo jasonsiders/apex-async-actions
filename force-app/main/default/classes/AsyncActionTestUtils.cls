@@ -81,62 +81,6 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
-	 * @description Inserts a Standard User assigned the AsyncActionAdministrator permission set,
-	 * which does not grant Create access on AsyncActionStart__e.
-	 * @return The inserted User record
-	 */
-	public static User insertAdministrator() {
-		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' WITH SYSTEM_MODE LIMIT 1];
-		PermissionSet permissionSet = [
-			SELECT Id
-			FROM PermissionSet
-			WHERE Name = 'AsyncActionAdministrator'
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
-		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
-		User user = new User(
-			Alias = 'testuser',
-			Email = username,
-			EmailEncodingKey = 'UTF-8',
-			LanguageLocaleKey = 'en_US',
-			LastName = 'User',
-			LocaleSidKey = 'en_US',
-			ProfileId = standardProfile?.Id,
-			TimeZoneSidKey = 'GMT',
-			Username = username
-		);
-		// Can't mix DML ops - this is a workaround
-		User me = new User(Id = UserInfo.getUserId());
-		System.runAs(me) {
-			Database.insert(user, System.AccessLevel.SYSTEM_MODE);
-			PermissionSetAssignment assignment = new PermissionSetAssignment(
-				AssigneeId = user?.Id,
-				PermissionSetId = permissionSet?.Id
-			);
-			Database.insert(assignment, System.AccessLevel.SYSTEM_MODE);
-		}
-		return user;
-	}
-
-	/**
-	 * @description Returns the UserType of the user who owns the scheduled job for the given settings.
-	 * @param jobSettings The scheduled job settings to check
-	 * @return The owner's UserType (ex., 'AutomatedProcess'), or null if the job is not scheduled
-	 */
-	public static String getScheduledJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
-		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
-		User owner = [
-			SELECT UserType
-			FROM User
-			WHERE Id IN (SELECT OwnerId FROM CronTrigger WHERE CronJobDetail.Name = :jobName)
-			WITH SYSTEM_MODE
-			LIMIT 1
-		] ?? null;
-		return owner?.UserType;
-	}
-
-	/**
 	 * @description Gives subscriber tests a way to set parameters, since custom metadata can't be inserted via DML
 	 * @param developerName The DeveloperName of the parameter to inject (ex., 'LoggerPlugin')
 	 * @param value The Value__c of the parameter to inject
@@ -194,5 +138,69 @@ global class AsyncActionTestUtils {
 			: new Map<String, AsyncActionScheduledJob__mdt>{};
 		String jobName = jobSettings?.DeveloperName;
 		AsyncActionScheduledJobService.settings?.put(jobName, jobSettings);
+	}
+
+	/**
+	 * @description Inserts a Standard User with the AsyncActionAdministrator permission set,
+	 * which does not grant Create access on AsyncActionStart__e
+	 * @return The inserted User record
+	 */
+	public static User insertAdministrator() {
+		PermissionSet permissionSet = [
+			SELECT Id
+			FROM PermissionSet
+			WHERE Name = 'AsyncActionAdministrator'
+			WITH SYSTEM_MODE
+			LIMIT 1
+		];
+		User user = AsyncActionTestUtils.initStandardUser();
+		// Can't mix DML ops - this is a workaround
+		User me = new User(Id = UserInfo.getUserId());
+		System.runAs(me) {
+			Database.insert(user, System.AccessLevel.SYSTEM_MODE);
+			PermissionSetAssignment assignment = new PermissionSetAssignment(
+				AssigneeId = user?.Id,
+				PermissionSetId = permissionSet?.Id
+			);
+			Database.insert(assignment, System.AccessLevel.SYSTEM_MODE);
+		}
+		return user;
+	}
+
+	/**
+	 * @description Scheduled Apex runs as the job's owner, so tests use this to check which user a job runs as
+	 * @param jobSettings The scheduled job settings to check
+	 * @return The owner's UserType (ex., 'AutomatedProcess'), or null if the job is not scheduled
+	 */
+	public static String getScheduledJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
+		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
+		User owner = [
+			SELECT UserType
+			FROM User
+			WHERE Id IN (SELECT OwnerId FROM CronTrigger WHERE CronJobDetail.Name = :jobName)
+			WITH SYSTEM_MODE
+			LIMIT 1
+		] ?? null;
+		return owner?.UserType;
+	}
+
+	/**
+	 * @description Builds a Standard User; the random username avoids colliding with usernames in other orgs
+	 * @return The uninserted User record
+	 */
+	private static User initStandardUser() {
+		Profile standardProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' WITH SYSTEM_MODE LIMIT 1];
+		String username = 'testuser' + Crypto.getRandomInteger() + '@test.com';
+		return new User(
+			Alias = 'testuser',
+			Email = username,
+			EmailEncodingKey = 'UTF-8',
+			LanguageLocaleKey = 'en_US',
+			LastName = 'User',
+			LocaleSidKey = 'en_US',
+			ProfileId = standardProfile?.Id,
+			TimeZoneSidKey = 'GMT',
+			Username = username
+		);
 	}
 }
