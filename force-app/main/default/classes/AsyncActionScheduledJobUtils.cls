@@ -68,14 +68,14 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 	 * @return The generated cron expression
 	 */
 	public static String getCronExpression(AsyncActionScheduledJob__mdt jobSettings) {
+		String cronExpression = HOURLY_CRON_EXP;
 		if (jobSettings?.Type__c == 'Custom') {
-			return jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
+			cronExpression = jobSettings?.CronExpression__c ?? HOURLY_CRON_EXP;
 		} else if (jobSettings?.Type__c == 'Semi-Hourly') {
 			Integer interval = AsyncActionScheduledJobUtils.getInterval(jobSettings);
-			return new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
-		} else {
-			return HOURLY_CRON_EXP;
+			cronExpression = new Cron(HOURLY_CRON_EXP)?.minutesFromNow(interval)?.expression();
 		}
+		return cronExpression;
 	}
 
 	/**

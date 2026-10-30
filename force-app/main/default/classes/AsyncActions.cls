@@ -150,7 +150,8 @@ global abstract class AsyncActions {
 		 * @param processorName DeveloperName of the AsyncActionProcessor__mdt record to start
 		 */
 		global void start(String processorName) {
-			this.start(new List<String>{ processorName });
+			List<String> processorNames = new List<String>{ processorName };
+			this.start(processorNames);
 		}
 
 		/** @description Starts every processor */
