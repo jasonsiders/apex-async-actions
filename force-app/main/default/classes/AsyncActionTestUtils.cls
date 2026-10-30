@@ -120,6 +120,23 @@ global class AsyncActionTestUtils {
 	}
 
 	/**
+	 * @description Returns the UserType of the user who owns the scheduled job for the given settings.
+	 * @param jobSettings The scheduled job settings to check
+	 * @return The owner's UserType (ex., 'AutomatedProcess'), or null if the job is not scheduled
+	 */
+	public static String getScheduledJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
+		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
+		User owner = [
+			SELECT UserType
+			FROM User
+			WHERE Id IN (SELECT OwnerId FROM CronTrigger WHERE CronJobDetail.Name = :jobName)
+			WITH SYSTEM_MODE
+			LIMIT 1
+		] ?? null;
+		return owner?.UserType;
+	}
+
+	/**
 	 * @description Gives subscriber tests a way to set parameters, since custom metadata can't be inserted via DML
 	 * @param developerName The DeveloperName of the parameter to inject (ex., 'LoggerPlugin')
 	 * @param value The Value__c of the parameter to inject

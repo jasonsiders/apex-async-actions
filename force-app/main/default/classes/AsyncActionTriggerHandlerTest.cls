@@ -104,7 +104,7 @@ private class AsyncActionTriggerHandlerTest {
 		Database.insert(action, System.AccessLevel.SYSTEM_MODE);
 		Test.getEventBus().deliver();
 
-		String ownerType = AsyncActionTriggerHandlerTest.getJobOwnerType(jobSettings);
+		String ownerType = AsyncActionTestUtils.getScheduledJobOwnerType(jobSettings);
 		Assert.areEqual('AutomatedProcess', ownerType, 'Scheduled Job is not owned by the Automated Process user');
 	}
 
@@ -153,20 +153,6 @@ private class AsyncActionTriggerHandlerTest {
 	}
 
 	// **** HELPER **** //
-	static String getJobOwnerType(AsyncActionScheduledJob__mdt jobSettings) {
-		String jobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
-		List<CronTrigger> jobs = [
-			SELECT OwnerId
-			FROM CronTrigger
-			WHERE CronJobDetail.Name = :jobName
-			WITH SYSTEM_MODE
-			LIMIT 1
-		];
-		Id ownerId = jobs?.isEmpty() == false ? jobs[0]?.OwnerId : null;
-		User owner = [SELECT UserType FROM User WHERE Id = :ownerId WITH SYSTEM_MODE LIMIT 1] ?? null;
-		return owner?.UserType;
-	}
-
 	static List<AsyncApexJob> getScheduledJobs(AsyncActionScheduledJob__mdt jobSettings) {
 		String expectedJobName = AsyncActionScheduledJobUtils.getJobName(jobSettings);
 		return [
