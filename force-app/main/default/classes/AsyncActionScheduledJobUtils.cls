@@ -155,9 +155,9 @@ public without sharing abstract class AsyncActionScheduledJobUtils {
 			String msg = 'Could not schedule job: ' + jobName + ': ' + error.getMessage();
 			AsyncActionLogger.log(System.LoggingLevel.WARN, msg);
 			return null;
-		} catch (Exception error) {
-			// Note: Invalid settings (e.g., a malformed CronExpression__c) should fail only their own job.
-			// Throwing would stop the caller from scheduling the remaining jobs.
+		} catch (System.StringException error) {
+			// Note: System.schedule() throws StringException for a malformed CronExpression__c.
+			// Failing only this job lets the caller schedule the remaining ones.
 			String msg = 'Invalid settings for job: ' + jobName + ': ' + error.getMessage();
 			AsyncActionLogger.log(System.LoggingLevel.ERROR, msg);
 			return null;

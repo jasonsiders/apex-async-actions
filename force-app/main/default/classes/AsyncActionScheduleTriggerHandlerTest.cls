@@ -18,13 +18,10 @@ private class AsyncActionScheduleTriggerHandlerTest {
 		String adapterName = AsyncActionTestUtils.MockLogAdapter.class.getName();
 		AsyncActionTestUtils.mockParameter('LoggerPlugin', adapterName);
 		AsyncActionScheduledJobUtils.terminator = new FailingTerminator();
-		// Has no settings, so enforce() tries to abort it
-		String orphanedJobName = AsyncActionScheduledJobUtils.SCHEDULED_JOB_PREFIX + 'Orphaned_Job';
-		System.schedule(
-			orphanedJobName,
-			AsyncActionScheduledJobUtils.HOURLY_CRON_EXP,
-			new AsyncActionSchedulable(null)
-		);
+		// Has no settings, so enforce() tries to abort it, and running it doesn't reschedule it
+		String jobName = AsyncActionScheduledJobUtils.SCHEDULED_JOB_PREFIX + 'Orphaned_Job';
+		System.Schedulable job = new AsyncActionSchedulable(null);
+		System.schedule(jobName, AsyncActionScheduledJobUtils.HOURLY_CRON_EXP, job);
 		AsyncActionSchedule__e event = new AsyncActionSchedule__e();
 
 		EventBus.publishWithAccessLevel(event, System.AccessLevel.SYSTEM_MODE);

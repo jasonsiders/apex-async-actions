@@ -68,8 +68,9 @@ private class AsyncActionScheduleEnforcerTest {
 
 		List<AsyncApexJob> jobs = AsyncActionScheduleEnforcerTest.getActiveScheduledJobs();
 		Assert.areEqual(1, jobs?.size(), 'Wrong # of jobs');
+		AsyncApexJob job = jobs?.get(0);
 		String expectedName = AsyncActionScheduledJobUtils.getJobName(validJob);
-		Assert.areEqual(expectedName, jobs?.get(0)?.CronTrigger?.CronJobDetail?.Name, 'Scheduled the wrong job');
+		Assert.areEqual(expectedName, job?.CronTrigger?.CronJobDetail?.Name, 'Scheduled the wrong job');
 	}
 
 	@IsTest
